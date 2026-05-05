@@ -58,8 +58,8 @@ ARG TARGETARCH
 
 COPY --from=archive /${KVER}/ /tmp/archive/${KVER}/
 
+SHELL ["/bin/bash", "-c"]
 RUN <<'INSTALL'
-#!/usr/bin/env bash
 set -euo pipefail
 
 # Map Docker's TARGETARCH (OCI spec) to Debian architecture names

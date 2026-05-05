@@ -25,7 +25,6 @@ ARG KVER
 COPY debs/${KVER}/ /debs/
 
 RUN <<'EOF'
-#!/bin/sh
 set -eu
 : > /kernel-versions.txt
 for d in /debs/*/; do
