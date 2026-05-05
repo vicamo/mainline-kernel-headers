@@ -75,7 +75,35 @@ docker buildx build \
 
 ## Build scripts
 
-Two helper scripts are provided under `scripts/`:
+Three helper scripts are provided under `scripts/`:
+
+### scripts/build-archive
+
+Build the archive image for a single kernel series.
+
+```sh
+./scripts/build-archive <KVER> [--push] [--image PREFIX]
+```
+
+| Flag | Default | Description |
+|------|---------|-------------|
+| `--push` | *(off)* | Push image to the registry; without it, image is loaded locally |
+| `--image` | `vicamo/mainline-kernel-headers` | Image name prefix |
+
+Examples:
+
+```sh
+# Build locally
+./scripts/build-archive 7.0
+
+# Build and push to Docker Hub
+./scripts/build-archive 7.0 --push
+```
+
+The script automatically detects whether a previous archive image exists and
+performs an incremental build when possible. Pre-downloaded `.deb` files can be
+placed under `debs/<KVER>/<version>/` in the build context to avoid fetching
+them from kernel.ubuntu.com.
 
 ### scripts/build-version
 
@@ -104,8 +132,9 @@ Examples:
 ./scripts/build-version 7.0 --push --image myrepo/kernel-headers --platforms linux/amd64,linux/arm64
 ```
 
-The script automatically detects whether a previous archive or install image
-exists and performs an incremental build when possible.
+The script delegates archive building to `build-archive`, then builds the
+multi-platform install image. It automatically detects whether a previous
+install image exists and performs an incremental build when possible.
 
 ### scripts/build-all
 

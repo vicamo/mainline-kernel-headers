@@ -1,0 +1,104 @@
+#!/usr/bin/env bash
+#
+# Build the archive image for a given kernel series.
+#
+# Usage:
+#   ./scripts/build-archive <KVER> [--push] [--image PREFIX]
+#
+# Examples:
+#   ./scripts/build-archive 7.0
+#   ./scripts/build-archive 7.0 --push
+#   ./scripts/build-archive 7.0 --push --image myrepo/kernel-headers
+#
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+repo_dir="$(dirname "${script_dir}")"
+
+push=false
+kver=""
+image_prefix="vicamo/mainline-kernel-headers"
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --push)   push=true; shift ;;
+        --image)  image_prefix="$2"; shift 2 ;;
+        -*)       echo "Unknown flag: $1" >&2; exit 1 ;;
+        *)        kver="$1"; shift ;;
+    esac
+done
+
+if [ -z "${kver}" ]; then
+    echo "Usage: $0 <KVER> [--push] [--image PREFIX]" >&2
+    exit 1
+fi
+
+archive_tag="${image_prefix}:${kver}-archive"
+
+output_flag="--load"
+if [ "${push}" = true ]; then
+    output_flag="--push"
+fi
+
+echo "=== Building archive: ${archive_tag} ==="
+
+archive_args=(
+    --build-arg "KVER=${kver}"
+)
+
+if docker buildx imagetools inspect "${archive_tag}" >/dev/null 2>&1; then
+    echo "  (incremental: previous archive found)"
+    archive_args+=(--build-arg "ARCHIVE_IMAGE=${archive_tag}")
+else
+    echo "  (cold start: no previous archive)"
+    archive_args+=(--build-arg "ARCHIVE_IMAGE=scratch")
+fi
+
+docker buildx build \
+    -f "${repo_dir}/Dockerfile.archive" \
+    "${archive_args[@]}" \
+    -t "${archive_tag}" \
+    ${output_flag} \
+    "${repo_dir}"
+
+# Annotate the archive image with version info (only when pushing)
+if [ "${push}" = true ]; then
+    echo ""
+    echo "--- Annotating archive with version info ---"
+
+    # Extract /kernel-versions.txt from the archive image
+    cid=$(docker create --platform linux/amd64 "${archive_tag}" sh 2>/dev/null) || true
+    if [ -n "${cid}" ]; then
+        versions_txt=$(docker cp "${cid}:/kernel-versions.txt" - 2>/dev/null \
+            | tar -xO 2>/dev/null) || true
+        docker rm "${cid}" >/dev/null 2>&1
+    else
+        versions_txt=""
+    fi
+
+    if [ -n "${versions_txt}" ]; then
+        # Build JSON: {"7.0.0": "amd64,arm64,...", "7.0.1": "amd,..."}
+        versions_json="{"
+        first=true
+        while IFS=': ' read -r ver archs; do
+            [ -z "${ver}" ] && continue
+            if [ "${first}" = true ]; then
+                first=false
+            else
+                versions_json+=","
+            fi
+            versions_json+="\"${ver}\":\"${archs}\""
+        done <<< "${versions_txt}"
+        versions_json+="}"
+
+        echo "  Versions: ${versions_json}"
+        docker buildx imagetools create \
+            --annotation "index:org.opencontainers.image.description=Mainline kernel header .deb archive for series ${kver}" \
+            --annotation "index:dev.mainline-kernel-headers.versions=${versions_json}" \
+            --tag "${archive_tag}" \
+            "${archive_tag}"
+    fi
+fi
+
+echo ""
+echo "=== Done: ${archive_tag} ==="
