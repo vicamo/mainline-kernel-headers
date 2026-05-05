@@ -86,6 +86,8 @@ for vnum in ${versions}; do
         continue
     fi
 
+    new_versions=$((new_versions + 1))
+
     # Skip if already fetched locally (has at least one .deb)
     if [ -d "${out_dir}" ] && find "${out_dir}" -maxdepth 1 -name '*.deb' | grep -q .; then
         echo ">>> ${ver_dir}: already fetched, skipping."
@@ -118,7 +120,6 @@ for vnum in ${versions}; do
             curl -fsSL --retry 3 --retry-delay 5 -o "${out_dir}/${deb}" "${ver_url}/${archdir}/${deb}"
         done
     done
-    new_versions=$((new_versions + 1))
 done
 
 if [ ${new_versions} -eq 0 ]; then
