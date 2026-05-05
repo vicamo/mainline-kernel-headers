@@ -71,8 +71,14 @@ echo "=== Building install: ${install_tag} ==="
 
 # Check if the install image is already up to date with the archive.
 # Extract the version list from the archive, compare with what's recorded on the install image.
-archive_versions=$(docker run --rm "${archive_tag}" cat /kernel-versions.txt 2>/dev/null \
-    | sort | paste -sd,) || true
+archive_versions=$(
+    cid=$(docker create "${archive_tag}" sh 2>/dev/null) || true
+    if [ -n "${cid}" ]; then
+        docker cp "${cid}:/kernel-versions.txt" - 2>/dev/null | tar -xO 2>/dev/null \
+            | awk -F: '{print $1}' | sort | paste -sd,
+        docker rm "${cid}" >/dev/null 2>&1
+    fi
+) || true
 
 if [ "${push}" = true ] && [ -n "${archive_versions}" ] && \
    docker buildx imagetools inspect "${install_tag}" >/dev/null 2>&1; then

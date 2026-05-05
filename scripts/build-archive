@@ -52,8 +52,14 @@ mkdir -p "${debs_dir}"
 # Determine which versions already exist in the archive image (if any).
 existing_versions=""
 if docker buildx imagetools inspect "${archive_tag}" >/dev/null 2>&1; then
-    existing_versions=$(docker run --rm "${archive_tag}" cat /kernel-versions.txt 2>/dev/null \
-        | awk -F: '{print $1}' | sort -V) || true
+    existing_versions=$(
+        cid=$(docker create "${archive_tag}" sh 2>/dev/null) || true
+        if [ -n "${cid}" ]; then
+            docker cp "${cid}:/kernel-versions.txt" - 2>/dev/null | tar -xO 2>/dev/null \
+                | awk -F: '{print $1}' | sort -V
+            docker rm "${cid}" >/dev/null 2>&1
+        fi
+    ) || true
 fi
 
 echo ">>> Discovering versions for series ${kver} ..."
