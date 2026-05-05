@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+#
+# Build archive and install images for all active kernel versions.
+#
+# Queries https://www.kernel.org/releases.json for stable and longterm
+# versions that are not end-of-life, then builds each one via build-version.
+#
+# Usage:
+#   ./scripts/build-all [--push] [--image PREFIX] [--platforms PLATFORMS]
+#
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+
+extra_args=("$@")
+
+# ---------------------------------------------------------------------------
+# Fetch active kernel versions from kernel.org
+# ---------------------------------------------------------------------------
+echo "=== Fetching active kernel versions from kernel.org ==="
+
+versions=$(curl -fsSL https://www.kernel.org/releases.json | python3 -c "
+import json, sys, re
+data = json.load(sys.stdin)
+seen = set()
+for r in data['releases']:
+    # Include stable and longterm that are not EOL
+    if r['moniker'] not in ('stable', 'longterm'):
+        continue
+    if r['iseol']:
+        continue
+    # Extract X.Y from version like 7.0.3 or 6.18.26
+    m = re.match(r'^(\d+\.\d+)', r['version'])
+    if m:
+        series = m.group(1)
+        if series not in seen:
+            seen.add(series)
+            print(series)
+")
+
+if [ -z "${versions}" ]; then
+    echo "ERROR: no active versions found" >&2
+    exit 1
+fi
+
+echo "Active versions:"
+printf '  %s\n' ${versions}
+echo ""
+
+# ---------------------------------------------------------------------------
+# Build each version
+# ---------------------------------------------------------------------------
+failed=()
+for kver in ${versions}; do
+    echo "================================================================"
+    echo "  Building ${kver}"
+    echo "================================================================"
+    if "${script_dir}/build-version" "${kver}" "${extra_args[@]}"; then
+        echo ""
+    else
+        echo "ERROR: build failed for ${kver}" >&2
+        failed+=("${kver}")
+    fi
+done
+
+# ---------------------------------------------------------------------------
+# Summary
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Summary ==="
+echo "Total: $(echo ${versions} | wc -w | tr -d ' ')"
+if [ ${#failed[@]} -gt 0 ]; then
+    echo "Failed: ${failed[*]}"
+    exit 1
+else
+    echo "All builds succeeded."
+fi

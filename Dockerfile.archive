@@ -1,0 +1,149 @@
+# syntax=docker/dockerfile:1
+#
+# Dockerfile.archive — fetching and archiving mainline kernel header .debs.
+# Architecture-independent: fetches headers for ALL architectures.
+#
+#   Stage 1 "fetcher":  FROM alpine:3.21
+#                        Discovers & downloads header .debs for ALL architectures
+#                        into /out/X.Y/X.Y.Z/.
+#
+#   Stage 2 "archive":  FROM mainline-kernel-headers:X.Y-archive
+#                        Accumulates all .debs ever fetched under /X.Y/X.Y.Z/.
+#                        Tag as: mainline-kernel-headers:X.Y-archive
+#
+# Build args:
+#   KVER          - kernel series, e.g. "6.14" (required)
+#   ARCHIVE_IMAGE - previous archive image for incremental builds
+#                   (default: mainline-kernel-headers:<KVER>-archive)
+#
+# === Normal (incremental by default) ===
+#
+#   docker build --build-arg KVER=6.14 \
+#     -t mainline-kernel-headers:6.14-archive .
+#
+# === Cold start (no previous archive exists) ===
+#
+#   docker build --build-arg KVER=6.14 \
+#     --build-arg ARCHIVE_IMAGE=scratch \
+#     -t mainline-kernel-headers:6.14-archive .
+#
+# See Dockerfile for building the arch-specific install image.
+#
+
+ARG KVER
+ARG BASE_IMAGE=alpine:3.21
+ARG ARCHIVE_IMAGE=mainline-kernel-headers:${KVER}-archive
+
+# ===========================================================================
+# Stage 1: fetcher (architecture-independent)
+#   Downloads header .debs for ALL architectures into /out/X.Y/X.Y.Z/
+# ===========================================================================
+FROM ${BASE_IMAGE} AS fetcher
+
+ARG KVER
+
+RUN test -n "${KVER}" || { echo "ERROR: KVER is required"; exit 1; }
+
+RUN apk add --no-cache bash curl grep
+
+# Prepare output directory — sentinel ensures COPY never fails on empty dir.
+RUN mkdir -p /out && touch /out/.sentinel
+
+RUN <<'FETCH'
+#!/usr/bin/env bash
+set -euo pipefail
+
+base_url="https://kernel.ubuntu.com/mainline"
+manifest="/opt/kernel-headers/manifest.txt"
+
+mkdir -p /opt/kernel-headers
+touch "${manifest}"
+
+echo ">>> Discovering versions for series ${KVER} ..."
+index=$(curl -fsSL --retry 3 --retry-delay 5 "${base_url}/")
+
+versions=$(echo "${index}" \
+    | grep -oP "href=\"v\K${KVER//./\\.}(\.\d+)?(?=/\")" \
+    | sort -V | uniq)
+
+if [ -z "${versions}" ]; then
+    echo "ERROR: no versions matching ${KVER} at ${base_url}/"
+    exit 1
+fi
+printf 'Found: v%s\n' ${versions}
+
+additions=""
+for vnum in ${versions}; do
+    ver_dir="v${vnum}"
+    if grep -qxF "${ver_dir}" "${manifest}" 2>/dev/null; then
+        echo ">>> ${ver_dir}: already known, skipping."
+        continue
+    fi
+
+    echo ">>> ${ver_dir}: fetching headers (all architectures) ..."
+    ver_url="${base_url}/${ver_dir}"
+    out_dir="/out/${KVER}/${vnum}"
+    mkdir -p "${out_dir}"
+
+    # Fetch the version index page
+    top=$(curl -fsSL --retry 3 --retry-delay 5 "${ver_url}/")
+
+    # Discover architecture subdirectories and fetch all header .debs
+    archdirs=$(echo "${top}" \
+        | grep -oP 'href="\K[a-z0-9]+(?=/")' \
+        | grep -vE '^(BUILT|CHANGES|HEADER|FOOTER)' | sort -u || true)
+
+    for archdir in ${archdirs}; do
+        arch_page=$(curl -fsSL --retry 3 --retry-delay 5 "${ver_url}/${archdir}/" 2>/dev/null) || continue
+        arch_debs=$(echo "${arch_page}" \
+            | grep -oP "href=\"\Klinux-headers-[^\"]+_${archdir}\.deb" | sort -u || true)
+        common_debs=$(echo "${arch_page}" \
+            | grep -oP 'href="\Klinux-headers-[^"]+_all\.deb' | sort -u || true)
+
+        for deb in ${arch_debs} ${common_debs}; do
+            # Skip if already downloaded (e.g. _all.deb from another arch dir)
+            [ -f "${out_dir}/${deb}" ] && continue
+            echo "  GET ${archdir}/${deb}"
+            curl -fsSL --retry 3 --retry-delay 5 -o "${out_dir}/${deb}" "${ver_url}/${archdir}/${deb}"
+        done
+    done
+
+    additions="${additions}${ver_dir}\n"
+done
+
+printf '%b' "${additions}" > /out/manifest-additions.txt
+echo "=== New versions fetched: $(grep -c . /out/manifest-additions.txt || echo 0) ==="
+
+# Generate /kernel-versions.txt with per-version architecture info
+# Format: "<version>: <arch>,<arch>,..."
+# Architectures are determined from arch-specific .deb filenames.
+> /out/kernel-versions.txt
+for d in /out/${KVER}/*/; do
+    v=$(basename "$d")
+    # Normalize X.Y -> X.Y.0
+    if [[ "$v" =~ ^[0-9]+\.[0-9]+$ ]]; then
+        v="${v}.0"
+    fi
+    # Extract unique architectures from .deb filenames (excluding _all.deb)
+    archs=$(find "$d" -maxdepth 1 -name '*.deb' ! -name '*_all.deb' \
+        | sed -n 's/.*_\([^_]*\)\.deb$/\1/p' \
+        | sort -u \
+        | paste -sd,)
+    echo "${v}: ${archs}" >> /out/kernel-versions.txt
+done
+sort -V /out/kernel-versions.txt -o /out/kernel-versions.txt
+echo "=== Fetched kernel versions ==="
+cat /out/kernel-versions.txt
+FETCH
+
+# ===========================================================================
+# Stage 2: archive (architecture-independent) — accumulate .debs under /X.Y/X.Y.Z/
+#   Tag as: mainline-kernel-headers:X.Y-archive
+# ===========================================================================
+FROM ${ARCHIVE_IMAGE} AS archive
+
+ARG KVER
+COPY --from=fetcher /out/${KVER}/ /${KVER}/
+COPY --from=fetcher /out/kernel-versions.txt /kernel-versions.txt
+
+CMD ["cat", "/kernel-versions.txt"]

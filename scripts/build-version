@@ -1,0 +1,241 @@
+#!/usr/bin/env bash
+#
+# Build archive and install images for a given kernel series.
+#
+# Usage:
+#   ./scripts/build-version <KVER> [--push] [--image PREFIX] [--platforms PLATFORMS]
+#
+# Examples:
+#   ./scripts/build-version 7.0
+#   ./scripts/build-version 7.0 --push
+#   ./scripts/build-version 7.0 --push --image myrepo/kernel-headers
+#   ./scripts/build-version 7.0 --push --platforms linux/amd64,linux/arm64
+#
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+repo_dir="$(dirname "${script_dir}")"
+
+push=false
+kver=""
+image_prefix="vicamo/mainline-kernel-headers"
+install_platforms="linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x"
+skip_archive=false
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --push)          push=true; shift ;;
+        --image)         image_prefix="$2"; shift 2 ;;
+        --platforms)     install_platforms="$2"; shift 2 ;;
+        --skip-archive)  skip_archive=true; shift ;;
+        -*)              echo "Unknown flag: $1" >&2; exit 1 ;;
+        *)               kver="$1"; shift ;;
+    esac
+done
+
+if [ -z "${kver}" ]; then
+    echo "Usage: $0 <KVER> [--push] [--image PREFIX] [--platforms PLATFORMS]" >&2
+    exit 1
+fi
+
+archive_tag="${image_prefix}:${kver}-archive"
+install_tag="${image_prefix}:${kver}"
+
+output_flag="--load"
+if [ "${push}" = true ]; then
+    output_flag="--push"
+fi
+
+# ---------------------------------------------------------------------------
+# Step 1: Build the archive image (single-platform, incremental by default)
+# ---------------------------------------------------------------------------
+if [ "${skip_archive}" = true ]; then
+    echo "=== Skipping archive build (--skip-archive) ==="
+    if ! docker buildx imagetools inspect "${archive_tag}" >/dev/null 2>&1; then
+        echo "ERROR: --skip-archive but ${archive_tag} not found in registry" >&2
+        exit 1
+    fi
+else
+    echo "=== Building archive: ${archive_tag} ==="
+
+    archive_args=(
+        --build-arg "KVER=${kver}"
+    )
+
+    if docker buildx imagetools inspect "${archive_tag}" >/dev/null 2>&1; then
+        echo "  (incremental: previous archive found)"
+        archive_args+=(--build-arg "ARCHIVE_IMAGE=${archive_tag}")
+    else
+        echo "  (cold start: no previous archive)"
+        archive_args+=(--build-arg "ARCHIVE_IMAGE=scratch")
+    fi
+
+    docker buildx build \
+        -f "${repo_dir}/Dockerfile.archive" \
+        "${archive_args[@]}" \
+        -t "${archive_tag}" \
+        ${output_flag} \
+        "${repo_dir}"
+
+    # Annotate the archive image with version info (only when pushing)
+    if [ "${push}" = true ]; then
+        echo ""
+        echo "--- Annotating archive with version info ---"
+
+        # Extract /kernel-versions.txt from the archive image
+        cid=$(docker create --platform linux/amd64 "${archive_tag}" sh 2>/dev/null) || true
+        if [ -n "${cid}" ]; then
+            versions_txt=$(docker cp "${cid}:/kernel-versions.txt" - 2>/dev/null \
+                | tar -xO 2>/dev/null) || true
+            docker rm "${cid}" >/dev/null 2>&1
+        else
+            versions_txt=""
+        fi
+
+        if [ -n "${versions_txt}" ]; then
+            # Build JSON: {"7.0.0": "amd64,arm64,...", "7.0.1": "amd,..."}
+            versions_json="{"
+            first=true
+            while IFS=': ' read -r ver archs; do
+                [ -z "${ver}" ] && continue
+                if [ "${first}" = true ]; then
+                    first=false
+                else
+                    versions_json+=","
+                fi
+                versions_json+="\"${ver}\":\"${archs}\""
+            done <<< "${versions_txt}"
+            versions_json+="}"
+
+            echo "  Versions: ${versions_json}"
+            docker buildx imagetools create \
+                --annotation "index:org.opencontainers.image.description=Mainline kernel header .deb archive for series ${kver}" \
+                --annotation "index:dev.mainline-kernel-headers.versions=${versions_json}" \
+                --tag "${archive_tag}" \
+                "${archive_tag}"
+        fi
+    fi
+fi
+
+# ---------------------------------------------------------------------------
+# Step 2: Build the install image (multi-platform)
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Building install: ${install_tag} ==="
+
+# Determine the appropriate Ubuntu base image for cold-start builds.
+# Ubuntu release kernel versions (codename -> release kernel):
+#   Jammy    (22.04) -> 5.15
+#   Kinetic  (22.10) -> 5.19
+#   Lunar    (23.04) -> 6.2
+#   Mantic   (23.10) -> 6.5
+#   Noble    (24.04) -> 6.8
+#   Oracular (24.10) -> 6.11
+#   Plucky   (25.04) -> 6.14
+#   Questing (25.10) -> 6.17
+#   Resolute (26.04) -> 7.0
+#
+# We pick the newest Ubuntu release whose kernel version <= KVER.
+# Format: "major_minor codename" sorted descending.
+ubuntu_base_for_kver() {
+    local kver="$1"
+    local major minor ver_num
+    major=$(echo "${kver}" | cut -d. -f1)
+    minor=$(echo "${kver}" | cut -d. -f2)
+    ver_num=$(( major * 100 + minor ))
+
+    # Descending order: newest first
+    local -a releases=(
+        "700 resolute"
+        "617 questing"
+        "614 plucky"
+        "611 oracular"
+        "608 noble"
+        "605 mantic"
+        "602 lunar"
+        "519 kinetic"
+        "515 jammy"
+    )
+
+    for entry in "${releases[@]}"; do
+        local rel_ver="${entry%% *}"
+        local rel_name="${entry##* }"
+        if [ ${ver_num} -ge ${rel_ver} ]; then
+            echo "ubuntu:${rel_name}"
+            return
+        fi
+    done
+    # Fallback for very old kernels
+    echo "ubuntu:jammy"
+}
+
+install_args=(
+    --build-arg "KVER=${kver}"
+    --build-arg "ARCHIVE_IMAGE=${archive_tag}"
+)
+
+if docker buildx imagetools inspect "${install_tag}" >/dev/null 2>&1; then
+    echo "  (incremental: previous install image found)"
+    install_args+=(--build-arg "BASE_IMAGE=${install_tag}")
+else
+    base_image=$(ubuntu_base_for_kver "${kver}")
+    echo "  (cold start: using ${base_image} as base)"
+    install_args+=(--build-arg "BASE_IMAGE=${base_image}")
+fi
+
+# Multi-platform builds require --push (can't --load multi-platform).
+# For local builds, fall back to the native platform only.
+if [ "${push}" = true ]; then
+    docker buildx build \
+        --platform "${install_platforms}" \
+        "${install_args[@]}" \
+        -t "${install_tag}" \
+        --push \
+        "${repo_dir}"
+else
+    docker buildx build \
+        "${install_args[@]}" \
+        -t "${install_tag}" \
+        --load \
+        "${repo_dir}"
+fi
+
+# ---------------------------------------------------------------------------
+# Step 2b: Annotate the install image with per-platform version info
+# ---------------------------------------------------------------------------
+if [ "${push}" = true ]; then
+    echo ""
+    echo "--- Annotating install image with per-platform version info ---"
+
+    annotation_args=()
+    annotation_args+=(--annotation "index:org.opencontainers.image.description=Mainline kernel headers for series ${kver}")
+
+    IFS=',' read -ra plats <<< "${install_platforms}"
+    for plat in "${plats[@]}"; do
+        echo "  Extracting versions for ${plat} ..."
+        cid=$(docker create --platform "${plat}" "${install_tag}" sh 2>/dev/null) || true
+        if [ -z "${cid}" ]; then
+            echo "    WARN: could not create container for ${plat}"
+            continue
+        fi
+        plat_versions=$(docker cp "${cid}:/kernel-versions.txt" - 2>/dev/null \
+            | tar -xO 2>/dev/null \
+            | paste -sd,) || true
+        docker rm "${cid}" >/dev/null 2>&1
+
+        if [ -n "${plat_versions}" ]; then
+            echo "    Versions: ${plat_versions}"
+            annotation_args+=(--annotation "manifest-descriptor[${plat}]:dev.mainline-kernel-headers.versions=${plat_versions}")
+        fi
+    done
+
+    docker buildx imagetools create \
+        "${annotation_args[@]}" \
+        --tag "${install_tag}" \
+        "${install_tag}"
+fi
+
+echo ""
+echo "=== Done: ${kver} ==="
+echo "  Archive: ${archive_tag}"
+echo "  Install: ${install_tag}"
