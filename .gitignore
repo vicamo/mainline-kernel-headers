@@ -1,0 +1,3 @@
+# Downloaded .deb packages (fetched by scripts/build-archive)
+debs/*/
+!debs/.gitkeep

@@ -49,6 +49,12 @@ RUN apk add --no-cache bash curl grep
 # Prepare output directory — sentinel ensures COPY never fails on empty dir.
 RUN mkdir -p /out && touch /out/.sentinel
 
+# Load pre-downloaded .deb files from build context (if any).
+# Place files under debs/<KVER>/<version>/*.deb in the build context to avoid
+# downloading them from kernel.ubuntu.com. The debs/ directory must exist
+# (even if empty); keep debs/.gitkeep for that purpose.
+COPY debs/ /preload/
+
 RUN <<'FETCH'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -58,6 +64,13 @@ manifest="/opt/kernel-headers/manifest.txt"
 
 mkdir -p /opt/kernel-headers
 touch "${manifest}"
+
+# Copy pre-downloaded .debs from build context into /out if present
+if [ -d "/preload/${KVER}" ]; then
+    echo ">>> Loading pre-downloaded .debs from build context ..."
+    cp -a "/preload/${KVER}" "/out/${KVER}"
+    find "/out/${KVER}" -name '*.deb' | wc -l | xargs -I{} echo "  {} pre-loaded .deb files"
+fi
 
 echo ">>> Discovering versions for series ${KVER} ..."
 index=$(curl -fsSL --retry 3 --retry-delay 5 "${base_url}/")
