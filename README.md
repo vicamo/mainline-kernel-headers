@@ -34,19 +34,16 @@ archive image.
 
 ### Dockerfile.archive
 
-Fetches **all** kernel header `.deb` packages (for all architectures) from
-kernel.ubuntu.com/mainline/ and stores them in a minimal image. This image is
-architecture-independent and supports incremental builds — only new versions
-are fetched on each rebuild.
+Stores **all** kernel header `.deb` packages (for all architectures) from a
+local `debs/<KVER>/` directory into a minimal image. This image is
+architecture-independent and supports incremental builds. The actual fetching
+is performed by `scripts/build-archive` before invoking Docker.
 
 ```sh
-# First build (cold start)
+# Typically invoked via scripts/build-archive, but can be run manually
+# after populating debs/<KVER>/:
 docker build -f Dockerfile.archive --build-arg KVER=7.0 \
   --build-arg ARCHIVE_IMAGE=scratch \
-  -t vicamo/mainline-kernel-headers:7.0-archive .
-
-# Incremental build (picks up new point releases)
-docker build -f Dockerfile.archive --build-arg KVER=7.0 \
   -t vicamo/mainline-kernel-headers:7.0-archive .
 ```
 
@@ -100,10 +97,10 @@ Examples:
 ./scripts/build-archive 7.0 --push
 ```
 
-The script automatically detects whether a previous archive image exists and
-performs an incremental build when possible. Pre-downloaded `.deb` files can be
-placed under `debs/<KVER>/<version>/` in the build context to avoid fetching
-them from kernel.ubuntu.com.
+The script fetches all kernel header `.deb` packages from kernel.ubuntu.com
+into `debs/<KVER>/`, then builds the archive Docker image. It automatically
+detects whether a previous archive image exists and performs an incremental
+build when possible. Already-downloaded versions are skipped on subsequent runs.
 
 ### scripts/build-version
 
@@ -160,7 +157,6 @@ A summary is printed at the end with any failures.
 | Arg | Required | Default | Description |
 |-----|----------|---------|-------------|
 | `KVER` | Yes | — | Kernel series, e.g. `6.14`, `7.0` |
-| `BASE_IMAGE` | No | `alpine:3.21` | Base image for the fetcher stage |
 | `ARCHIVE_IMAGE` | No | `mainline-kernel-headers:<KVER>-archive` | Previous archive image for incremental builds; set to `scratch` for cold start |
 
 ### Dockerfile

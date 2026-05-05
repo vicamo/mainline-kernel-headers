@@ -40,6 +40,72 @@ if [ "${push}" = true ]; then
     output_flag="--push"
 fi
 
+# ---------------------------------------------------------------------------
+# Step 1: Fetch .deb packages into debs/<KVER>/
+# ---------------------------------------------------------------------------
+echo "=== Fetching kernel headers for series ${kver} ==="
+
+base_url="https://kernel.ubuntu.com/mainline"
+debs_dir="${repo_dir}/debs/${kver}"
+mkdir -p "${debs_dir}"
+
+echo ">>> Discovering versions for series ${kver} ..."
+index=$(curl -fsSL --retry 3 --retry-delay 5 "${base_url}/")
+
+versions=$(echo "${index}" \
+    | grep -oP "href=\"v\K${kver//./\\.}(\.\d+)?(?=/\")" \
+    | sort -V | uniq)
+
+if [ -z "${versions}" ]; then
+    echo "ERROR: no versions matching ${kver} at ${base_url}/"
+    exit 1
+fi
+printf 'Found: v%s\n' ${versions}
+
+for vnum in ${versions}; do
+    ver_dir="v${vnum}"
+    out_dir="${debs_dir}/${vnum}"
+
+    # Skip if already fetched (has at least one .deb)
+    if [ -d "${out_dir}" ] && find "${out_dir}" -maxdepth 1 -name '*.deb' | grep -q .; then
+        echo ">>> ${ver_dir}: already fetched, skipping."
+        continue
+    fi
+
+    echo ">>> ${ver_dir}: fetching headers (all architectures) ..."
+    ver_url="${base_url}/${ver_dir}"
+    mkdir -p "${out_dir}"
+
+    # Fetch the version index page
+    top=$(curl -fsSL --retry 3 --retry-delay 5 "${ver_url}/")
+
+    # Discover architecture subdirectories and fetch all header .debs
+    archdirs=$(echo "${top}" \
+        | grep -oP 'href="\K[a-z0-9]+(?=/")' \
+        | grep -vE '^(BUILT|CHANGES|HEADER|FOOTER)' | sort -u || true)
+
+    for archdir in ${archdirs}; do
+        arch_page=$(curl -fsSL --retry 3 --retry-delay 5 "${ver_url}/${archdir}/" 2>/dev/null) || continue
+        arch_debs=$(echo "${arch_page}" \
+            | grep -oP "href=\"\Klinux-headers-[^\"]+_${archdir}\.deb" | sort -u || true)
+        common_debs=$(echo "${arch_page}" \
+            | grep -oP 'href="\Klinux-headers-[^"]+_all\.deb' | sort -u || true)
+
+        for deb in ${arch_debs} ${common_debs}; do
+            # Skip if already downloaded (e.g. _all.deb from another arch dir)
+            [ -f "${out_dir}/${deb}" ] && continue
+            echo "  GET ${archdir}/${deb}"
+            curl -fsSL --retry 3 --retry-delay 5 -o "${out_dir}/${deb}" "${ver_url}/${archdir}/${deb}"
+        done
+    done
+done
+
+echo "=== Fetching complete ==="
+
+# ---------------------------------------------------------------------------
+# Step 2: Build the archive image
+# ---------------------------------------------------------------------------
+echo ""
 echo "=== Building archive: ${archive_tag} ==="
 
 archive_args=(
