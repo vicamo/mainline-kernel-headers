@@ -69,6 +69,32 @@ fi
 echo ""
 echo "=== Building install: ${install_tag} ==="
 
+# Check if the install image is already up to date with the archive.
+# Extract the version list from the archive, compare with what's recorded on the install image.
+archive_versions=$(docker run --rm "${archive_tag}" cat /kernel-versions.txt 2>/dev/null \
+    | sort | paste -sd,) || true
+
+if [ "${push}" = true ] && [ -n "${archive_versions}" ] && \
+   docker buildx imagetools inspect "${install_tag}" >/dev/null 2>&1; then
+    install_versions=$(docker buildx imagetools inspect "${install_tag}" --raw 2>/dev/null \
+        | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+annotations = data.get('annotations') or {}
+v = annotations.get('dev.mainline-kernel-headers.archive-versions', '')
+if v:
+    print(v)
+" 2>/dev/null) || true
+
+    if [ -n "${install_versions}" ] && [ "${archive_versions}" = "${install_versions}" ]; then
+        echo "  Install image already matches archive versions"
+        echo "  Versions: ${install_versions}"
+        echo ""
+        echo "=== Done: ${kver} (up to date) ==="
+        exit 0
+    fi
+fi
+
 # Determine the appropriate Ubuntu base image for cold-start builds.
 # Ubuntu release kernel versions (codename -> release kernel):
 #   Jammy    (22.04) -> 5.15
@@ -155,6 +181,7 @@ if [ "${push}" = true ]; then
 
     annotation_args=()
     annotation_args+=(--annotation "index:org.opencontainers.image.description=Mainline kernel headers for series ${kver}")
+    annotation_args+=(--annotation "index:dev.mainline-kernel-headers.archive-versions=${archive_versions}")
 
     IFS=',' read -ra plats <<< "${install_platforms}"
     for plat in "${plats[@]}"; do
