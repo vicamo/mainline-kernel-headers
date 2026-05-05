@@ -30,11 +30,6 @@ set -eu
 for d in /debs/*/; do
     [ -d "$d" ] || continue
     v=$(basename "$d")
-    # Normalize X.Y -> X.Y.0
-    case "$v" in
-        *.*.*) ;;
-        *.*) v="${v}.0" ;;
-    esac
     # Extract unique architectures from .deb filenames (excluding _all.deb)
     archs=$(find "$d" -maxdepth 1 -name '*.deb' ! -name '*_all.deb' \
         | sed -n 's/.*_\([^_]*\)\.deb$/\1/p' \

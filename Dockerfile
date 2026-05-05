@@ -122,6 +122,7 @@ rm -rf /tmp/archive
 ls -1d /usr/src/linux-headers-* 2>/dev/null \
   | sed 's|/usr/src/linux-headers-||' \
   | grep -oP '^\d+\.\d+\.\d+' \
+  | sed 's/\.0$//' \
   | sort -Vu \
   > /kernel-versions.txt
 
