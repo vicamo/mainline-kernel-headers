@@ -192,6 +192,10 @@ if [ "${push}" = true ]; then
     IFS=',' read -ra plats <<< "${install_platforms}"
     for plat in "${plats[@]}"; do
         echo "  Extracting versions for ${plat} ..."
+        if ! docker pull --platform "${plat}" "${install_tag}" >/dev/null 2>&1; then
+            echo "    WARN: could not pull ${install_tag} for ${plat}"
+            continue
+        fi
         cid=$(docker create --platform "${plat}" "${install_tag}" sh 2>/dev/null) || true
         if [ -z "${cid}" ]; then
             echo "    WARN: could not create container for ${plat}"
