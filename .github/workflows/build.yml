@@ -75,3 +75,7 @@ jobs:
 
       - name: Build and push ${{ matrix.kver }}
         run: ./scripts/build-version "${{ matrix.kver }}" --push
+
+      - name: Gap report for ${{ matrix.kver }}
+        if: always()
+        run: python3 scripts/report-gaps "${{ matrix.kver }}" >> "$GITHUB_STEP_SUMMARY"

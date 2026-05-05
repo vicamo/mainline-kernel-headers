@@ -1,0 +1,244 @@
+#!/usr/bin/env python3
+"""
+Generate a gap report for mainline-kernel-headers Docker images.
+
+Outputs GitHub-flavored Markdown suitable for $GITHUB_STEP_SUMMARY.
+
+For each active kernel series, compares:
+  1. Versions available on kernel.ubuntu.com/mainline (upstream)
+  2. Versions archived in the Docker archive image (per-arch .deb availability)
+  3. Versions installed in the Docker install image (per-platform)
+
+Icons indicate root cause:
+  ✅ - available and installed
+  ⚪ - not available upstream (no .deb for this arch on kernel.ubuntu.com)
+  🔺 - in archive but not installed (install image needs rebuild)
+  ❌ - available upstream but not in archive (archive needs rebuild)
+  ⬛ - no Docker image exists for this series
+"""
+
+import json
+import re
+import subprocess
+import sys
+import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+IMAGE_PREFIX = "vicamo/mainline-kernel-headers"
+BASE_URL = "https://kernel.ubuntu.com/mainline"
+ARCHS = ["amd64", "arm64", "armhf", "ppc64el", "s390x"]
+OCI_TO_DEB = {
+    "linux/amd64": "amd64",
+    "linux/arm64": "arm64",
+    "linux/arm": "armhf",
+    "linux/arm/v7": "armhf",
+    "linux/ppc64le": "ppc64el",
+    "linux/s390x": "s390x",
+}
+
+
+def fetch(url):
+    try:
+        with urllib.request.urlopen(url, timeout=30) as r:
+            return r.read().decode()
+    except Exception:
+        return None
+
+
+def get_active_series():
+    data = fetch("https://www.kernel.org/releases.json")
+    if not data:
+        print("ERROR: cannot fetch kernel.org releases", file=sys.stderr)
+        sys.exit(1)
+    releases = json.loads(data)
+    seen = set()
+    series = []
+    for r in releases["releases"]:
+        if r["moniker"] not in ("stable", "longterm"):
+            continue
+        if r["iseol"]:
+            continue
+        m = re.match(r"^(\d+\.\d+)", r["version"])
+        if m:
+            s = m.group(1)
+            if s not in seen:
+                seen.add(s)
+                series.append(s)
+    return series
+
+
+def get_upstream_versions(kver):
+    """Discover versions available on kernel.ubuntu.com/mainline for a series."""
+    index = fetch(f"{BASE_URL}/")
+    if not index:
+        return {}
+    pattern = re.compile(rf'href="v({re.escape(kver)}(?:\.\d+)?)/?"')
+    versions = sorted(set(pattern.findall(index)), key=lambda v: list(map(int, v.split("."))))
+
+    # _all.deb may only appear in one subdir (e.g. amd64) but applies to all.
+    # An arch is "available" if it has _ARCH.deb AND _all.deb exists anywhere.
+    def check_version(v):
+        ver_url = f"{BASE_URL}/v{v}/"
+        page = fetch(ver_url)
+        if not page:
+            return v, set()
+        archdirs = set(re.findall(r'href="([a-z0-9]+)/"', page)) - {
+            "BUILT", "CHANGES", "HEADER", "FOOTER"
+        }
+        found_archs = set()
+        has_all_deb = False
+        for ad in archdirs:
+            arch_page = fetch(f"{ver_url}{ad}/")
+            if not arch_page:
+                continue
+            if not has_all_deb:
+                has_all_deb = bool(re.search(r'linux-headers-[^"]+_all\.deb', arch_page))
+            if re.search(rf'linux-headers-[^"]+_{ad}\.deb', arch_page):
+                found_archs.add(ad)
+        if not has_all_deb:
+            return v, set()
+        return v, found_archs
+
+    result = {}
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        futures = {pool.submit(check_version, v): v for v in versions}
+        for f in as_completed(futures):
+            v, archs = f.result()
+            result[v] = archs
+    return result
+
+
+def inspect_image_raw(tag):
+    try:
+        r = subprocess.run(
+            ["docker", "buildx", "imagetools", "inspect", tag, "--raw"],
+            capture_output=True, text=True, timeout=30,
+        )
+        if r.returncode == 0:
+            return json.loads(r.stdout)
+    except Exception:
+        pass
+    return None
+
+
+def get_archive_info(kver):
+    tag = f"{IMAGE_PREFIX}:{kver}-archive"
+    data = inspect_image_raw(tag)
+    if not data:
+        return None
+    ann = data.get("annotations", {})
+    versions_str = ann.get("dev.mainline-kernel-headers.versions", "")
+    if not versions_str:
+        return {}
+    try:
+        v = json.loads(versions_str)
+        return {ver: set(archs.split(",")) for ver, archs in v.items()}
+    except Exception:
+        return {}
+
+
+def get_install_info(kver):
+    tag = f"{IMAGE_PREFIX}:{kver}"
+    data = inspect_image_raw(tag)
+    if not data:
+        return None
+    result = {}
+    for m in data.get("manifests", []):
+        plat = m.get("platform", {})
+        if plat.get("os", "") != "linux":
+            continue
+        arch = plat.get("architecture", "")
+        variant = plat.get("variant", "")
+        oci_plat = f"linux/{arch}/{variant}" if variant else f"linux/{arch}"
+        deb_arch = OCI_TO_DEB.get(oci_plat) or OCI_TO_DEB.get(f"linux/{arch}")
+        if not deb_arch:
+            continue
+        ann = m.get("annotations", {})
+        versions_str = ann.get("dev.mainline-kernel-headers.versions", "")
+        if versions_str:
+            result[deb_arch] = set(versions_str.split(","))
+        else:
+            result[deb_arch] = set()
+    return result
+
+
+def version_sort_key(v):
+    return tuple(int(p) for p in v.split("."))
+
+
+def generate_report(series_list):
+    lines = []
+    lines.append("# Mainline Kernel Headers — Gap Report\n")
+    lines.append("| Icon | Meaning |")
+    lines.append("|------|---------|")
+    lines.append("| ✅ | Available and installed |")
+    lines.append("| ⚪ | Not available upstream (no .deb for this arch) |")
+    lines.append("| 🔺 | In archive but not installed (install image stale) |")
+    lines.append("| ❌ | Available upstream but not in archive (archive stale) |")
+    lines.append("| ⬛ | No Docker image exists for this series |")
+    lines.append("")
+
+    for kver in series_list:
+        lines.append(f"## Series {kver}\n")
+
+        print(f"  Fetching upstream versions for {kver}...", file=sys.stderr)
+        upstream = get_upstream_versions(kver)
+        if not upstream:
+            lines.append("> No versions found upstream.\n")
+            continue
+
+        archive_info = get_archive_info(kver)
+        install_info = get_install_info(kver)
+
+        if archive_info is None and install_info is None:
+            lines.append(f"> ⬛ No Docker images exist yet ({len(upstream)} versions upstream)\n")
+            continue
+
+        all_versions = sorted(upstream.keys(), key=version_sort_key)
+
+        # Build rows — only include versions with at least one gap
+        gap_rows = []
+        for v in all_versions:
+            upstream_archs = upstream[v]
+            cells = []
+            has_gap = False
+            for arch in ARCHS:
+                if arch not in upstream_archs:
+                    cells.append("⚪")
+                    has_gap = True
+                elif archive_info is not None and (v not in archive_info or arch not in archive_info.get(v, set())):
+                    cells.append("❌")
+                    has_gap = True
+                elif install_info is not None and arch in install_info and v not in install_info[arch]:
+                    cells.append("🔺")
+                    has_gap = True
+                else:
+                    cells.append("✅")
+            if has_gap:
+                gap_rows.append((v, cells))
+
+        if not gap_rows:
+            lines.append(f"✅ All {len(all_versions)} versions fully available across all architectures.\n")
+        else:
+            # Emit table
+            lines.append(f"| Version | {' | '.join(ARCHS)} |")
+            lines.append(f"|---------|{'|'.join([':---:'] * len(ARCHS))}|")
+            for v, cells in gap_rows:
+                lines.append(f"| `{v}` | {' | '.join(cells)} |")
+            lines.append("")
+            lines.append(f"_{len(gap_rows)}/{len(all_versions)} versions have gaps_\n")
+
+    return "\n".join(lines)
+
+
+def main():
+    if len(sys.argv) > 1:
+        series_list = sys.argv[1:]
+    else:
+        series_list = get_active_series()
+    report = generate_report(series_list)
+    print(report)
+
+
+if __name__ == "__main__":
+    main()
