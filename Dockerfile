@@ -115,6 +115,7 @@ fi
 
 echo ">>> Installing ${#to_install[@]} header package(s) for ${arch} ..."
 dpkg --force-depends -i "${to_install[@]}"
+apt-get update -qq && apt-get install -yqq --fix-broken --no-install-recommends
 
 rm -rf /tmp/archive
 
