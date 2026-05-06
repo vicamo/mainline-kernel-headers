@@ -13,6 +13,13 @@
 #
 set -euo pipefail
 
+# Require containerd-snapshotter for multi-platform --load and local annotations.
+if ! docker info -f '{{.DriverStatus}}' 2>/dev/null | grep -q 'io.containerd.snapshotter'; then
+    echo "ERROR: containerd-snapshotter not enabled in Docker daemon." >&2
+    echo "Multi-platform --load requires containerd image store." >&2
+    exit 1
+fi
+
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 repo_dir="$(dirname "${script_dir}")"
 
@@ -41,11 +48,6 @@ fi
 archive_tag="${image_prefix}:${kver}-archive"
 install_tag="${image_prefix}:${kver}"
 
-output_flag="--load"
-if [ "${push}" = true ]; then
-    output_flag="--push"
-fi
-
 # ---------------------------------------------------------------------------
 # Step 1: Build the archive image (single-platform, incremental by default)
 # ---------------------------------------------------------------------------
@@ -70,17 +72,19 @@ echo ""
 echo "=== Building install: ${install_tag} ==="
 
 # Check if the install image is already up to date with the archive.
-# Extract the version list from the archive, compare with what's recorded on the install image.
-archive_versions=$(
-    cid=$(docker create "${archive_tag}" sh 2>/dev/null) || true
-    if [ -n "${cid}" ]; then
-        docker cp "${cid}:/kernel-versions.txt" - 2>/dev/null | tar -xO 2>/dev/null \
-            | awk -F: '{print $1}' | sort | paste -sd,
-        docker rm "${cid}" >/dev/null 2>&1
-    fi
-) || true
+# Extract the version list from the archive annotation.
+archive_versions=$(docker buildx imagetools inspect "${archive_tag}" --raw 2>/dev/null \
+    | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+annotations = data.get('annotations') or {}
+v = annotations.get('dev.mainline-kernel-headers.versions', '')
+if v:
+    versions = sorted(json.loads(v).keys())
+    print(','.join(versions))
+" 2>/dev/null) || true
 
-if [ "${push}" = true ] && [ -n "${archive_versions}" ] && \
+if [ -n "${archive_versions}" ] && \
    docker buildx imagetools inspect "${install_tag}" >/dev/null 2>&1; then
     install_versions=$(docker buildx imagetools inspect "${install_tag}" --raw 2>/dev/null \
         | python3 -c "
@@ -95,6 +99,9 @@ if v:
     if [ -n "${install_versions}" ] && [ "${archive_versions}" = "${install_versions}" ]; then
         echo "  Install image already matches archive versions"
         echo "  Versions: ${install_versions}"
+        echo ""
+        echo "--- Install image inspection ---"
+        docker buildx imagetools inspect "${install_tag}" --raw 2>/dev/null || true
         echo ""
         echo "=== Done: ${kver} (up to date) ==="
         exit 0
@@ -161,62 +168,66 @@ else
     install_args+=(--build-arg "BASE_IMAGE=${base_image}")
 fi
 
-# Multi-platform builds require --push (can't --load multi-platform).
-# For local builds, fall back to the native platform only.
+# Step 2a: Build all platforms and load locally (tmp tag)
+tmp_tag="${install_tag}-tmp"
+echo ""
+echo "--- Building multi-platform install (tmp) ---"
+docker buildx build \
+    --platform "${install_platforms}" \
+    "${install_args[@]}" \
+    -t "${tmp_tag}" \
+    --load \
+    "${repo_dir}"
+
+# Step 2b: Extract per-platform version info via docker create --platform
+echo ""
+echo "--- Extracting per-platform version info ---"
+
+annotation_args=()
+annotation_args+=(--annotation "index:org.opencontainers.image.description=Mainline kernel headers for series ${kver}")
+annotation_args+=(--annotation "index:dev.mainline-kernel-headers.archive-versions=${archive_versions}")
+
+IFS=',' read -ra plats <<< "${install_platforms}"
+for plat in "${plats[@]}"; do
+    echo "  Extracting versions for ${plat} ..."
+    plat_versions=$(
+        cid=$(docker create --platform "${plat}" "${tmp_tag}" sh 2>/dev/null) || true
+        if [ -n "${cid}" ]; then
+            docker cp "${cid}:/kernel-versions.txt" - 2>/dev/null | tar -xO 2>/dev/null \
+                | paste -sd,
+            docker rm "${cid}" >/dev/null 2>&1
+        fi
+    ) || true
+
+    if [ -n "${plat_versions}" ]; then
+        echo "    Versions: ${plat_versions}"
+        annotation_args+=(--annotation "manifest-descriptor[${plat}]:dev.mainline-kernel-headers.versions=${plat_versions}")
+    fi
+done
+
+# Step 2c: Rebuild with annotations + load (+ push if requested)
+echo ""
+echo "--- Building with annotations ---"
+push_flags=()
 if [ "${push}" = true ]; then
-    docker buildx build \
-        --platform "${install_platforms}" \
-        "${install_args[@]}" \
-        -t "${install_tag}" \
-        --push \
-        "${repo_dir}"
-else
-    docker buildx build \
-        "${install_args[@]}" \
-        -t "${install_tag}" \
-        --load \
-        "${repo_dir}"
+    push_flags+=(--push)
 fi
 
-# ---------------------------------------------------------------------------
-# Step 2b: Annotate the install image with per-platform version info
-# ---------------------------------------------------------------------------
-if [ "${push}" = true ]; then
-    echo ""
-    echo "--- Annotating install image with per-platform version info ---"
+docker buildx build \
+    --platform "${install_platforms}" \
+    "${install_args[@]}" \
+    "${annotation_args[@]}" \
+    -t "${install_tag}" \
+    --load \
+    "${push_flags[@]}" \
+    "${repo_dir}"
 
-    annotation_args=()
-    annotation_args+=(--annotation "index:org.opencontainers.image.description=Mainline kernel headers for series ${kver}")
-    annotation_args+=(--annotation "index:dev.mainline-kernel-headers.archive-versions=${archive_versions}")
+# Clean up tmp tag
+docker rmi "${tmp_tag}" >/dev/null 2>&1 || true
 
-    IFS=',' read -ra plats <<< "${install_platforms}"
-    for plat in "${plats[@]}"; do
-        echo "  Extracting versions for ${plat} ..."
-        if ! docker pull --platform "${plat}" "${install_tag}" >/dev/null 2>&1; then
-            echo "    WARN: could not pull ${install_tag} for ${plat}"
-            continue
-        fi
-        cid=$(docker create --platform "${plat}" "${install_tag}" sh 2>/dev/null) || true
-        if [ -z "${cid}" ]; then
-            echo "    WARN: could not create container for ${plat}"
-            continue
-        fi
-        plat_versions=$(docker cp "${cid}:/kernel-versions.txt" - 2>/dev/null \
-            | tar -xO 2>/dev/null \
-            | paste -sd,) || true
-        docker rm "${cid}" >/dev/null 2>&1
-
-        if [ -n "${plat_versions}" ]; then
-            echo "    Versions: ${plat_versions}"
-            annotation_args+=(--annotation "manifest-descriptor[${plat}]:dev.mainline-kernel-headers.versions=${plat_versions}")
-        fi
-    done
-
-    docker buildx imagetools create \
-        "${annotation_args[@]}" \
-        --tag "${install_tag}" \
-        "${install_tag}"
-fi
+echo ""
+echo "--- Install image inspection ---"
+docker buildx imagetools inspect "${install_tag}" --raw 2>/dev/null || true
 
 echo ""
 echo "=== Done: ${kver} ==="

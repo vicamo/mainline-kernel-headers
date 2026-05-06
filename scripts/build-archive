@@ -12,6 +12,13 @@
 #
 set -euo pipefail
 
+# Require containerd-snapshotter for OCI annotation support in local store
+if ! docker info -f '{{.DriverStatus}}' 2>/dev/null | grep -q 'io.containerd'; then
+    echo "ERROR: containerd-snapshotter is not enabled in Docker daemon." >&2
+    echo "Enable it with: {\"features\":{\"containerd-snapshotter\":true}} in daemon.json" >&2
+    exit 1
+fi
+
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 repo_dir="$(dirname "${script_dir}")"
 
@@ -34,11 +41,6 @@ if [ -z "${kver}" ]; then
 fi
 
 archive_tag="${image_prefix}:${kver}-archive"
-
-output_flag="--load"
-if [ "${push}" = true ]; then
-    output_flag="--push"
-fi
 
 # ---------------------------------------------------------------------------
 # Step 1: Fetch .deb packages into debs/<KVER>/
@@ -124,6 +126,7 @@ done
 
 if [ ${new_versions} -eq 0 ]; then
     echo "=== No new versions found, nothing to do. ==="
+    docker buildx imagetools inspect "${archive_tag}" --raw 2>/dev/null || true
     exit 0
 fi
 
@@ -147,51 +150,63 @@ else
     archive_args+=(--build-arg "ARCHIVE_IMAGE=scratch")
 fi
 
+# Build and load into local docker daemon (temporary tag for extraction)
 docker buildx build \
     -f "${repo_dir}/Dockerfile.archive" \
     "${archive_args[@]}" \
-    -t "${archive_tag}" \
-    ${output_flag} \
+    -t "${archive_tag}-tmp" \
+    --load \
     "${repo_dir}"
 
-# Annotate the archive image with version info (only when pushing)
-if [ "${push}" = true ]; then
-    echo ""
-    echo "--- Annotating archive with version info ---"
+# Extract /kernel-versions.txt from the local image
+echo ""
+echo "--- Extracting version info from archive ---"
+cid=$(docker create "${archive_tag}-tmp" sh)
+versions_txt=$(docker cp "${cid}:/kernel-versions.txt" - | tar -xO) || true
+docker rm "${cid}" >/dev/null 2>&1
 
-    # Extract /kernel-versions.txt from the archive image
-    cid=$(docker create --platform linux/amd64 "${archive_tag}" sh 2>/dev/null) || true
-    if [ -n "${cid}" ]; then
-        versions_txt=$(docker cp "${cid}:/kernel-versions.txt" - 2>/dev/null \
-            | tar -xO 2>/dev/null) || true
-        docker rm "${cid}" >/dev/null 2>&1
-    else
-        versions_txt=""
-    fi
+annotation_args=()
+if [ -n "${versions_txt}" ]; then
+    # Build JSON: {"7.0.0": "amd64,arm64,...", "7.0.1": "amd,..."}
+    versions_json="{"
+    first=true
+    while IFS=': ' read -r ver archs; do
+        [ -z "${ver}" ] && continue
+        if [ "${first}" = true ]; then
+            first=false
+        else
+            versions_json+=","
+        fi
+        versions_json+="\"${ver}\":\"${archs}\""
+    done <<< "${versions_txt}"
+    versions_json+="}"
 
-    if [ -n "${versions_txt}" ]; then
-        # Build JSON: {"7.0.0": "amd64,arm64,...", "7.0.1": "amd,..."}
-        versions_json="{"
-        first=true
-        while IFS=': ' read -r ver archs; do
-            [ -z "${ver}" ] && continue
-            if [ "${first}" = true ]; then
-                first=false
-            else
-                versions_json+=","
-            fi
-            versions_json+="\"${ver}\":\"${archs}\""
-        done <<< "${versions_txt}"
-        versions_json+="}"
-
-        echo "  Versions: ${versions_json}"
-        docker buildx imagetools create \
-            --annotation "index:org.opencontainers.image.description=Mainline kernel header .deb archive for series ${kver}" \
-            --annotation "index:dev.mainline-kernel-headers.versions=${versions_json}" \
-            --tag "${archive_tag}" \
-            "${archive_tag}"
-    fi
+    echo "  Versions: ${versions_json}"
+    annotation_args+=(--annotation "index:org.opencontainers.image.description=Mainline kernel header .deb archive for series ${kver}")
+    annotation_args+=(--annotation "index:dev.mainline-kernel-headers.versions=${versions_json}")
 fi
+
+# Rebuild with annotations (cached, just updates metadata) and push if requested
+push_flag=()
+if [ "${push}" = true ]; then
+    push_flag=(--push)
+fi
+
+echo ""
+echo "--- Loading with annotations${push:+ and pushing} ---"
+docker buildx build \
+    -f "${repo_dir}/Dockerfile.archive" \
+    --platform linux/amd64 \
+    "${archive_args[@]}" \
+    "${annotation_args[@]}" \
+    -t "${archive_tag}" \
+    --load "${push_flag[@]}" \
+    "${repo_dir}"
+
+docker rmi "${archive_tag}-tmp" >/dev/null 2>&1
+
+echo ""
+docker buildx imagetools inspect "${archive_tag}" --raw 2>/dev/null || true
 
 echo ""
 echo "=== Done: ${archive_tag} ==="
