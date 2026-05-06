@@ -56,10 +56,8 @@ FROM ${BASE_IMAGE} AS install
 ARG KVER
 ARG TARGETARCH
 
-COPY --from=archive /${KVER}/ /tmp/archive/${KVER}/
-
 SHELL ["/bin/bash", "-c"]
-RUN <<'INSTALL'
+RUN --mount=from=archive,source=/${KVER},target=/tmp/archive/${KVER} <<'INSTALL'
 set -euo pipefail
 
 # Map Docker's TARGETARCH (OCI spec) to Debian architecture names
@@ -91,7 +89,6 @@ done
 
 if [ ${#debs[@]} -eq 0 ]; then
     echo "=== No packages found for ${arch}. ==="
-    rm -rf /tmp/archive
     exit 0
 fi
 
@@ -109,15 +106,12 @@ done
 
 if [ ${#to_install[@]} -eq 0 ]; then
     echo "=== All packages already installed for ${arch}. Up to date. ==="
-    rm -rf /tmp/archive
     exit 0
 fi
 
 echo ">>> Installing ${#to_install[@]} header package(s) for ${arch} ..."
 dpkg --force-depends -i "${to_install[@]}"
 apt-get update -qq && apt-get install -yqq --fix-broken --no-install-recommends
-
-rm -rf /tmp/archive
 
 # Generate a machine-readable list of installed kernel versions
 ls -1d /usr/src/linux-headers-* 2>/dev/null \
