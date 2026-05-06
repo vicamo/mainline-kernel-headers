@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+#
+# Extract an annotation value from an archive image's manifest.
+#
+# Usage:
+#   ./scripts/get-archive-annotation <IMAGE> <KEY>
+#
+# Examples:
+#   ./scripts/get-archive-annotation vicamo/mainline-kernel-headers:6.18-archive dev.mainline-kernel-headers.versions
+#
+set -euo pipefail
+
+image="${1:-}"
+key="${2:-}"
+
+if [ -z "${image}" ] || [ -z "${key}" ]; then
+    echo "Usage: $0 <IMAGE> <KEY>" >&2
+    exit 1
+fi
+
+docker buildx imagetools inspect "${image}" --raw 2>/dev/null \
+    | python3 -c "
+import json, sys, subprocess
+
+data = json.load(sys.stdin)
+
+# If it's an index, dereference to the first non-attestation manifest
+if 'manifests' in data:
+    for m in data['manifests']:
+        ann = m.get('annotations') or {}
+        if 'attestation' in ann.get('vnd.docker.reference.type', ''):
+            continue
+        digest = m['digest']
+        raw = subprocess.check_output(
+            ['docker', 'buildx', 'imagetools', 'inspect',
+             sys.argv[1] + '@' + digest, '--raw'],
+            stderr=subprocess.DEVNULL)
+        data = json.loads(raw)
+        break
+
+annotations = data.get('annotations') or {}
+v = annotations.get(sys.argv[2], '')
+if v:
+    print(v)
+" "${image}" "${key}"

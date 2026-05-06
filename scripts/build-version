@@ -72,17 +72,13 @@ echo ""
 echo "=== Building install: ${install_tag} ==="
 
 # Check if the install image is already up to date with the archive.
-# Extract the version list from the archive annotation.
-archive_versions=$(docker buildx imagetools inspect "${archive_tag}" --raw 2>/dev/null \
-    | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-annotations = data.get('annotations') or {}
-v = annotations.get('dev.mainline-kernel-headers.versions', '')
-if v:
-    versions = sorted(json.loads(v).keys())
-    print(','.join(versions))
-" 2>/dev/null) || true
+# Extract the version list from the archive manifest annotation.
+archive_versions=$(
+    v=$("${script_dir}/get-archive-annotation" "${archive_tag}" "dev.mainline-kernel-headers.versions") || true
+    if [ -n "${v}" ]; then
+        echo "${v}" | python3 -c "import json,sys; print(','.join(sorted(json.loads(sys.stdin.read()).keys())))"
+    fi
+) || true
 
 if [ -n "${archive_versions}" ] && \
    docker buildx imagetools inspect "${install_tag}" >/dev/null 2>&1; then
@@ -172,6 +168,7 @@ fi
 tmp_tag="${install_tag}-tmp"
 echo ""
 echo "--- Building multi-platform install (tmp) ---"
+docker rmi "${tmp_tag}" >/dev/null 2>&1 || true
 docker buildx build \
     --platform "${install_platforms}" \
     "${install_args[@]}" \
@@ -213,6 +210,7 @@ if [ "${push}" = true ]; then
     push_flags+=(--push)
 fi
 
+docker rmi "${install_tag}" >/dev/null 2>&1 || true
 docker buildx build \
     --platform "${install_platforms}" \
     "${install_args[@]}" \

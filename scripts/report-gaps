@@ -123,18 +123,19 @@ def inspect_image_raw(tag):
 
 def get_archive_info(kver):
     tag = f"{IMAGE_PREFIX}:{kver}-archive"
-    data = inspect_image_raw(tag)
-    if not data:
-        return None
-    ann = data.get("annotations", {})
-    versions_str = ann.get("dev.mainline-kernel-headers.versions", "")
-    if not versions_str:
-        return {}
+    key = "dev.mainline-kernel-headers.versions"
     try:
+        r = subprocess.run(
+            ["./scripts/get-archive-annotation", tag, key],
+            capture_output=True, text=True, timeout=60,
+        )
+        versions_str = r.stdout.strip()
+        if r.returncode != 0 or not versions_str:
+            return None
         v = json.loads(versions_str)
         return {ver: set(archs.split(",")) for ver, archs in v.items()}
     except Exception:
-        return {}
+        return None
 
 
 def get_install_info(kver):
