@@ -133,7 +133,8 @@ def get_archive_info(kver):
         if r.returncode != 0 or not versions_str:
             return None
         v = json.loads(versions_str)
-        return {ver: set(archs.split(",")) for ver, archs in v.items()}
+        # Format: {version: {arch: [flavours]}}
+        return v
     except Exception:
         return None
 
@@ -157,9 +158,10 @@ def get_install_info(kver):
         ann = m.get("annotations", {})
         versions_str = ann.get("dev.mainline-kernel-headers.versions", "")
         if versions_str:
-            result[deb_arch] = set(versions_str.split(","))
+            # Format: {version: [flavours]}
+            result[deb_arch] = json.loads(versions_str)
         else:
-            result[deb_arch] = set()
+            result[deb_arch] = {}
     return result
 
 
@@ -207,7 +209,7 @@ def generate_report(series_list):
                 if arch not in upstream_archs:
                     cells.append("⚪")
                     has_gap = True
-                elif archive_info is not None and (v not in archive_info or arch not in archive_info.get(v, set())):
+                elif archive_info is not None and arch not in archive_info.get(v, {}):
                     cells.append("❌")
                     has_gap = True
                 elif install_info is not None and arch in install_info and v not in install_info[arch]:

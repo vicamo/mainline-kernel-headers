@@ -3,15 +3,23 @@
 Parallel .deb fetcher for mainline kernel headers.
 
 Usage:
-    fetch-debs <KVER> <BASE_URL> <DEBS_DIR> [<EXISTING_VERSIONS_NEWLINE_SEPARATED>]
+    fetch-debs <KVER> <BASE_URL> <DEBS_DIR> [<ARCHIVE_VERSIONS_JSON>]
 
 Discovers versions for the given kernel series from kernel.ubuntu.com/mainline,
 validates existing local debs, and downloads missing ones — all in parallel.
 
-Prints the number of new versions (with downloads) to stdout on success.
+The optional ARCHIVE_VERSIONS_JSON (format: {version: {arch: [flavours]}}) tells
+which debs are already in the archive image, so they can be skipped.
+
+Prints the number of changed versions to stdout on success.
+A version counts as changed if:
+  - new debs were downloaded from the remote site, OR
+  - local debs already exist on the filesystem (overrides or pre-built).
+
 Exits non-zero on corrupt debs or fatal errors.
 """
 
+import json
 import os
 import re
 import subprocess
@@ -48,12 +56,13 @@ def download(url, dest, retries=3):
                 return False
 
 
-def validate_debs(out_dir):
-    """Validate existing .deb files in parallel. Returns list of corrupt paths."""
-    debs = list(Path(out_dir).glob("*.deb"))
+def validate_debs(debs_dir):
+    """Validate all local .deb files in parallel. Exits on corruption."""
+    debs = list(Path(debs_dir).rglob("*.deb"))
     if not debs:
-        return []
+        return
 
+    print(f">>> Validating {len(debs)} local deb(s) ...", file=sys.stderr)
     corrupt = []
 
     def check(deb):
@@ -67,23 +76,37 @@ def validate_debs(out_dir):
         for deb, is_corrupt in pool.map(lambda d: check(d), debs):
             if is_corrupt:
                 corrupt.append(str(deb))
-    return corrupt
+
+    if corrupt:
+        for c in corrupt:
+            print(f"ERROR: corrupt deb: {c}", file=sys.stderr)
+        sys.exit(1)
 
 
-def discover_version(base_url, kver_dir, vnum, out_dir):
+def flavour_from_deb(fname):
+    """Extract (flavour, arch) from a deb filename, or None."""
+    m = re.match(r'linux-headers-\d+\.\d+\.\d+-\d+-(.+)_.+_([^_]+)\.deb', fname)
+    if m:
+        return (m.group(1), m.group(2))
+    return None
+
+
+def discover_version(base_url, kver_dir, vnum, out_dir, archive_flavours):
     """
     Discover and download missing debs for one version.
-    Returns (vnum, had_new_downloads: bool, error: str|None).
+
+    archive_flavours: {arch: [flavours]} for this version from the archive
+                      annotation, or {} if not in archive.
+
+    Returns (vnum, is_changed: bool, error: str|None).
     """
     ver_url = f"{base_url}/{kver_dir}/"
     os.makedirs(out_dir, exist_ok=True)
 
-    # Validate existing debs
-    corrupt = validate_debs(out_dir)
-    if corrupt:
-        return (vnum, False, f"corrupt: {corrupt}")
+    # Check for local debs (pre-downloaded or manual builds)
+    local_debs = list(Path(out_dir).glob("*.deb"))
 
-    # Fetch version index
+    # Fetch version index from website
     top = fetch(ver_url)
     if not top:
         return (vnum, False, f"cannot fetch {ver_url}")
@@ -101,13 +124,18 @@ def discover_version(base_url, kver_dir, vnum, out_dir):
         page = fetch(arch_url)
         if not page:
             return []
+        archived = set(archive_flavours.get(archdir, []))
         items = []
         # Arch-specific debs
         for deb in set(re.findall(rf'href="(linux-headers-[^"]+_{archdir}\.deb)"', page)):
             local = os.path.join(out_dir, deb)
-            if not os.path.isfile(local):
-                items.append((f"{arch_url}{deb}", local))
-        # Common _all.deb
+            if os.path.isfile(local):
+                continue
+            info = flavour_from_deb(deb)
+            if info and info[0] in archived:
+                continue
+            items.append((f"{arch_url}{deb}", local))
+        # Common _all.deb — needed if any arch-specific deb is being downloaded
         for deb in set(re.findall(r'href="(linux-headers-[^"]+_all\.deb)"', page)):
             local = os.path.join(out_dir, deb)
             if not os.path.isfile(local):
@@ -128,7 +156,7 @@ def discover_version(base_url, kver_dir, vnum, out_dir):
             unique_downloads.append((url, local))
 
     if not unique_downloads:
-        return (vnum, False, None)
+        return (vnum, bool(local_debs), None)
 
     # Download missing debs in parallel
     failed = []
@@ -149,15 +177,23 @@ def discover_version(base_url, kver_dir, vnum, out_dir):
 
 def main():
     if len(sys.argv) < 4:
-        print("Usage: fetch-debs <KVER> <BASE_URL> <DEBS_DIR> [<EXISTING>]", file=sys.stderr)
+        print("Usage: fetch-debs <KVER> <BASE_URL> <DEBS_DIR> [<ARCHIVE_VERSIONS_JSON>]", file=sys.stderr)
         sys.exit(1)
 
     kver = sys.argv[1]
     base_url = sys.argv[2].rstrip("/")
     debs_dir = sys.argv[3]
-    existing = set()
-    if len(sys.argv) > 4 and sys.argv[4].strip():
-        existing = set(sys.argv[4].strip().splitlines())
+
+    # Parse archive annotation: {version: {arch: [flavours]}}
+    archive = {}
+    if len(sys.argv) >= 5 and sys.argv[4]:
+        try:
+            archive = json.loads(sys.argv[4])
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    # Validate all local debs upfront
+    validate_debs(debs_dir)
 
     # Discover versions from mainline index
     print(f">>> Discovering versions for series {kver} ...", file=sys.stderr)
@@ -175,37 +211,25 @@ def main():
 
     print(f"Found {len(versions)} version(s): {versions[0]} .. {versions[-1]}", file=sys.stderr)
 
-    # Filter out existing
-    to_process = [v for v in versions if v not in existing]
-    skipped = len(versions) - len(to_process)
-    if skipped:
-        print(f">>> Skipping {skipped} version(s) already in archive.", file=sys.stderr)
-
-    if not to_process:
-        print("0")
-        return
-
-    # Process versions in parallel
+    # Process all versions in parallel
     new_versions = 0
     errors = []
 
     with ThreadPoolExecutor(max_workers=MAX_DISCOVER_WORKERS) as pool:
         futures = {}
-        for vnum in to_process:
+        for vnum in versions:
             kver_dir = f"v{vnum}"
             out_dir = os.path.join(debs_dir, vnum)
-            futures[pool.submit(discover_version, base_url, kver_dir, vnum, out_dir)] = vnum
+            archive_flavours = archive.get(vnum, {})
+            futures[pool.submit(discover_version, base_url, kver_dir, vnum, out_dir, archive_flavours)] = vnum
 
         for f in as_completed(futures):
-            vnum, had_downloads, error = f.result()
-            if error and "corrupt" in error:
-                print(f"ERROR: {vnum}: {error}", file=sys.stderr)
-                sys.exit(1)
-            elif error:
+            vnum, is_changed, error = f.result()
+            if error:
                 errors.append(f"{vnum}: {error}")
-            if had_downloads:
+            if is_changed:
                 new_versions += 1
-                print(f">>> v{vnum}: downloaded new debs.", file=sys.stderr)
+                print(f">>> v{vnum}: changed.", file=sys.stderr)
             else:
                 print(f">>> v{vnum}: up to date.", file=sys.stderr)
 

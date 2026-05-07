@@ -51,23 +51,11 @@ base_url="https://kernel.ubuntu.com/mainline"
 debs_dir="${repo_dir}/debs/${kver}"
 mkdir -p "${debs_dir}"
 
-# Determine which versions already exist in the archive image (if any).
-existing_versions=""
+# Retrieve existing archive annotation for early-exit check.
 archive_versions_json=$("${script_dir}/get-archive-annotation" "${archive_tag}" "dev.mainline-kernel-headers.versions" 2>/dev/null) || true
-if [ -n "${archive_versions_json}" ]; then
-    existing_versions=$(echo "${archive_versions_json}" | python3 -c "
-import json, sys
-try:
-    data = json.load(sys.stdin)
-    for k in sorted(data.keys()):
-        print(k)
-except Exception:
-    pass
-")
-fi
 
 # Parallel fetch of .deb packages using Python
-new_versions=$(python3 -u "${script_dir}/fetch-debs" "${kver}" "${base_url}" "${debs_dir}" "${existing_versions}")
+new_versions=$(python3 -u "${script_dir}/fetch-debs" "${kver}" "${base_url}" "${debs_dir}" "${archive_versions_json}")
 
 if [ "${new_versions}" -eq 0 ]; then
     echo "=== No new versions found, nothing to do. ==="
@@ -112,7 +100,8 @@ versions_json=$(docker run --rm "${archive_tag}-tmp" /bin/ls -R "/${kver}/" 2>/d
 import sys, re, json
 from collections import defaultdict
 
-versions = defaultdict(set)
+# {version: {arch: set(flavours)}}
+versions = defaultdict(lambda: defaultdict(set))
 current_ver = ''
 for line in sys.stdin.read().strip().splitlines():
     if line.endswith(':'):
@@ -124,12 +113,15 @@ for line in sys.stdin.read().strip().splitlines():
     fname = line.strip()
     if fname.endswith('_all.deb'):
         continue
-    m = re.search(r'_([^_]+)\.deb$', fname)
+    # linux-headers-<ver>-<abi>-<flavour>_<ver>.<abi>.<date>_<arch>.deb
+    m = re.match(r'linux-headers-\d+\.\d+\.\d+-\d+-(.+)_.+_([^_]+)\.deb', fname)
     if m:
-        versions[current_ver].add(m.group(1))
+        flavour, arch = m.group(1), m.group(2)
+        versions[current_ver][arch].add(flavour)
 
 if versions:
-    result = {k: ','.join(sorted(v)) for k, v in sorted(versions.items())}
+    result = {v: {a: sorted(f) for a, f in sorted(archs.items())}
+              for v, archs in sorted(versions.items())}
     print(json.dumps(result, separators=(',', ':')))
 ") || true
 

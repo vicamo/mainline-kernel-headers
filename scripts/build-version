@@ -251,7 +251,9 @@ for layer_data in layers:
 if not dpkg_status:
     sys.exit(0)
 
-versions = set()
+# {version: set(flavours)}
+from collections import defaultdict
+versions = defaultdict(set)
 for block in dpkg_status.split('\n\n'):
     if 'Package: linux-headers-' not in block:
         continue
@@ -262,11 +264,15 @@ for block in dpkg_status.split('\n\n'):
         elif line.startswith('Architecture: '):
             arch = line[14:]
     if pkg.startswith('linux-headers-') and arch and arch != 'all':
-        m = re.match(r'linux-headers-(\d+\.\d+\.\d+)', pkg)
+        m = re.match(r'linux-headers-\d+\.\d+\.\d+-\d+-(.+)', pkg)
         if m:
-            versions.add(m.group(1))
+            flavour = m.group(1)
+            vm = re.match(r'linux-headers-(\d+\.\d+\.\d+)', pkg)
+            if vm:
+                versions[vm.group(1)].add(flavour)
 if versions:
-    print(','.join(sorted(versions)))
+    result = {v: sorted(f) for v, f in sorted(versions.items())}
+    print(json.dumps(result, separators=(',', ':')))
 " 2>/dev/null
     ) || true
 
