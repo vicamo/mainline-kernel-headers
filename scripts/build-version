@@ -136,6 +136,27 @@ ubuntu_base_for_kver() {
         "602 lunar"
         "519 kinetic"
         "515 jammy"
+        "513 impish"
+        "511 hirsuit"
+        "508 groovy"
+        "504 focal"
+        "503 eoan"
+        "500 disco"
+        "418 cosmic"
+        "415 bionic"
+        "413 artful"
+        "410 zesty"
+        "408 yakkety"
+        "404 xenial"
+        "402 wily"
+        "319 vivid"
+        "316 utopic"
+        "313 trusty"
+        "311 saucy"
+        "308 raring"
+        "305 quantal"
+        "302 precise"
+        "300 oneiric"
     )
 
     for entry in "${releases[@]}"; do
@@ -147,7 +168,7 @@ ubuntu_base_for_kver() {
         fi
     done
     # Fallback for very old kernels
-    echo "ubuntu:jammy"
+    echo "ubuntu:trusty"
 }
 
 install_args=(
