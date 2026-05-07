@@ -1,0 +1,220 @@
+#!/usr/bin/env python3
+"""
+Parallel .deb fetcher for mainline kernel headers.
+
+Usage:
+    fetch-debs <KVER> <BASE_URL> <DEBS_DIR> [<EXISTING_VERSIONS_NEWLINE_SEPARATED>]
+
+Discovers versions for the given kernel series from kernel.ubuntu.com/mainline,
+validates existing local debs, and downloads missing ones — all in parallel.
+
+Prints the number of new versions (with downloads) to stdout on success.
+Exits non-zero on corrupt debs or fatal errors.
+"""
+
+import os
+import re
+import subprocess
+import sys
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from pathlib import Path
+from urllib.request import urlopen, Request
+from urllib.error import URLError
+
+MAX_DISCOVER_WORKERS = 8
+MAX_DOWNLOAD_WORKERS = 16
+
+
+def fetch(url, retries=3):
+    for attempt in range(retries):
+        try:
+            with urlopen(Request(url), timeout=30) as r:
+                return r.read().decode()
+        except Exception:
+            if attempt == retries - 1:
+                return None
+
+
+def download(url, dest, retries=3):
+    for attempt in range(retries):
+        try:
+            with urlopen(Request(url), timeout=60) as r:
+                data = r.read()
+            with open(dest, "wb") as f:
+                f.write(data)
+            return True
+        except Exception:
+            if attempt == retries - 1:
+                return False
+
+
+def validate_debs(out_dir):
+    """Validate existing .deb files in parallel. Returns list of corrupt paths."""
+    debs = list(Path(out_dir).glob("*.deb"))
+    if not debs:
+        return []
+
+    corrupt = []
+
+    def check(deb):
+        r = subprocess.run(
+            ["dpkg-deb", "--info", str(deb)],
+            capture_output=True, timeout=30,
+        )
+        return (deb, r.returncode != 0)
+
+    with ThreadPoolExecutor(max_workers=os.cpu_count() or 4) as pool:
+        for deb, is_corrupt in pool.map(lambda d: check(d), debs):
+            if is_corrupt:
+                corrupt.append(str(deb))
+    return corrupt
+
+
+def discover_version(base_url, kver_dir, vnum, out_dir):
+    """
+    Discover and download missing debs for one version.
+    Returns (vnum, had_new_downloads: bool, error: str|None).
+    """
+    ver_url = f"{base_url}/{kver_dir}/"
+    os.makedirs(out_dir, exist_ok=True)
+
+    # Validate existing debs
+    corrupt = validate_debs(out_dir)
+    if corrupt:
+        return (vnum, False, f"corrupt: {corrupt}")
+
+    # Fetch version index
+    top = fetch(ver_url)
+    if not top:
+        return (vnum, False, f"cannot fetch {ver_url}")
+
+    # Find arch subdirs
+    archdirs = set(re.findall(r'href="([a-z0-9]+)/"', top)) - {
+        "BUILT", "CHANGES", "HEADER", "FOOTER"
+    }
+
+    # Collect all deb URLs to download
+    downloads = []  # (url, local_path)
+
+    def scan_arch(archdir):
+        arch_url = f"{ver_url}{archdir}/"
+        page = fetch(arch_url)
+        if not page:
+            return []
+        items = []
+        # Arch-specific debs
+        for deb in set(re.findall(rf'href="(linux-headers-[^"]+_{archdir}\.deb)"', page)):
+            local = os.path.join(out_dir, deb)
+            if not os.path.isfile(local):
+                items.append((f"{arch_url}{deb}", local))
+        # Common _all.deb
+        for deb in set(re.findall(r'href="(linux-headers-[^"]+_all\.deb)"', page)):
+            local = os.path.join(out_dir, deb)
+            if not os.path.isfile(local):
+                items.append((f"{arch_url}{deb}", local))
+        return items
+
+    # Parallel arch page scanning
+    with ThreadPoolExecutor(max_workers=len(archdirs) or 1) as pool:
+        for items in pool.map(scan_arch, archdirs):
+            downloads.extend(items)
+
+    # Deduplicate (same _all.deb may appear in multiple archdirs)
+    seen = set()
+    unique_downloads = []
+    for url, local in downloads:
+        if local not in seen:
+            seen.add(local)
+            unique_downloads.append((url, local))
+
+    if not unique_downloads:
+        return (vnum, False, None)
+
+    # Download missing debs in parallel
+    failed = []
+    with ThreadPoolExecutor(max_workers=MAX_DOWNLOAD_WORKERS) as pool:
+        futures = {pool.submit(download, url, local): (url, local) for url, local in unique_downloads}
+        for f in as_completed(futures):
+            url, local = futures[f]
+            if not f.result():
+                failed.append(url)
+            else:
+                print(f"  GET {os.path.basename(local)}", file=sys.stderr)
+
+    if failed:
+        return (vnum, True, f"failed downloads: {failed}")
+
+    return (vnum, True, None)
+
+
+def main():
+    if len(sys.argv) < 4:
+        print("Usage: fetch-debs <KVER> <BASE_URL> <DEBS_DIR> [<EXISTING>]", file=sys.stderr)
+        sys.exit(1)
+
+    kver = sys.argv[1]
+    base_url = sys.argv[2].rstrip("/")
+    debs_dir = sys.argv[3]
+    existing = set()
+    if len(sys.argv) > 4 and sys.argv[4].strip():
+        existing = set(sys.argv[4].strip().splitlines())
+
+    # Discover versions from mainline index
+    print(f">>> Discovering versions for series {kver} ...", file=sys.stderr)
+    index = fetch(f"{base_url}/")
+    if not index:
+        print(f"ERROR: cannot fetch {base_url}/", file=sys.stderr)
+        sys.exit(1)
+
+    pattern = re.compile(rf'href="v({re.escape(kver)}(?:\.\d+)?)/?"')
+    versions = sorted(set(pattern.findall(index)), key=lambda v: [int(p) for p in v.split(".")])
+
+    if not versions:
+        print(f"ERROR: no versions matching {kver} at {base_url}/", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Found {len(versions)} version(s): {versions[0]} .. {versions[-1]}", file=sys.stderr)
+
+    # Filter out existing
+    to_process = [v for v in versions if v not in existing]
+    skipped = len(versions) - len(to_process)
+    if skipped:
+        print(f">>> Skipping {skipped} version(s) already in archive.", file=sys.stderr)
+
+    if not to_process:
+        print("0")
+        return
+
+    # Process versions in parallel
+    new_versions = 0
+    errors = []
+
+    with ThreadPoolExecutor(max_workers=MAX_DISCOVER_WORKERS) as pool:
+        futures = {}
+        for vnum in to_process:
+            kver_dir = f"v{vnum}"
+            out_dir = os.path.join(debs_dir, vnum)
+            futures[pool.submit(discover_version, base_url, kver_dir, vnum, out_dir)] = vnum
+
+        for f in as_completed(futures):
+            vnum, had_downloads, error = f.result()
+            if error and "corrupt" in error:
+                print(f"ERROR: {vnum}: {error}", file=sys.stderr)
+                sys.exit(1)
+            elif error:
+                errors.append(f"{vnum}: {error}")
+            if had_downloads:
+                new_versions += 1
+                print(f">>> v{vnum}: downloaded new debs.", file=sys.stderr)
+            else:
+                print(f">>> v{vnum}: up to date.", file=sys.stderr)
+
+    if errors:
+        for e in errors:
+            print(f"WARNING: {e}", file=sys.stderr)
+
+    print(new_versions)
+
+
+if __name__ == "__main__":
+    main()

@@ -57,91 +57,21 @@ archive_versions_json=$("${script_dir}/get-archive-annotation" "${archive_tag}" 
 if [ -n "${archive_versions_json}" ]; then
     existing_versions=$(echo "${archive_versions_json}" | python3 -c "
 import json, sys
-data = json.load(sys.stdin)
-for k in sorted(data.keys()):
-    print(k)
+try:
+    data = json.load(sys.stdin)
+    for k in sorted(data.keys()):
+        print(k)
+except Exception:
+    pass
 ")
 fi
 
-echo ">>> Discovering versions for series ${kver} ..."
-index=$(curl -fsSL --retry 3 --retry-delay 5 "${base_url}/")
+# Parallel fetch of .deb packages using Python
+new_versions=$(python3 -u "${script_dir}/fetch-debs" "${kver}" "${base_url}" "${debs_dir}" "${existing_versions}")
 
-versions=$(echo "${index}" \
-    | grep -oP "href=\"v\K${kver//./\\.}(\.\d+)?(?=/\")" \
-    | sort -V | uniq)
-
-if [ -z "${versions}" ]; then
-    echo "ERROR: no versions matching ${kver} at ${base_url}/"
-    exit 1
-fi
-printf 'Found: v%s\n' ${versions}
-
-new_versions=0
-for vnum in ${versions}; do
-    ver_dir="v${vnum}"
-    out_dir="${debs_dir}/${vnum}"
-
-    # Skip if already in the archive image
-    if echo "${existing_versions}" | grep -qxF "${vnum}"; then
-        echo ">>> ${ver_dir}: already in archive, skipping."
-        continue
-    fi
-
-    echo ">>> ${ver_dir}: checking headers (all architectures) ..."
-    ver_url="${base_url}/${ver_dir}"
-    mkdir -p "${out_dir}"
-
-    # Validate all existing local debs first
-    if [ -d "${out_dir}" ]; then
-        for local_deb in "${out_dir}"/*.deb; do
-            [ -f "${local_deb}" ] || continue
-            if ! dpkg-deb --info "${local_deb}" >/dev/null 2>&1; then
-                echo "ERROR: corrupt deb: ${local_deb}" >&2
-                echo "Please inspect and fix manually." >&2
-                exit 1
-            fi
-        done
-    fi
-
-    # Fetch the version index page
-    top=$(curl -fsSL --retry 3 --retry-delay 5 "${ver_url}/")
-
-    # Discover architecture subdirectories
-    archdirs=$(echo "${top}" \
-        | grep -oP 'href="\K[a-z0-9]+(?=/")' \
-        | grep -vE '^(BUILT|CHANGES|HEADER|FOOTER)' | sort -u || true)
-
-    # Check which upstream debs are missing locally
-    needs_download=false
-    for archdir in ${archdirs}; do
-        arch_page=$(curl -fsSL --retry 3 --retry-delay 5 "${ver_url}/${archdir}/" 2>/dev/null) || continue
-        arch_debs=$(echo "${arch_page}" \
-            | grep -oP "href=\"\Klinux-headers-[^\"]+_${archdir}\.deb" | sort -u || true)
-        common_debs=$(echo "${arch_page}" \
-            | grep -oP 'href="\Klinux-headers-[^"]+_all\.deb' | sort -u || true)
-
-        for deb in ${arch_debs} ${common_debs}; do
-            if [ -f "${out_dir}/${deb}" ]; then
-                continue
-            fi
-
-            # Download from upstream
-            echo "  GET ${archdir}/${deb}"
-            curl -fsSL --retry 3 --retry-delay 5 -o "${out_dir}/${deb}" "${ver_url}/${archdir}/${deb}"
-            needs_download=true
-        done
-    done
-
-    if [ "${needs_download}" = true ]; then
-        new_versions=$((new_versions + 1))
-    else
-        echo ">>> ${ver_dir}: all debs present and valid."
-    fi
-done
-
-if [ ${new_versions} -eq 0 ]; then
+if [ "${new_versions}" -eq 0 ]; then
     echo "=== No new versions found, nothing to do. ==="
-    "${script_dir}/get-archive-annotation" "${archive_tag}" "dev.mainline-kernel-headers.versions" || true
+    [ -n "${archive_versions_json}" ] && echo "${archive_versions_json}"
     exit 0
 fi
 
