@@ -88,26 +88,32 @@ for vnum in ${versions}; do
         continue
     fi
 
-    new_versions=$((new_versions + 1))
-
-    # Skip if already fetched locally (has at least one .deb)
-    if [ -d "${out_dir}" ] && find "${out_dir}" -maxdepth 1 -name '*.deb' | grep -q .; then
-        echo ">>> ${ver_dir}: already fetched, skipping."
-        continue
-    fi
-
-    echo ">>> ${ver_dir}: fetching headers (all architectures) ..."
+    echo ">>> ${ver_dir}: checking headers (all architectures) ..."
     ver_url="${base_url}/${ver_dir}"
     mkdir -p "${out_dir}"
+
+    # Validate all existing local debs first
+    if [ -d "${out_dir}" ]; then
+        for local_deb in "${out_dir}"/*.deb; do
+            [ -f "${local_deb}" ] || continue
+            if ! dpkg-deb --info "${local_deb}" >/dev/null 2>&1; then
+                echo "ERROR: corrupt deb: ${local_deb}" >&2
+                echo "Please inspect and fix manually." >&2
+                exit 1
+            fi
+        done
+    fi
 
     # Fetch the version index page
     top=$(curl -fsSL --retry 3 --retry-delay 5 "${ver_url}/")
 
-    # Discover architecture subdirectories and fetch all header .debs
+    # Discover architecture subdirectories
     archdirs=$(echo "${top}" \
         | grep -oP 'href="\K[a-z0-9]+(?=/")' \
         | grep -vE '^(BUILT|CHANGES|HEADER|FOOTER)' | sort -u || true)
 
+    # Check which upstream debs are missing locally
+    needs_download=false
     for archdir in ${archdirs}; do
         arch_page=$(curl -fsSL --retry 3 --retry-delay 5 "${ver_url}/${archdir}/" 2>/dev/null) || continue
         arch_debs=$(echo "${arch_page}" \
@@ -116,12 +122,22 @@ for vnum in ${versions}; do
             | grep -oP 'href="\Klinux-headers-[^"]+_all\.deb' | sort -u || true)
 
         for deb in ${arch_debs} ${common_debs}; do
-            # Skip if already downloaded (e.g. _all.deb from another arch dir)
-            [ -f "${out_dir}/${deb}" ] && continue
+            if [ -f "${out_dir}/${deb}" ]; then
+                continue
+            fi
+
+            # Download from upstream
             echo "  GET ${archdir}/${deb}"
             curl -fsSL --retry 3 --retry-delay 5 -o "${out_dir}/${deb}" "${ver_url}/${archdir}/${deb}"
+            needs_download=true
         done
     done
+
+    if [ "${needs_download}" = true ]; then
+        new_versions=$((new_versions + 1))
+    else
+        echo ">>> ${ver_dir}: all debs present and valid."
+    fi
 done
 
 if [ ${new_versions} -eq 0 ]; then
