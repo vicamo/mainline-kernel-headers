@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 #
-# Extract an annotation value from an archive image's manifest.
+# Extract an annotation value from an archive image.
+# Tries in order:
+#   1. Registry via imagetools inspect (works when image is pushed)
+#   2. Docker label via docker inspect (works locally, mirrors annotation)
 #
 # Usage:
 #   ./scripts/get-archive-annotation <IMAGE> <KEY>
-#
-# Examples:
-#   ./scripts/get-archive-annotation vicamo/mainline-kernel-headers:6.18-archive dev.mainline-kernel-headers.versions
 #
 set -euo pipefail
 
@@ -18,11 +18,16 @@ if [ -z "${image}" ] || [ -z "${key}" ]; then
     exit 1
 fi
 
-docker buildx imagetools inspect "${image}" --raw 2>/dev/null \
+# Try registry via imagetools inspect
+value=$(docker buildx imagetools inspect "${image}" --raw 2>/dev/null \
     | python3 -c "
 import json, sys, subprocess
 
-data = json.load(sys.stdin)
+raw = sys.stdin.read().strip()
+if not raw:
+    sys.exit(0)
+
+data = json.loads(raw)
 
 # If it's an index, dereference to the first non-attestation manifest
 if 'manifests' in data:
@@ -31,15 +36,28 @@ if 'manifests' in data:
         if 'attestation' in ann.get('vnd.docker.reference.type', ''):
             continue
         digest = m['digest']
-        raw = subprocess.check_output(
+        r = subprocess.run(
             ['docker', 'buildx', 'imagetools', 'inspect',
              sys.argv[1] + '@' + digest, '--raw'],
-            stderr=subprocess.DEVNULL)
-        data = json.loads(raw)
+            capture_output=True, text=True)
+        if r.returncode == 0 and r.stdout.strip():
+            data = json.loads(r.stdout)
         break
 
 annotations = data.get('annotations') or {}
 v = annotations.get(sys.argv[2], '')
 if v:
     print(v)
-" "${image}" "${key}"
+" "${image}" "${key}" 2>/dev/null) || true
+
+if [ -n "${value}" ]; then
+    echo "${value}"
+    exit 0
+fi
+
+# Fallback: read from Docker label (mirrors annotation, works locally)
+value=$(docker inspect "${image}" --format "{{index .Config.Labels \"${key}\"}}" 2>/dev/null) || true
+
+if [ -n "${value}" ]; then
+    echo "${value}"
+fi

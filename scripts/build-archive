@@ -153,6 +153,7 @@ docker buildx build \
     -f "${repo_dir}/Dockerfile.archive" \
     "${archive_args[@]}" \
     "${annotation_args[@]}" \
+    --build-arg "VERSIONS_JSON=${versions_json}" \
     -t "${archive_tag}" \
     --load "${push_flag[@]}" \
     "${repo_dir}"

@@ -23,5 +23,7 @@ FROM busybox:musl AS base
 FROM ${ARCHIVE_IMAGE}
 
 ARG KVER
+ARG VERSIONS_JSON=
 COPY debs/${KVER}/ /${KVER}/
 COPY --from=base /bin/ls /bin/ls
+LABEL dev.mainline-kernel-headers.versions="${VERSIONS_JSON}"
