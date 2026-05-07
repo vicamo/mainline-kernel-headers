@@ -278,7 +278,28 @@ docker rmi "${tmp_tag}" >/dev/null 2>&1 || true
 
 echo ""
 echo "--- Install image inspection ---"
-docker buildx imagetools inspect "${install_tag}" --raw 2>/dev/null || true
+IFS=',' read -ra plats <<< "${install_platforms}"
+for plat in "${plats[@]}"; do
+    if [ "${push}" = true ]; then
+        val=$(docker buildx imagetools inspect "${install_tag}" --raw 2>/dev/null \
+            | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for m in data.get('manifests', []):
+    p = m.get('platform', {})
+    plat_str = p.get('os','') + '/' + p.get('architecture','')
+    if p.get('variant'):
+        plat_str += '/' + p['variant']
+    if plat_str == '${plat}':
+        print(m.get('annotations', {}).get('dev.mainline-kernel-headers.versions', ''))
+        break
+" 2>/dev/null) || true
+    else
+        val=$(docker image inspect --platform "${plat}" "${install_tag}" \
+            --format '{{index .Descriptor.Annotations "dev.mainline-kernel-headers.versions"}}' 2>/dev/null) || true
+    fi
+    echo "  ${plat}: dev.mainline-kernel-headers.versions=${val:-<none>}"
+done
 
 echo ""
 echo "=== Done: ${kver} ==="
