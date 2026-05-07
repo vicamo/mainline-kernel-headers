@@ -188,12 +188,65 @@ IFS=',' read -ra plats <<< "${install_platforms}"
 for plat in "${plats[@]}"; do
     echo "  Extracting versions for ${plat} ..."
     plat_versions=$(
-        cid=$(docker create --platform "${plat}" "${tmp_tag}" sh 2>/dev/null) || true
-        if [ -n "${cid}" ]; then
-            docker cp "${cid}:/kernel-versions.txt" - 2>/dev/null | tar -xO 2>/dev/null \
-                | paste -sd,
-            docker rm "${cid}" >/dev/null 2>&1
-        fi
+        docker save --platform "${plat}" "${tmp_tag}" 2>/dev/null \
+            | python3 -c "
+import tarfile, json, io, sys, re
+
+tar = tarfile.open(fileobj=sys.stdin.buffer, mode='r|')
+
+# First pass: read all members into memory
+content = {}
+for member in tar:
+    if member.isfile():
+        data = tar.extractfile(member).read()
+        content[member.name] = data
+
+# Determine format: OCI (index.json) or Docker (manifest.json)
+if 'index.json' in content:
+    # OCI layout
+    idx = json.loads(content['index.json'])
+    manifest_desc = idx['manifests'][0]
+    manifest_blob = content['blobs/' + manifest_desc['digest'].replace(':', '/')]
+    manifest = json.loads(manifest_blob)
+    layers = [content['blobs/' + l['digest'].replace(':', '/')] for l in manifest['layers']]
+else:
+    # Docker format
+    mf = json.loads(content['manifest.json'])
+    layers = [content[l] for l in mf[0]['Layers']]
+
+# Extract var/lib/dpkg/status from the topmost layer that has it
+dpkg_status = None
+for layer_data in layers:
+    try:
+        lt = tarfile.open(fileobj=io.BytesIO(layer_data), mode='r:*')
+        for m in lt:
+            if m.name in ('var/lib/dpkg/status', './var/lib/dpkg/status'):
+                dpkg_status = lt.extractfile(m).read().decode()
+                break
+        lt.close()
+    except Exception:
+        pass
+
+if not dpkg_status:
+    sys.exit(0)
+
+versions = set()
+for block in dpkg_status.split('\n\n'):
+    if 'Package: linux-headers-' not in block:
+        continue
+    pkg = arch = ''
+    for line in block.splitlines():
+        if line.startswith('Package: '):
+            pkg = line[9:]
+        elif line.startswith('Architecture: '):
+            arch = line[14:]
+    if pkg.startswith('linux-headers-') and arch and arch != 'all':
+        m = re.match(r'linux-headers-(\d+\.\d+\.\d+)', pkg)
+        if m:
+            versions.add(m.group(1))
+if versions:
+    print(','.join(sorted(versions)))
+" 2>/dev/null
     ) || true
 
     if [ -n "${plat_versions}" ]; then

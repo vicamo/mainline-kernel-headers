@@ -17,37 +17,11 @@ ARG KVER
 ARG ARCHIVE_IMAGE=mainline-kernel-headers:${KVER}-archive
 
 # ===========================================================================
-# Stage 1: Generate kernel-versions.txt from .deb filenames
+# Accumulate .debs under /<KVER>/<version>/
 # ===========================================================================
-FROM alpine:3.21 AS versions
-
-ARG KVER
-COPY debs/${KVER}/ /debs/
-
-RUN <<'EOF'
-set -eu
-: > /kernel-versions.txt
-for d in /debs/*/; do
-    [ -d "$d" ] || continue
-    v=$(basename "$d")
-    # Extract unique architectures from .deb filenames (excluding _all.deb)
-    archs=$(find "$d" -maxdepth 1 -name '*.deb' ! -name '*_all.deb' \
-        | sed -n 's/.*_\([^_]*\)\.deb$/\1/p' \
-        | sort -u \
-        | paste -sd,)
-    [ -n "${archs}" ] && echo "${v}: ${archs}" >> /kernel-versions.txt
-done
-sort -V /kernel-versions.txt -o /kernel-versions.txt
-cat /kernel-versions.txt
-EOF
-
-# ===========================================================================
-# Stage 2: Accumulate .debs under /<KVER>/<version>/
-# ===========================================================================
+FROM busybox:musl AS base
 FROM ${ARCHIVE_IMAGE}
 
 ARG KVER
 COPY debs/${KVER}/ /${KVER}/
-COPY --from=versions /kernel-versions.txt /kernel-versions.txt
-
-CMD ["cat", "/kernel-versions.txt"]
+COPY --from=base /bin/ls /bin/ls

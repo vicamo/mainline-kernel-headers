@@ -113,16 +113,5 @@ echo ">>> Installing ${#to_install[@]} header package(s) for ${arch} ..."
 dpkg --force-depends -i "${to_install[@]}"
 apt-get update -qq && apt-get install -yqq --fix-broken --no-install-recommends
 
-# Generate a machine-readable list of installed kernel versions
-ls -1d /usr/src/linux-headers-* 2>/dev/null \
-  | sed 's|/usr/src/linux-headers-||' \
-  | grep -oP '^\d+\.\d+\.\d+' \
-  | sed 's/\.0$//' \
-  | sort -Vu \
-  > /kernel-versions.txt
-
-echo "=== Installed kernel header versions (${arch}) ==="
-cat /kernel-versions.txt
+echo "=== Done installing kernel headers for ${arch} ==="
 INSTALL
-
-CMD ["cat", "/kernel-versions.txt"]

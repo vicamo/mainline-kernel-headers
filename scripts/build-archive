@@ -53,15 +53,14 @@ mkdir -p "${debs_dir}"
 
 # Determine which versions already exist in the archive image (if any).
 existing_versions=""
-if docker buildx imagetools inspect "${archive_tag}" >/dev/null 2>&1; then
-    existing_versions=$(
-        cid=$(docker create "${archive_tag}" sh 2>/dev/null) || true
-        if [ -n "${cid}" ]; then
-            docker cp "${cid}:/kernel-versions.txt" - 2>/dev/null | tar -xO 2>/dev/null \
-                | awk -F: '{print $1}' | sort -V
-            docker rm "${cid}" >/dev/null 2>&1
-        fi
-    ) || true
+archive_versions_json=$("${script_dir}/get-archive-annotation" "${archive_tag}" "dev.mainline-kernel-headers.versions" 2>/dev/null) || true
+if [ -n "${archive_versions_json}" ]; then
+    existing_versions=$(echo "${archive_versions_json}" | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for k in sorted(data.keys()):
+    print(k)
+")
 fi
 
 echo ">>> Discovering versions for series ${kver} ..."
@@ -175,29 +174,37 @@ docker buildx build \
     --load \
     "${repo_dir}"
 
-# Extract /kernel-versions.txt from the local image
+# Extract version info by scanning .deb filenames in the archive
 echo ""
 echo "--- Extracting version info from archive ---"
-cid=$(docker create "${archive_tag}-tmp" sh)
-versions_txt=$(docker cp "${cid}:/kernel-versions.txt" - | tar -xO) || true
-docker rm "${cid}" >/dev/null 2>&1
+versions_json=$(docker run --rm "${archive_tag}-tmp" /bin/ls -R "/${kver}/" 2>/dev/null \
+    | python3 -c "
+import sys, re, json
+from collections import defaultdict
+
+versions = defaultdict(set)
+current_ver = ''
+for line in sys.stdin.read().strip().splitlines():
+    if line.endswith(':'):
+        m = re.search(r'/(\d+\.\d+\.\d+):$', line)
+        current_ver = m.group(1) if m else ''
+        continue
+    if not current_ver or not line.endswith('.deb'):
+        continue
+    fname = line.strip()
+    if fname.endswith('_all.deb'):
+        continue
+    m = re.search(r'_([^_]+)\.deb$', fname)
+    if m:
+        versions[current_ver].add(m.group(1))
+
+if versions:
+    result = {k: ','.join(sorted(v)) for k, v in sorted(versions.items())}
+    print(json.dumps(result, separators=(',', ':')))
+") || true
 
 annotation_args=()
-if [ -n "${versions_txt}" ]; then
-    # Build JSON: {"7.0.0": "amd64,arm64,...", "7.0.1": "amd,..."}
-    versions_json="{"
-    first=true
-    while IFS=': ' read -r ver archs; do
-        [ -z "${ver}" ] && continue
-        if [ "${first}" = true ]; then
-            first=false
-        else
-            versions_json+=","
-        fi
-        versions_json+="\"${ver}\":\"${archs}\""
-    done <<< "${versions_txt}"
-    versions_json+="}"
-
+if [ -n "${versions_json}" ]; then
     echo "  Versions: ${versions_json}"
     annotation_args+=(--annotation "manifest:org.opencontainers.image.description=Mainline kernel header .deb archive for series ${kver}")
     annotation_args+=(--annotation "manifest:dev.mainline-kernel-headers.versions=${versions_json}")
