@@ -84,10 +84,13 @@ def validate_debs(debs_dir):
 
 
 def flavour_from_deb(fname):
-    """Extract (flavour, arch) from a deb filename, or None."""
-    m = re.match(r'linux-headers-\d+\.\d+\.\d+-\d+-(.+)_.+_([^_]+)\.deb', fname)
+    """Extract (flavour, arch) from a deb filename, or None.
+    linux[-<derived>]-headers-<ver>-<abi>-<flavour>_<ver>_<arch>.deb  (arch != all)
+    linux[-<derived>]-headers-<ver>-<abi>_<ver>_all.deb               (arch == all, no flavour)
+    """
+    m = re.match(r'linux(?:-.+)?-headers-\d+\.\d+\.\d+-\d+(?:-(.+))?_.+_([^_]+)\.deb', fname)
     if m:
-        return (m.group(1), m.group(2))
+        return (m.group(1) or 'all', m.group(2))
     return None
 
 
@@ -124,22 +127,20 @@ def discover_version(base_url, kver_dir, vnum, out_dir, archive_flavours):
         page = fetch(arch_url)
         if not page:
             return []
-        archived = set(archive_flavours.get(archdir, []))
         items = []
-        # Arch-specific debs
-        for deb in set(re.findall(rf'href="(linux-headers-[^"]+_{archdir}\.deb)"', page)):
+        # Match all linux[-<derived>]-headers debs
+        for deb in set(re.findall(r'href="(linux(?:-.+)?-headers-[^"]+\.deb)"', page)):
             local = os.path.join(out_dir, deb)
             if os.path.isfile(local):
                 continue
             info = flavour_from_deb(deb)
-            if info and info[0] in archived:
+            if not info:
+                continue
+            flavour, arch = info
+            archived = set(archive_flavours.get(arch, []))
+            if flavour in archived:
                 continue
             items.append((f"{arch_url}{deb}", local))
-        # Common _all.deb — needed if any arch-specific deb is being downloaded
-        for deb in set(re.findall(r'href="(linux-headers-[^"]+_all\.deb)"', page)):
-            local = os.path.join(out_dir, deb)
-            if not os.path.isfile(local):
-                items.append((f"{arch_url}{deb}", local))
         return items
 
     # Parallel arch page scanning

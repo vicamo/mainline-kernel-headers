@@ -111,13 +111,13 @@ for line in sys.stdin.read().strip().splitlines():
     if not current_ver or not line.endswith('.deb'):
         continue
     fname = line.strip()
-    if fname.endswith('_all.deb'):
+    # linux[-<derived>]-headers-<ver>-<abi>_<ver>_all.deb (no flavour for arch=all)
+    # linux[-<derived>]-headers-<ver>-<abi>-<flavour>_<ver>_<arch>.deb
+    m = re.match(r'linux(?:-.+)?-headers-\d+\.\d+\.\d+-\d+(?:-(.+))?_.+_([^_]+)\.deb', fname)
+    if not m:
         continue
-    # linux-headers-<ver>-<abi>-<flavour>_<ver>.<abi>.<date>_<arch>.deb
-    m = re.match(r'linux-headers-\d+\.\d+\.\d+-\d+-(.+)_.+_([^_]+)\.deb', fname)
-    if m:
-        flavour, arch = m.group(1), m.group(2)
-        versions[current_ver][arch].add(flavour)
+    flavour, arch = m.group(1) or 'all', m.group(2)
+    versions[current_ver][arch].add(flavour)
 
 if versions:
     result = {v: {a: sorted(f) for a, f in sorted(archs.items())}
