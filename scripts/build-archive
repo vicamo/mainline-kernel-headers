@@ -22,13 +22,13 @@ fi
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 repo_dir="$(dirname "${script_dir}")"
 
-push=false
+push=
 kver=""
 image_prefix="vicamo/mainline-kernel-headers"
 
 while [ $# -gt 0 ]; do
     case "$1" in
-        --push)   push=true; shift ;;
+        --push)   push=--push; shift ;;
         --image)  image_prefix="$2"; shift 2 ;;
         -*)       echo "Unknown flag: $1" >&2; exit 1 ;;
         *)        kver="$1"; shift ;;
@@ -133,11 +133,6 @@ if [ -n "${versions_json}" ]; then
 fi
 
 # Rebuild with annotations (cached, just updates metadata) and push if requested
-push_flag=()
-if [ "${push}" = true ]; then
-    push_flag=(--push)
-fi
-
 echo ""
 echo "--- Loading with annotations${push:+ and pushing} ---"
 docker rmi "${archive_tag}" >/dev/null 2>&1 || true
@@ -147,7 +142,7 @@ docker buildx build \
     "${annotation_args[@]}" \
     --build-arg "VERSIONS_JSON=${versions_json}" \
     -t "${archive_tag}" \
-    --load "${push_flag[@]}" \
+    --load ${push} \
     "${repo_dir}"
 
 docker rmi "${archive_tag}-tmp" >/dev/null 2>&1
