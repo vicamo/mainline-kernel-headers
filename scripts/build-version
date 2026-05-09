@@ -271,7 +271,7 @@ done
 
 # Rebuild with annotations
 echo ""
-echo "--- Loading with annotations${push:+ and pushing} ---"
+echo "--- ${push:+Pushing}${push:-Loading} with annotations ---"
 
 docker rmi "${install_tag}" >/dev/null 2>&1 || true
 docker buildx build \
@@ -279,7 +279,7 @@ docker buildx build \
     "${install_args[@]}" \
     "${annotation_args[@]}" \
     -t "${install_tag}" \
-    --load ${push} \
+    ${push:---load} \
     "${repo_dir}"
 
 # Clean up tmp tag

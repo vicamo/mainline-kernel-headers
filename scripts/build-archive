@@ -134,7 +134,7 @@ fi
 
 # Rebuild with annotations (cached, just updates metadata) and push if requested
 echo ""
-echo "--- Loading with annotations${push:+ and pushing} ---"
+echo "--- ${push:+Pushing}${push:-Loading} with annotations ---"
 docker rmi "${archive_tag}" >/dev/null 2>&1 || true
 docker buildx build \
     -f "${repo_dir}/Dockerfile.archive" \
@@ -142,7 +142,7 @@ docker buildx build \
     "${annotation_args[@]}" \
     --build-arg "VERSIONS_JSON=${versions_json}" \
     -t "${archive_tag}" \
-    --load ${push} \
+    ${push:---load} \
     "${repo_dir}"
 
 docker rmi "${archive_tag}-tmp" >/dev/null 2>&1
