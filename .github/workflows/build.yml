@@ -78,7 +78,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push ${{ matrix.kver }}
+      - name: Build and push archive for ${{ matrix.kver }}
+        run: ./scripts/build-archive "${{ matrix.kver }}" --push
+
+      - name: Build and push install for ${{ matrix.kver }}
         run: ./scripts/build-version "${{ matrix.kver }}" --push
 
       - name: Gap report for ${{ matrix.kver }}

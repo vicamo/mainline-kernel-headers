@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 #
-# Build archive and install images for a given kernel series.
+# Build the install image for a given kernel series.
+# Requires the archive image to already exist.
 #
 # Usage:
 #   ./scripts/build-version <KVER> [--push] [--image PREFIX] [--platforms PLATFORMS]
@@ -27,14 +28,12 @@ push=
 kver=""
 image_prefix="vicamo/mainline-kernel-headers"
 install_platforms="linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x"
-skip_archive=false
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --push)          push=--push; shift ;;
         --image)         image_prefix="$2"; shift 2 ;;
         --platforms)     install_platforms="$2"; shift 2 ;;
-        --skip-archive)  skip_archive=true; shift ;;
         -*)              echo "Unknown flag: $1" >&2; exit 1 ;;
         *)               kver="$1"; shift ;;
     esac
@@ -48,25 +47,14 @@ fi
 archive_tag="${image_prefix}:${kver}-archive"
 install_tag="${image_prefix}:${kver}"
 
-# ---------------------------------------------------------------------------
-# Step 1: Build the archive image (single-platform, incremental by default)
-# ---------------------------------------------------------------------------
-if [ "${skip_archive}" = true ]; then
-    echo "=== Skipping archive build (--skip-archive) ==="
-    if ! docker buildx imagetools inspect "${archive_tag}" >/dev/null 2>&1; then
-        echo "ERROR: --skip-archive but ${archive_tag} not found in registry" >&2
-        exit 1
-    fi
-else
-    archive_flags=(--image "${image_prefix}")
-    if [ -n "${push}" ]; then
-        archive_flags+=(${push})
-    fi
-    "${script_dir}/build-archive" "${kver}" "${archive_flags[@]}"
+# Verify archive image exists
+if ! "${script_dir}/get-archive-annotation" "${archive_tag}" "dev.mainline-kernel-headers.versions" >/dev/null 2>&1; then
+    echo "ERROR: archive image ${archive_tag} not found. Run build-archive first." >&2
+    exit 1
 fi
 
 # ---------------------------------------------------------------------------
-# Step 2: Build the install image (multi-platform)
+# Build the install image (multi-platform)
 # ---------------------------------------------------------------------------
 echo ""
 echo "=== Building install: ${install_tag} ==="
@@ -185,7 +173,7 @@ else
     install_args+=(--build-arg "BASE_IMAGE=${base_image}")
 fi
 
-# Step 2a: Build all platforms and load locally (tmp tag)
+# Build all platforms and load locally (tmp tag)
 tmp_tag="${install_tag}-tmp"
 echo ""
 echo "--- Building multi-platform install (tmp) ---"
@@ -197,7 +185,7 @@ docker buildx build \
     --load \
     "${repo_dir}"
 
-# Step 2b: Extract per-platform version info via docker create --platform
+# Extract per-platform version info
 echo ""
 echo "--- Extracting per-platform version info ---"
 
@@ -281,9 +269,9 @@ if versions:
     fi
 done
 
-# Step 2c: Rebuild with annotations + load (+ push if requested)
+# Rebuild with annotations
 echo ""
-echo "--- Building with annotations ---"
+echo "--- Loading with annotations${push:+ and pushing} ---"
 
 docker rmi "${install_tag}" >/dev/null 2>&1 || true
 docker buildx build \
