@@ -26,7 +26,10 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       versions: ${{ steps.versions.outputs.matrix }}
+      dkms_series: ${{ steps.versions.outputs.dkms_series }}
     steps:
+      - uses: actions/checkout@v4
+
       - name: Discover active versions (schedule)
         if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.kver == '')
         run: |
@@ -60,9 +63,58 @@ jobs:
           ")
           echo "matrix=${matrix}" >> "$GITHUB_ENV"
 
+      - name: Compute dkms series
+        run: |
+          source scripts/lib/ubuntu-series.sh
+          seen=()
+          for kver in $(echo "${matrix}" | python3 -c "import json,sys; [print(v) for v in json.load(sys.stdin)]"); do
+            s=$(ubuntu_series_for_kver "${kver}")
+            if ! printf '%s\n' "${seen[@]}" | grep -qx "${s}"; then
+              seen+=("${s}")
+            fi
+          done
+          dkms_series=$(printf '%s\n' "${seen[@]}" | python3 -c "import json,sys; print(json.dumps([l.strip() for l in sys.stdin if l.strip()]))")
+          echo "dkms_series=${dkms_series}" >> "$GITHUB_ENV"
+
       - name: Set output
         id: versions
-        run: echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
+        run: |
+          echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
+          echo "dkms_series=${dkms_series}" >> "$GITHUB_OUTPUT"
+
+  dkms:
+    needs: discover
+    if: needs.discover.outputs.dkms_series != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        series: ${{ fromJson(needs.discover.outputs.dkms_series) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push dkms image for ${{ matrix.series }}
+        run: |
+          tag="vicamo/mainline-kernel-headers:${{ matrix.series }}-dkms"
+          if docker buildx imagetools inspect "${tag}" >/dev/null 2>&1; then
+            echo "dkms image ${tag} already exists, skipping"
+            exit 0
+          fi
+          docker buildx build \
+            -f Dockerfile.dkms \
+            --platform linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x \
+            --build-arg "SERIES=${{ matrix.series }}" \
+            --push \
+            -t "${tag}" .
 
   build:
     needs: discover

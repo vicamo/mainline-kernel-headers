@@ -10,6 +10,14 @@ Two image types are produced for each kernel series (e.g. `7.0`):
 | `vicamo/mainline-kernel-headers:<KVER>-archive` | Architecture-independent archive of all `.deb` files | linux/amd64 |
 | `vicamo/mainline-kernel-headers:<KVER>` | Headers image — installed kernel headers (Ubuntu-based) | linux/amd64, linux/arm64, linux/arm/v7, linux/ppc64le, linux/s390x |
 
+A shared base image is also produced per Ubuntu series:
+
+| Image | Purpose | Platforms |
+|-------|---------|-----------|
+| `vicamo/mainline-kernel-headers:<SERIES>-dkms` | Ubuntu base with `dkms` pre-installed | linux/amd64, linux/arm64, linux/arm/v7, linux/ppc64le, linux/s390x |
+
+Multiple kernel series may share the same dkms image (e.g. 6.17, 6.18, 6.19 all use `questing-dkms`).
+
 ## Quick start
 
 List installed kernel header versions:
@@ -47,6 +55,19 @@ docker build -f Dockerfile.archive --build-arg KVER=7.0 \
   -t vicamo/mainline-kernel-headers:7.0-archive .
 ```
 
+### Dockerfile.dkms
+
+Produces a multi-platform Ubuntu base image with `dkms` pre-installed. Used as
+the cold-start base for headers images. Multiple kernel series that target the
+same Ubuntu release share a single dkms image.
+
+```sh
+docker buildx build -f Dockerfile.dkms \
+  --platform linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x \
+  --build-arg SERIES=noble \
+  -t vicamo/mainline-kernel-headers:noble-dkms .
+```
+
 ### Dockerfile
 
 Takes an archive image and installs the appropriate `.deb` packages for the
@@ -58,7 +79,7 @@ builds via Docker buildx.
 docker buildx build \
   --platform linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x \
   --build-arg KVER=7.0 \
-  --build-arg BASE_IMAGE=ubuntu:24.04 \
+  --build-arg BASE_IMAGE=ubuntu:noble \
   --build-arg ARCHIVE_IMAGE=vicamo/mainline-kernel-headers:7.0-archive \
   -t vicamo/mainline-kernel-headers:7.0 .
 
@@ -154,6 +175,12 @@ A summary is printed at the end with any failures.
 
 ## Build args
 
+### Dockerfile.dkms
+
+| Arg | Required | Default | Description |
+|-----|----------|---------|-------------|
+| `SERIES` | No | `noble` | Ubuntu series codename (e.g. `noble`, `questing`, `jammy`) |
+
 ### Dockerfile.archive
 
 | Arg | Required | Default | Description |
@@ -166,7 +193,7 @@ A summary is printed at the end with any failures.
 | Arg | Required | Default | Description |
 |-----|----------|---------|-------------|
 | `KVER` | Yes | — | Kernel series, e.g. `6.14`, `7.0` |
-| `BASE_IMAGE` | No | `mainline-kernel-headers:<KVER>` | Previous headers image; set to `ubuntu:24.04` for cold start |
+| `BASE_IMAGE` | No | `mainline-kernel-headers:<KVER>` | Previous headers image; set to `ubuntu:<SERIES>` for cold start |
 | `ARCHIVE_IMAGE` | No | `mainline-kernel-headers:<KVER>-archive` | Archive image containing the `.deb` files |
 | `ARCHIVE_PLATFORM` | No | `linux/amd64` | Platform of the archive image (archive is arch-independent, pinned to amd64 by default) |
 

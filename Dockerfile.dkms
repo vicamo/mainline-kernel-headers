@@ -1,0 +1,6 @@
+ARG SERIES=noble
+FROM ubuntu:${SERIES}
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends dkms && \
+    rm -rf /var/lib/apt/lists/*
