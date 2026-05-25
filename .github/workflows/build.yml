@@ -7,9 +7,10 @@ on:
   workflow_dispatch:
     inputs:
       kver:
-        description: 'Kernel series to build, comma-separated (e.g. "6.6" or "6.6,6.12,7.0"). Leave empty to build all active versions.'
+        description: 'Kernel series to build, comma-separated (e.g. "6.6" or "6.6,6.12,7.0"). Use "active" to build all active versions.'
         required: false
         type: string
+        default: 'active'
       force_install:
         description: 'Force rebuild headers image even if archive is unchanged'
         required: false
@@ -31,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Discover active versions (schedule)
-        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.kver == '')
+        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.kver == 'active')
         run: |
           matrix=$(curl -fsSL https://www.kernel.org/releases.json | python3 -c "
           import json, sys, re
@@ -54,7 +55,7 @@ jobs:
           echo "matrix=${matrix}" >> "$GITHUB_ENV"
 
       - name: Parse input versions (workflow_dispatch)
-        if: github.event_name == 'workflow_dispatch' && inputs.kver != ''
+        if: github.event_name == 'workflow_dispatch' && inputs.kver != 'active'
         run: |
           matrix=$(echo "${{ inputs.kver }}" | python3 -c "
           import sys, json
