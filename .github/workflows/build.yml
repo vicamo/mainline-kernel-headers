@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       kver:
-        description: 'Kernel series to build, comma-separated (e.g. "6.6" or "6.6,6.12,7.0"). Use "active" for non-EOL versions, "all" for all versions >= 4.7.'
+        description: 'Kernel series to build, comma-separated (e.g. "6.6", "6.x", "6.6,6.12,7.0"). Use "active" for non-EOL versions, "all" for all versions >= 4.7.'
         required: false
         type: string
         default: 'active'
@@ -79,8 +79,36 @@ jobs:
         if: github.event_name == 'workflow_dispatch' && inputs.kver != 'active' && inputs.kver != 'all'
         run: |
           matrix=$(echo "${{ inputs.kver }}" | python3 -c "
-          import sys, json
-          versions = [v.strip() for v in sys.stdin.read().split(',') if v.strip()]
+          import sys, json, re, urllib.request
+
+          raw = [v.strip() for v in sys.stdin.read().split(',') if v.strip()]
+          # Check if any entry uses wildcard 'x'
+          need_expand = any(re.fullmatch(r'\d+\.x', v) for v in raw)
+          all_series = None
+          if need_expand:
+              html = urllib.request.urlopen('https://kernel.ubuntu.com/mainline/').read().decode()
+              all_series = set()
+              for m in re.finditer(r'href=\"v(\d+\.\d+)(?:\.\d+)?/\"', html):
+                  all_series.add(m.group(1))
+
+          versions = []
+          seen = set()
+          for v in raw:
+              wm = re.fullmatch(r'(\d+)\.x', v)
+              if wm:
+                  major = int(wm.group(1))
+                  matched = sorted(
+                      [s for s in all_series if int(s.split('.')[0]) == major],
+                      key=lambda s: tuple(int(x) for x in s.split('.'))
+                  )
+                  for s in matched:
+                      if s not in seen:
+                          seen.add(s)
+                          versions.append(s)
+              else:
+                  if v not in seen:
+                      seen.add(v)
+                      versions.append(v)
           print(json.dumps(versions))
           ")
           echo "matrix=${matrix}" >> "$GITHUB_ENV"
