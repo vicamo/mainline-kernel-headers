@@ -117,7 +117,7 @@ jobs:
             -t "${tag}" .
 
   build:
-    needs: discover
+    needs: [discover, dkms]
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

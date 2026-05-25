@@ -75,11 +75,11 @@ target architecture using `dpkg --force-depends`. Supports multi-platform
 builds via Docker buildx.
 
 ```sh
-# Cold start (no previous headers image)
+# Cold start (no previous headers image — uses dkms base)
 docker buildx build \
   --platform linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x \
   --build-arg KVER=7.0 \
-  --build-arg BASE_IMAGE=ubuntu:noble \
+  --build-arg BASE_IMAGE=vicamo/mainline-kernel-headers:resolute-dkms \
   --build-arg ARCHIVE_IMAGE=vicamo/mainline-kernel-headers:7.0-archive \
   -t vicamo/mainline-kernel-headers:7.0 .
 
@@ -193,7 +193,7 @@ A summary is printed at the end with any failures.
 | Arg | Required | Default | Description |
 |-----|----------|---------|-------------|
 | `KVER` | Yes | — | Kernel series, e.g. `6.14`, `7.0` |
-| `BASE_IMAGE` | No | `mainline-kernel-headers:<KVER>` | Previous headers image; set to `ubuntu:<SERIES>` for cold start |
+| `BASE_IMAGE` | No | `mainline-kernel-headers:<KVER>` | Previous headers image; set to `<SERIES>-dkms` image for cold start |
 | `ARCHIVE_IMAGE` | No | `mainline-kernel-headers:<KVER>-archive` | Archive image containing the `.deb` files |
 | `ARCHIVE_PLATFORM` | No | `linux/amd64` | Platform of the archive image (archive is arch-independent, pinned to amd64 by default) |
 

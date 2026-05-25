@@ -122,9 +122,10 @@ if [ -z "${clean}" ] && docker buildx imagetools inspect "${headers_tag}" >/dev/
     echo "  (incremental: previous headers image found)"
     headers_args+=(--build-arg "BASE_IMAGE=${headers_tag}")
 else
-    base_image="ubuntu:$(ubuntu_series_for_kver "${kver}")"
-    echo "  (cold start: using ${base_image} as base)"
-    headers_args+=(--build-arg "BASE_IMAGE=${base_image}")
+    series=$(ubuntu_series_for_kver "${kver}")
+    dkms_tag="${image_prefix}:${series}-dkms"
+    echo "  (cold start: using ${dkms_tag} as base)"
+    headers_args+=(--build-arg "BASE_IMAGE=${dkms_tag}")
 fi
 
 # Build all platforms and load locally (tmp tag)
