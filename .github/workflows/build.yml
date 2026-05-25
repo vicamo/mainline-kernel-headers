@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       kver:
-        description: 'Kernel series to build, comma-separated (e.g. "6.6" or "6.6,6.12,7.0"). Use "active" to build all active versions.'
+        description: 'Kernel series to build, comma-separated (e.g. "6.6" or "6.6,6.12,7.0"). Use "active" for non-EOL versions, "all" for all versions >= 4.7.'
         required: false
         type: string
         default: 'active'
@@ -54,8 +54,29 @@ jobs:
           ")
           echo "matrix=${matrix}" >> "$GITHUB_ENV"
 
+      - name: Discover all versions >= 4.7
+        if: github.event_name == 'workflow_dispatch' && inputs.kver == 'all'
+        run: |
+          matrix=$(curl -fsSL https://kernel.ubuntu.com/mainline/ | python3 -c "
+          import sys, re, json
+          html = sys.stdin.read()
+          seen = set()
+          versions = []
+          for m in re.finditer(r'href=\"v(\d+\.\d+)(?:\.\d+)?/\"', html):
+              series = m.group(1)
+              major, minor = (int(x) for x in series.split('.'))
+              if (major, minor) < (4, 7):
+                  continue
+              if series not in seen:
+                  seen.add(series)
+                  versions.append(series)
+          versions.sort(key=lambda s: tuple(int(x) for x in s.split('.')))
+          print(json.dumps(versions))
+          ")
+          echo "matrix=${matrix}" >> "$GITHUB_ENV"
+
       - name: Parse input versions (workflow_dispatch)
-        if: github.event_name == 'workflow_dispatch' && inputs.kver != 'active'
+        if: github.event_name == 'workflow_dispatch' && inputs.kver != 'active' && inputs.kver != 'all'
         run: |
           matrix=$(echo "${{ inputs.kver }}" | python3 -c "
           import sys, json
