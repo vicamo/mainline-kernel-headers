@@ -227,7 +227,7 @@ def generate_report(series_list):
             lines.append(f"| Version | {' | '.join(ARCHS)} |")
             lines.append(f"|---------|{'|'.join([':---:'] * len(ARCHS))}|")
             for v, cells in gap_rows:
-                lines.append(f"| `{v}` | {' | '.join(cells)} |")
+                lines.append(f"| [``{v}``](https://kernel.ubuntu.com/mainline/v{v}/) | {' | '.join(cells)} |")
             lines.append("")
             lines.append(f"_{len(gap_rows)}/{len(all_versions)} versions have gaps_\n")
 
