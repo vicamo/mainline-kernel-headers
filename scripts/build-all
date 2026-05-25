@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Build archive and install images for all active kernel versions.
+# Build archive and headers images for all active kernel versions.
 #
 # Queries https://www.kernel.org/releases.json for stable and longterm
 # versions that are not end-of-life, then builds each one via build-version.

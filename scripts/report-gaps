@@ -7,12 +7,12 @@ Outputs GitHub-flavored Markdown suitable for $GITHUB_STEP_SUMMARY.
 For each active kernel series, compares:
   1. Versions available on kernel.ubuntu.com/mainline (upstream)
   2. Versions archived in the Docker archive image (per-arch .deb availability)
-  3. Versions installed in the Docker install image (per-platform)
+  3. Versions installed in the Docker headers image (per-platform)
 
 Icons indicate root cause:
   ✅ - available and installed
   ⚪ - not available upstream (no .deb for this arch on kernel.ubuntu.com)
-  🔺 - in archive but not installed (install image needs rebuild)
+  🔺 - in archive but not in headers image (needs rebuild)
   ❌ - available upstream but not in archive (archive needs rebuild)
   ⬛ - no Docker image exists for this series
 """
@@ -176,7 +176,7 @@ def generate_report(series_list):
     lines.append("|------|---------|")
     lines.append("| ✅ | Available and installed |")
     lines.append("| ⚪ | Not available upstream (no .deb for this arch) |")
-    lines.append("| 🔺 | In archive but not installed (install image stale) |")
+    lines.append("| 🔺 | In archive but not in headers image (stale) |")
     lines.append("| ❌ | Available upstream but not in archive (archive stale) |")
     lines.append("| ⬛ | No Docker image exists for this series |")
     lines.append("")

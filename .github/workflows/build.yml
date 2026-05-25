@@ -11,12 +11,12 @@ on:
         required: false
         type: string
       force_install:
-        description: 'Force rebuild install image even if archive is unchanged'
+        description: 'Force rebuild headers image even if archive is unchanged'
         required: false
         type: boolean
         default: false
       clean_install:
-        description: 'Build install image from scratch instead of the previous image'
+        description: 'Build headers image from scratch instead of the previous image'
         required: false
         type: boolean
         default: false
@@ -91,7 +91,7 @@ jobs:
       - name: Build and push archive for ${{ matrix.kver }}
         run: ./scripts/build-archive "${{ matrix.kver }}" --push
 
-      - name: Build and push install for ${{ matrix.kver }}
+      - name: Build and push headers for ${{ matrix.kver }}
         run: ./scripts/build-version "${{ matrix.kver }}" --push ${{ inputs.force_install && '--force' || '' }} ${{ inputs.clean_install && '--clean' || '' }}
 
       - name: Gap report for ${{ matrix.kver }}

@@ -8,7 +8,7 @@ Two image types are produced for each kernel series (e.g. `7.0`):
 | Image | Purpose | Platforms |
 |-------|---------|-----------|
 | `vicamo/mainline-kernel-headers:<KVER>-archive` | Architecture-independent archive of all `.deb` files | linux/amd64 |
-| `vicamo/mainline-kernel-headers:<KVER>` | Installed kernel headers (Ubuntu-based) | linux/amd64, linux/arm64, linux/arm/v7, linux/ppc64le, linux/s390x |
+| `vicamo/mainline-kernel-headers:<KVER>` | Headers image — installed kernel headers (Ubuntu-based) | linux/amd64, linux/arm64, linux/arm/v7, linux/ppc64le, linux/s390x |
 
 ## Quick start
 
@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y build-essential
 
 ## How it works
 
-The build is split into two Dockerfiles. `Dockerfile` produces the install
+The build is split into two Dockerfiles. `Dockerfile` produces the headers
 image (the primary artifact); `Dockerfile.archive` produces the intermediate
 archive image.
 
@@ -54,7 +54,7 @@ target architecture using `dpkg --force-depends`. Supports multi-platform
 builds via Docker buildx.
 
 ```sh
-# Cold start (no previous install image)
+# Cold start (no previous headers image)
 docker buildx build \
   --platform linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x \
   --build-arg KVER=7.0 \
@@ -62,7 +62,7 @@ docker buildx build \
   --build-arg ARCHIVE_IMAGE=vicamo/mainline-kernel-headers:7.0-archive \
   -t vicamo/mainline-kernel-headers:7.0 .
 
-# Incremental build (installs only new versions on top of existing image)
+# Incremental build (installs only new versions on top of existing headers image)
 docker buildx build \
   --platform linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x \
   --build-arg KVER=7.0 \
@@ -104,7 +104,7 @@ build when possible. Already-downloaded versions are skipped on subsequent runs.
 
 ### scripts/build-version
 
-Build the archive and install images for a single kernel series.
+Build the headers image for a single kernel series. Requires the archive image to already exist.
 
 ```sh
 ./scripts/build-version <KVER> [--push] [--image PREFIX] [--platforms PLATFORMS]
@@ -112,9 +112,11 @@ Build the archive and install images for a single kernel series.
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--push` | *(off)* | Push images to the registry; without it, images are loaded locally (native platform only) |
+| `--push` | *(off)* | Push image to the registry; without it, image is loaded locally (native platform only) |
 | `--image` | `vicamo/mainline-kernel-headers` | Image name prefix |
-| `--platforms` | `linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x` | Target platforms for the install image (only with `--push`) |
+| `--platforms` | `linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x` | Target platforms for the headers image (only with `--push`) |
+| `--force` | *(off)* | Force rebuild even if archive is unchanged |
+| `--clean` | *(off)* | Build from scratch (Ubuntu base) instead of previous headers image |
 
 Examples:
 
@@ -129,9 +131,9 @@ Examples:
 ./scripts/build-version 7.0 --push --image myrepo/kernel-headers --platforms linux/amd64,linux/arm64
 ```
 
-The script delegates archive building to `build-archive`, then builds the
-multi-platform install image. It automatically detects whether a previous
-install image exists and performs an incremental build when possible.
+The script builds the multi-platform headers image. It automatically detects
+whether a previous headers image exists and performs an incremental build when
+possible. The archive image must already exist (run `build-archive` first).
 
 ### scripts/build-all
 
@@ -164,7 +166,7 @@ A summary is printed at the end with any failures.
 | Arg | Required | Default | Description |
 |-----|----------|---------|-------------|
 | `KVER` | Yes | — | Kernel series, e.g. `6.14`, `7.0` |
-| `BASE_IMAGE` | No | `mainline-kernel-headers:<KVER>` | Previous install image; set to `ubuntu:24.04` for cold start |
+| `BASE_IMAGE` | No | `mainline-kernel-headers:<KVER>` | Previous headers image; set to `ubuntu:24.04` for cold start |
 | `ARCHIVE_IMAGE` | No | `mainline-kernel-headers:<KVER>-archive` | Archive image containing the `.deb` files |
 | `ARCHIVE_PLATFORM` | No | `linux/amd64` | Platform of the archive image (archive is arch-independent, pinned to amd64 by default) |
 
