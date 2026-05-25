@@ -1,5 +1,5 @@
 ARG SERIES=noble
-FROM ubuntu:${SERIES}
+FROM vicamo/ubuntu:${SERIES}
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends dkms && \
