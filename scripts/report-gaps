@@ -231,6 +231,14 @@ def generate_report(series_list):
             lines.append("")
             lines.append(f"_{len(gap_rows)}/{len(all_versions)} versions have gaps_\n")
 
+            # List complete versions
+            complete = [v for v in all_versions if v not in {r[0] for r in gap_rows}]
+            if complete:
+                links = ", ".join(f"[v{v}](https://kernel.ubuntu.com/mainline/v{v}/)" for v in complete)
+                lines.append(f"<details><summary>✅ {len(complete)} complete versions</summary>\n")
+                lines.append(f"{links}\n")
+                lines.append("</details>\n")
+
     return "\n".join(lines)
 
 
