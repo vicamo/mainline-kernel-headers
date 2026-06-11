@@ -23,7 +23,7 @@ ubuntu_series_for_kver() {
         "519 kinetic"
         "515 jammy"
         "513 impish"
-        "511 hirsuit"
+        "511 hirsute"
         "508 groovy"
         "504 focal"
         "503 eoan"
