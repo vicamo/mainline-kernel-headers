@@ -162,7 +162,7 @@ jobs:
           docker buildx build \
             -f Dockerfile.dkms \
             --platform linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x \
-            --build-arg "SERIES=${{ matrix.series }}" \
+            --build-arg "BASE_IMAGE=vicamo/ubuntu:${{ matrix.series }}" \
             --push \
             -t "${tag}" .
 
