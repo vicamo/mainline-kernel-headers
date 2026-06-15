@@ -29,7 +29,7 @@ force=
 clean=
 kver=""
 image_prefix="vicamo/mainline-kernel-headers"
-headers_platforms="linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x"
+headers_platforms=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -120,12 +120,42 @@ headers_args=(
 
 if [ -z "${clean}" ] && docker buildx imagetools inspect "${headers_tag}" >/dev/null 2>&1; then
     echo "  (incremental: previous headers image found)"
-    headers_args+=(--build-arg "BASE_IMAGE=${headers_tag}")
+    base_image="${headers_tag}"
 else
     series=$(ubuntu_series_for_kver "${kver}")
     dkms_tag="${image_prefix}:${series}-dkms"
     echo "  (cold start: using ${dkms_tag} as base)"
-    headers_args+=(--build-arg "BASE_IMAGE=${dkms_tag}")
+    base_image="${dkms_tag}"
+fi
+headers_args+=(--build-arg "BASE_IMAGE=${base_image}")
+
+# Auto-detect available platforms from the base image if not explicitly set.
+if [ -z "${headers_platforms}" ]; then
+    headers_platforms=$(docker buildx imagetools inspect "${base_image}" --raw 2>/dev/null \
+        | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+platforms = []
+for m in data.get('manifests', []):
+    ann = m.get('annotations') or {}
+    if 'attestation' in ann.get('vnd.docker.reference.type', ''):
+        continue
+    p = m.get('platform', {})
+    if p.get('os') == 'unknown':
+        continue
+    plat = p.get('os', '') + '/' + p.get('architecture', '')
+    if p.get('variant'):
+        plat += '/' + p['variant']
+    platforms.append(plat)
+if platforms:
+    print(','.join(platforms))
+" 2>/dev/null) || true
+
+    if [ -z "${headers_platforms}" ]; then
+        echo "ERROR: could not detect platforms from base image ${base_image}" >&2
+        exit 1
+    fi
+    echo "  (detected platforms from base: ${headers_platforms})"
 fi
 
 # Build all platforms and load locally (tmp tag)
