@@ -159,10 +159,35 @@ jobs:
             echo "dkms image ${tag} already exists, skipping"
             exit 0
           fi
+          base_image="vicamo/ubuntu:${{ matrix.series }}"
+          platforms=$(docker buildx imagetools inspect "${base_image}" --raw \
+            | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          platforms = []
+          for m in data.get('manifests', []):
+              ann = m.get('annotations') or {}
+              if 'attestation' in ann.get('vnd.docker.reference.type', ''):
+                  continue
+              p = m.get('platform', {})
+              if p.get('os') == 'unknown':
+                  continue
+              plat = p.get('os', '') + '/' + p.get('architecture', '')
+              if p.get('variant'):
+                  plat += '/' + p['variant']
+              platforms.append(plat)
+          if platforms:
+              print(','.join(platforms))
+          ")
+          if [ -z "${platforms}" ]; then
+            echo "ERROR: could not detect platforms from ${base_image}" >&2
+            exit 1
+          fi
+          echo "Detected platforms: ${platforms}"
           docker buildx build \
             -f Dockerfile.dkms \
-            --platform linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x \
-            --build-arg "BASE_IMAGE=vicamo/ubuntu:${{ matrix.series }}" \
+            --platform "${platforms}" \
+            --build-arg "BASE_IMAGE=${base_image}" \
             --push \
             -t "${tag}" .
 
