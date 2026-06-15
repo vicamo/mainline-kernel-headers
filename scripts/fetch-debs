@@ -122,14 +122,10 @@ def discover_version(base_url, kver_dir, vnum, out_dir, archive_flavours):
     # Collect all deb URLs to download
     downloads = []  # (url, local_path)
 
-    def scan_arch(archdir):
-        arch_url = f"{ver_url}{archdir}/"
-        page = fetch(arch_url)
-        if not page:
-            return []
+    def scan_page(page_url, page_content):
+        """Scan a page for header debs and return download items."""
         items = []
-        # Match all linux[-<derived>]-headers debs
-        for deb in set(re.findall(r'href="(linux(?:-.+)?-headers-[^"]+\.deb)"', page)):
+        for deb in set(re.findall(r'href="(linux(?:-.+)?-headers-[^"]+\.deb)"', page_content)):
             local = os.path.join(out_dir, deb)
             if os.path.isfile(local):
                 continue
@@ -140,13 +136,24 @@ def discover_version(base_url, kver_dir, vnum, out_dir, archive_flavours):
             archived = set(archive_flavours.get(arch, []))
             if flavour in archived:
                 continue
-            items.append((f"{arch_url}{deb}", local))
+            items.append((f"{page_url}{deb}", local))
         return items
 
-    # Parallel arch page scanning
-    with ThreadPoolExecutor(max_workers=len(archdirs) or 1) as pool:
-        for items in pool.map(scan_arch, archdirs):
-            downloads.extend(items)
+    if archdirs:
+        # Newer layout: debs are inside arch subdirectories
+        def scan_arch(archdir):
+            arch_url = f"{ver_url}{archdir}/"
+            page = fetch(arch_url)
+            if not page:
+                return []
+            return scan_page(arch_url, page)
+
+        with ThreadPoolExecutor(max_workers=len(archdirs)) as pool:
+            for items in pool.map(scan_arch, archdirs):
+                downloads.extend(items)
+    else:
+        # Flat layout (older kernels): debs are listed on the version page
+        downloads.extend(scan_page(ver_url, top))
 
     # Deduplicate (same _all.deb may appear in multiple archdirs)
     seen = set()
