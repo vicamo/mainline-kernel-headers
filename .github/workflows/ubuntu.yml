@@ -1,0 +1,109 @@
+name: Build Ubuntu kernel headers images
+
+on:
+  schedule:
+    # Every Monday at 04:00 UTC
+    - cron: '0 4 * * 1'
+  workflow_dispatch:
+    inputs:
+      series:
+        description: 'Comma-separated series names, or "active" for all active series'
+        required: false
+        type: string
+        default: 'active'
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      series: ${{ steps.filter.outputs.series }}
+    steps:
+      - name: Get Ubuntu releases
+        id: releases
+        uses: vicamo/actions-library/ubuntu-releases@v1
+
+      - name: Filter active series
+        id: filter
+        run: |
+          input="${{ inputs.series || 'active' }}"
+          if [ "${input}" = "active" ]; then
+            series=$(echo '${{ steps.releases.outputs.json }}' | python3 -c "
+          import json, sys
+          releases = json.load(sys.stdin)
+          active = [r['codename'] for r in releases if r['active']]
+          print(json.dumps(active))
+          ")
+          else
+            series=$(echo "${input}" | python3 -c "
+          import json, sys
+          names = [s.strip() for s in sys.stdin.read().split(',') if s.strip()]
+          print(json.dumps(names))
+          ")
+          fi
+          echo "series=${series}" >> "$GITHUB_OUTPUT"
+
+  headers:
+    needs: discover
+    if: needs.discover.outputs.series != '[]'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        series: ${{ fromJson(needs.discover.outputs.series) }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Determine base image
+        id: base
+        run: |
+          tag="vicamo/mainline-kernel-headers:${{ matrix.series }}-generic"
+          if docker buildx imagetools inspect "${tag}" >/dev/null 2>&1; then
+            echo "image=${tag}" >> "$GITHUB_OUTPUT"
+          else
+            echo "image=vicamo/mainline-kernel-headers:${{ matrix.series }}-dkms" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Detect platforms
+        id: platforms
+        run: |
+          platforms=$(docker buildx imagetools inspect "${{ steps.base.outputs.image }}" --raw | python3 -c "
+          import json, sys
+          manifest = json.load(sys.stdin)
+          platforms = []
+          for m in manifest.get('manifests', []):
+              p = m['platform']
+              if p['os'] != 'linux':
+                  continue
+              arch = 'linux/' + p['architecture']
+              if p.get('variant'):
+                  arch += '/' + p['variant']
+              platforms.append(arch)
+          print(','.join(sorted(platforms)))
+          ")
+          echo "list=${platforms}" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push headers image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile.ubuntu
+          platforms: ${{ steps.platforms.outputs.list }}
+          build-args: |
+            SERIES=${{ matrix.series }}
+            BASE_IMAGE=${{ steps.base.outputs.image }}
+          push: true
+          tags: |
+            vicamo/mainline-kernel-headers:${{ matrix.series }}-generic
+            vicamo/mainline-kernel-headers:${{ matrix.series }}

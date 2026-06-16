@@ -1,0 +1,57 @@
+# syntax=docker/dockerfile:1
+#
+# Dockerfile.ubuntu — install all linux-headers-*-generic packages.
+#
+# Incremental: defaults to the previous headers image as base. On cold
+# start (image doesn't exist yet), pass BASE_IMAGE to use the dkms image.
+#
+# Build args:
+#   SERIES     - Ubuntu series codename (e.g. "noble")
+#   BASE_IMAGE - override for cold start
+#                (default: vicamo/mainline-kernel-headers:<SERIES>-generic)
+#
+
+ARG SERIES=noble
+ARG BASE_IMAGE=vicamo/mainline-kernel-headers:${SERIES}-generic
+
+FROM ${BASE_IMAGE}
+
+SHELL ["/bin/bash", "-c"]
+RUN <<'INSTALL'
+set -euo pipefail
+
+apt-get update
+
+# Find all available linux-headers-*-generic packages
+mapfile -t pkgs < <(apt-cache search --names-only '^linux-headers-[0-9].*-generic$' | awk '{print $1}' | sort -V)
+
+if [ ${#pkgs[@]} -eq 0 ]; then
+    echo "=== No linux-headers-*-generic packages found ==="
+    rm -rf /var/lib/apt/lists/*
+    exit 0
+fi
+
+# Filter out already-installed packages
+to_install=()
+for pkg in "${pkgs[@]}"; do
+    if dpkg-query -W -f='${Status}' "${pkg}" 2>/dev/null | grep -q '^install ok installed$'; then
+        echo "  SKIP ${pkg} (already installed)"
+    else
+        to_install+=("${pkg}")
+    fi
+done
+
+if [ ${#to_install[@]} -eq 0 ]; then
+    echo "=== All packages already installed. Up to date. ==="
+    rm -rf /var/lib/apt/lists/*
+    exit 0
+fi
+
+echo ">>> Installing ${#to_install[@]} header package(s):"
+printf '  %s\n' "${to_install[@]}"
+
+apt-get install -y --no-install-recommends "${to_install[@]}"
+rm -rf /var/lib/apt/lists/*
+
+echo "=== Done installing kernel headers ==="
+INSTALL
