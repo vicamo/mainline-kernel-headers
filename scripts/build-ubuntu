@@ -165,32 +165,30 @@ if not dpkg_status:
 
 # Parse installed linux-headers-*-generic packages.
 # Package name pattern: linux-headers-<version>-<abi>-generic
-# Record the deb version (from the Version: field) keyed by <version>-<abi>.
-versions = {}
-current_pkg = ''
-current_version = ''
+# Record as {version-abi: [flavours]} to match mainline annotation format.
+from collections import defaultdict
+versions = defaultdict(set)
 for block in dpkg_status.split('\n\n'):
     if 'Package: linux-headers-' not in block:
         continue
     if 'Status: install ok installed' not in block:
         continue
     pkg = ''
-    ver = ''
     for line in block.splitlines():
         if line.startswith('Package: '):
             pkg = line[9:]
-        elif line.startswith('Version: '):
-            ver = line[9:]
     if not pkg.startswith('linux-headers-'):
         continue
-    # Match linux-headers-<ver>-<abi>-generic
-    m = re.match(r'^linux-headers-(\d+\.\d+\.\d+-\d+)-generic$', pkg)
+    # Match linux-headers-<ver>-<abi>-<flavour>
+    m = re.match(r'^linux-headers-(\d+\.\d+\.\d+-\d+)-(.+)$', pkg)
     if m:
         kabi = m.group(1)
-        versions[kabi] = ver
+        flavour = m.group(2)
+        versions[kabi].add(flavour)
 
 if versions:
-    print(json.dumps(versions, separators=(',', ':')))
+    result = {k: sorted(v) for k, v in sorted(versions.items())}
+    print(json.dumps(result, separators=(',', ':')))
 " 2>/dev/null
     ) || true
 
