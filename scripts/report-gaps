@@ -2,9 +2,21 @@
 """
 Generate a gap report for mainline-kernel-headers Docker images.
 
-Outputs GitHub-flavored Markdown suitable for $GITHUB_STEP_SUMMARY.
+Usage:
+    report-gaps [OPTIONS] [SERIES...]
 
-For each active kernel series, compares:
+Options:
+    --format markdown|json   Output format (default: markdown)
+    --json                   Shorthand for --format json
+    --from-json              Read JSON data from stdin and render as markdown.
+                             Ignores SERIES args; skips all network/docker queries.
+
+When no SERIES are given, discovers active (non-EOL) series from kernel.org.
+
+Outputs GitHub-flavored Markdown suitable for $GITHUB_STEP_SUMMARY,
+or structured JSON as an intermediate representation.
+
+For each kernel series, compares:
   1. Versions available on kernel.ubuntu.com/mainline (upstream)
   2. Versions archived in the Docker archive image (per-arch .deb availability)
   3. Versions installed in the Docker headers image (per-platform)
@@ -179,7 +191,8 @@ def version_sort_key(v):
     return tuple(int(p) for p in v.split("."))
 
 
-def generate_report(series_list):
+def json_to_markdown(data):
+    """Render JSON report data as GitHub-flavored Markdown."""
     lines = []
     lines.append("# Mainline Kernel Headers — Gap Report\n")
     lines.append("| Icon | Meaning |")
@@ -191,57 +204,56 @@ def generate_report(series_list):
     lines.append("| ⬛ | No Docker image exists for this series |")
     lines.append("")
 
-    for kver in series_list:
+    status_icon = {
+        "ok": "✅",
+        "unavailable": "⚪",
+        "missing_archive": "❌",
+        "missing_install": "🔺",
+    }
+
+    series_data = data.get("series", {})
+    for kver in sorted(series_data.keys(), key=version_sort_key):
+        info = series_data[kver]
         lines.append(f"## Series {kver}\n")
 
-        print(f"  Fetching upstream versions for {kver}...", file=sys.stderr)
-        upstream = get_upstream_versions(kver)
-        if not upstream:
+        versions = info.get("versions", {})
+        archs = info.get("archs", ARCHS)
+        has_archive = info.get("has_archive", False)
+        has_install = info.get("has_install", False)
+
+        if not versions:
             lines.append("> No versions found upstream.\n")
             continue
 
-        archive_info = get_archive_info(kver)
-        install_info = get_install_info(kver)
-
-        if archive_info is None and install_info is None:
-            lines.append(f"> ⬛ No Docker images exist yet ({len(upstream)} versions upstream)\n")
+        if not has_archive and not has_install:
+            lines.append(f"> ⬛ No Docker images exist yet ({len(versions)} versions upstream)\n")
             continue
 
-        all_versions = sorted(upstream.keys(), key=version_sort_key)
+        all_versions = sorted(versions.keys(), key=version_sort_key)
 
-        # Build rows — only include versions with at least one gap
         gap_rows = []
         for v in all_versions:
-            upstream_archs = upstream[v]
+            arch_status = versions[v]
             cells = []
             has_gap = False
-            for arch in ARCHS:
-                if arch not in upstream_archs:
-                    cells.append("⚪")
+            for arch in archs:
+                status = arch_status.get(arch, "ok")
+                cells.append(status_icon.get(status, "?"))
+                if status != "ok":
                     has_gap = True
-                elif archive_info is not None and arch not in archive_info.get(v, {}):
-                    cells.append("❌")
-                    has_gap = True
-                elif install_info is not None and arch in install_info and v not in install_info[arch]:
-                    cells.append("🔺")
-                    has_gap = True
-                else:
-                    cells.append("✅")
             if has_gap:
                 gap_rows.append((v, cells))
 
         if not gap_rows:
             lines.append(f"✅ All {len(all_versions)} versions fully available across all architectures.\n")
         else:
-            # Emit table
-            lines.append(f"| Version | {' | '.join(ARCHS)} |")
-            lines.append(f"|---------|{'|'.join([':---:'] * len(ARCHS))}|")
+            lines.append(f"| Version | {' | '.join(archs)} |")
+            lines.append(f"|---------|{'|'.join([':---:'] * len(archs))}|")
             for v, cells in gap_rows:
                 lines.append(f"| [``{v}``](https://kernel.ubuntu.com/mainline/v{v}/) | {' | '.join(cells)} |")
             lines.append("")
             lines.append(f"_{len(gap_rows)}/{len(all_versions)} versions have gaps_\n")
 
-            # List complete versions
             complete = [v for v in all_versions if v not in {r[0] for r in gap_rows}]
             if complete:
                 links = ", ".join(f"[v{v}](https://kernel.ubuntu.com/mainline/v{v}/)" for v in complete)
@@ -250,6 +262,12 @@ def generate_report(series_list):
                 lines.append("</details>\n")
 
     return "\n".join(lines)
+
+
+def generate_report(series_list):
+    """Generate markdown report by collecting data then rendering."""
+    data = generate_json(series_list)
+    return json_to_markdown(data)
 
 
 def generate_json(series_list):
@@ -297,23 +315,45 @@ def generate_json(series_list):
 
 
 def main():
-    output_json = False
+    output_format = "markdown"
+    from_json = False
     series_list = []
-    for arg in sys.argv[1:]:
-        if arg == "--json":
-            output_json = True
+
+    args = sys.argv[1:]
+    i = 0
+    while i < len(args):
+        if args[i] == "--json":
+            # Legacy flag, equivalent to --format json
+            output_format = "json"
+        elif args[i] == "--format":
+            i += 1
+            if i >= len(args):
+                print("ERROR: --format requires an argument (markdown or json)", file=sys.stderr)
+                sys.exit(1)
+            output_format = args[i]
+            if output_format not in ("markdown", "json"):
+                print(f"ERROR: --format must be 'markdown' or 'json', got '{output_format}'", file=sys.stderr)
+                sys.exit(1)
+        elif args[i] == "--from-json":
+            from_json = True
         else:
-            series_list.append(arg)
+            series_list.append(args[i])
+        i += 1
 
-    if not series_list:
-        series_list = get_active_series()
-
-    if output_json:
+    if from_json:
+        # Read JSON from stdin and render as markdown
+        data = json.load(sys.stdin)
+        print(json_to_markdown(data))
+    elif output_format == "json":
+        if not series_list:
+            series_list = get_active_series()
         data = generate_json(series_list)
         print(json.dumps(data, separators=(",", ":")))
     else:
-        report = generate_report(series_list)
-        print(report)
+        if not series_list:
+            series_list = get_active_series()
+        data = generate_json(series_list)
+        print(json_to_markdown(data))
 
 
 if __name__ == "__main__":
