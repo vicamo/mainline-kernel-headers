@@ -51,8 +51,9 @@ fi
 archive_tag="${image_prefix}:${kver}-archive"
 headers_tag="${image_prefix}:${kver}"
 
-# Verify archive image exists
-if ! "${script_dir}/get-archive-annotation" "${archive_tag}" "dev.mainline-kernel-headers.versions" >/dev/null 2>&1; then
+# Verify archive image exists and capture its version annotation
+archive_versions_json=$("${script_dir}/get-archive-annotation" "${archive_tag}" "dev.mainline-kernel-headers.versions" 2>/dev/null) || true
+if [ -z "${archive_versions_json}" ]; then
     echo "ERROR: archive image ${archive_tag} not found. Run build-archive first." >&2
     exit 1
 fi
@@ -66,10 +67,7 @@ echo "=== Building headers: ${headers_tag} ==="
 # Check if the install image is already up to date with the archive.
 # Extract the version list from the archive manifest annotation.
 archive_versions=$(
-    v=$("${script_dir}/get-archive-annotation" "${archive_tag}" "dev.mainline-kernel-headers.versions") || true
-    if [ -n "${v}" ]; then
-        echo "${v}" | python3 -c "import json,sys; print(','.join(sorted(json.loads(sys.stdin.read()).keys())))"
-    fi
+    echo "${archive_versions_json}" | python3 -c "import json,sys; print(','.join(sorted(json.loads(sys.stdin.read()).keys())))"
 ) || true
 
 if [ -n "${archive_versions}" ] && \
