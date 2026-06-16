@@ -228,16 +228,15 @@ for block in dpkg_status.split('\n\n'):
             pkg = line[9:]
         elif line.startswith('Architecture: '):
             arch = line[14:]
-    if pkg.startswith('linux-headers-') and arch:
-        # linux[-<derived>]-headers-<ver>-<abi>[-<flavour>]
-        m = re.match(r'linux(?:-.+)?-headers-(\d+\.\d+(?:\.\d+)?)-\d+(?:-(.+))?', pkg)
+    if pkg.startswith('linux-headers-') and arch and arch != 'all':
+        # linux[-<derived>]-headers-<ver>-<abi>-<flavour>
+        m = re.match(r'linux(?:-.+)?-headers-(\d+\.\d+(?:\.\d+)?)-\d+-(.+)', pkg)
         if m:
             ver = m.group(1)
             # Normalize: strip trailing .0 (e.g. 7.0.0 -> 7.0)
             if ver.endswith('.0') and ver.count('.') == 2:
                 ver = ver[:-2]
-            flavour = m.group(2) or 'all'
-            versions[ver].add(flavour)
+            versions[ver].add(m.group(2))
 if versions:
     result = {v: sorted(f) for v, f in sorted(versions.items())}
     print(json.dumps(result, separators=(',', ':')))
