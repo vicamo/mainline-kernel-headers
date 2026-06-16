@@ -252,13 +252,68 @@ def generate_report(series_list):
     return "\n".join(lines)
 
 
+def generate_json(series_list):
+    """Generate structured JSON report data."""
+    from datetime import datetime, timezone
+
+    results = {}
+    for kver in series_list:
+        print(f"  Fetching upstream versions for {kver}...", file=sys.stderr)
+        upstream = get_upstream_versions(kver)
+        if not upstream:
+            results[kver] = {"versions": {}, "archs": ARCHS}
+            continue
+
+        archive_info = get_archive_info(kver)
+        install_info = get_install_info(kver)
+
+        all_versions = sorted(upstream.keys(), key=version_sort_key)
+        versions_data = {}
+        for v in all_versions:
+            upstream_archs = upstream[v]
+            arch_status = {}
+            for arch in ARCHS:
+                if arch not in upstream_archs:
+                    arch_status[arch] = "unavailable"
+                elif archive_info is not None and arch not in archive_info.get(v, {}):
+                    arch_status[arch] = "missing_archive"
+                elif install_info is not None and arch in install_info and v not in install_info[arch]:
+                    arch_status[arch] = "missing_install"
+                else:
+                    arch_status[arch] = "ok"
+            versions_data[v] = arch_status
+
+        results[kver] = {
+            "versions": versions_data,
+            "archs": ARCHS,
+            "has_archive": archive_info is not None,
+            "has_install": install_info is not None,
+        }
+
+    return {
+        "updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "series": results,
+    }
+
+
 def main():
-    if len(sys.argv) > 1:
-        series_list = sys.argv[1:]
-    else:
+    output_json = False
+    series_list = []
+    for arg in sys.argv[1:]:
+        if arg == "--json":
+            output_json = True
+        else:
+            series_list.append(arg)
+
+    if not series_list:
         series_list = get_active_series()
-    report = generate_report(series_list)
-    print(report)
+
+    if output_json:
+        data = generate_json(series_list)
+        print(json.dumps(data, separators=(",", ":")))
+    else:
+        report = generate_report(series_list)
+        print(report)
 
 
 if __name__ == "__main__":
