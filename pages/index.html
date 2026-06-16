@@ -253,8 +253,11 @@ async function main() {
     const seriesList = (meta.series || []).sort((a, b) => versionCompare(b, a));
 
     for (const kver of seriesList) {
-      const data = await loadSeries(kver);
-      if (data) {
+      const raw = await loadSeries(kver);
+      if (raw) {
+        // Each JSON file wraps data in {updated, series: {kver: {...}}}
+        const data = (raw.series && raw.series[kver]) || raw;
+        if (!data.updated && raw.updated) data.updated = raw.updated;
         content.appendChild(renderSeries(kver, data));
       } else {
         const section = document.createElement("div");
