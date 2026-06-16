@@ -87,14 +87,24 @@ def get_upstream_versions(kver):
         }
         found_archs = set()
         has_all_deb = False
-        for ad in archdirs:
-            arch_page = fetch(f"{ver_url}{ad}/")
-            if not arch_page:
-                continue
-            if not has_all_deb:
-                has_all_deb = bool(re.search(r'linux-headers-[^"]+_all\.deb', arch_page))
-            if re.search(rf'linux-headers-[^"]+_{ad}\.deb', arch_page):
-                found_archs.add(ad)
+
+        if archdirs:
+            # Newer layout: debs are inside arch subdirectories
+            for ad in archdirs:
+                arch_page = fetch(f"{ver_url}{ad}/")
+                if not arch_page:
+                    continue
+                if not has_all_deb:
+                    has_all_deb = bool(re.search(r'linux-headers-[^"]+_all\.deb', arch_page))
+                if re.search(rf'linux-headers-[^"]+_{ad}\.deb', arch_page):
+                    found_archs.add(ad)
+        else:
+            # Flat layout (older kernels): debs are on the version page
+            has_all_deb = bool(re.search(r'linux-headers-[^"]+_all\.deb', page))
+            for arch in ARCHS:
+                if re.search(rf'linux-headers-[^"]+_{arch}\.deb', page):
+                    found_archs.add(arch)
+
         if not has_all_deb:
             return v, set()
         return v, found_archs
