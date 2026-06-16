@@ -1,0 +1,255 @@
+#!/usr/bin/env bash
+#
+# Build the Ubuntu generic kernel headers image for a given Ubuntu series.
+#
+# Usage:
+#   ./scripts/build-ubuntu <SERIES> [--push] [--image PREFIX] [--platforms PLATFORMS]
+#
+# Examples:
+#   ./scripts/build-ubuntu noble
+#   ./scripts/build-ubuntu noble --push
+#   ./scripts/build-ubuntu noble --push --image myrepo/kernel-headers
+#   ./scripts/build-ubuntu noble --push --platforms linux/amd64,linux/arm64
+#
+set -euo pipefail
+
+# Require containerd-snapshotter for multi-platform --load and local annotations.
+if ! docker info -f '{{.DriverStatus}}' 2>/dev/null | grep -q 'io.containerd.snapshotter'; then
+    echo "ERROR: containerd-snapshotter not enabled in Docker daemon." >&2
+    echo "Multi-platform --load requires containerd image store." >&2
+    exit 1
+fi
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+repo_dir="$(dirname "${script_dir}")"
+
+push=
+clean=
+series=""
+image_prefix="vicamo/mainline-kernel-headers"
+platforms=""
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --push)          push=--push; shift ;;
+        --clean)         clean=1; shift ;;
+        --image)         image_prefix="$2"; shift 2 ;;
+        --platforms)     platforms="$2"; shift 2 ;;
+        -*)              echo "Unknown flag: $1" >&2; exit 1 ;;
+        *)               series="$1"; shift ;;
+    esac
+done
+
+if [ -z "${series}" ]; then
+    echo "Usage: $0 <SERIES> [--push] [--clean] [--image PREFIX] [--platforms PLATFORMS]" >&2
+    exit 1
+fi
+
+generic_tag="${image_prefix}:${series}-generic"
+alias_tag="${image_prefix}:${series}"
+dkms_tag="${image_prefix}:${series}-dkms"
+
+# ---------------------------------------------------------------------------
+# Determine base image
+# ---------------------------------------------------------------------------
+echo ""
+echo "=== Building Ubuntu headers: ${generic_tag} ==="
+
+if [ -z "${clean}" ] && docker buildx imagetools inspect "${generic_tag}" >/dev/null 2>&1; then
+    echo "  (incremental: previous headers image found)"
+    base_image="${generic_tag}"
+else
+    echo "  (cold start: using ${dkms_tag} as base)"
+    base_image="${dkms_tag}"
+fi
+
+# ---------------------------------------------------------------------------
+# Auto-detect platforms from base image
+# ---------------------------------------------------------------------------
+if [ -z "${platforms}" ]; then
+    platforms=$(docker buildx imagetools inspect "${base_image}" --raw 2>/dev/null \
+        | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+platforms = []
+for m in data.get('manifests', []):
+    ann = m.get('annotations') or {}
+    if 'attestation' in ann.get('vnd.docker.reference.type', ''):
+        continue
+    p = m.get('platform', {})
+    if p.get('os') == 'unknown':
+        continue
+    plat = p.get('os', '') + '/' + p.get('architecture', '')
+    if p.get('variant'):
+        plat += '/' + p['variant']
+    platforms.append(plat)
+if platforms:
+    print(','.join(platforms))
+" 2>/dev/null) || true
+
+    if [ -z "${platforms}" ]; then
+        echo "ERROR: could not detect platforms from base image ${base_image}" >&2
+        exit 1
+    fi
+    echo "  (detected platforms from base: ${platforms})"
+fi
+
+# ---------------------------------------------------------------------------
+# Build (first pass — load locally to extract version info)
+# ---------------------------------------------------------------------------
+tmp_tag="${generic_tag}-tmp"
+echo ""
+echo "--- Building multi-platform install (tmp) ---"
+docker rmi "${tmp_tag}" >/dev/null 2>&1 || true
+docker buildx build \
+    --platform "${platforms}" \
+    --build-arg "SERIES=${series}" \
+    --build-arg "BASE_IMAGE=${base_image}" \
+    -f "${repo_dir}/Dockerfile.ubuntu" \
+    -t "${tmp_tag}" \
+    --load \
+    "${repo_dir}"
+
+# ---------------------------------------------------------------------------
+# Extract per-platform version annotations
+# ---------------------------------------------------------------------------
+echo ""
+echo "--- Extracting per-platform version info ---"
+
+annotation_args=()
+annotation_args+=(--annotation "index:org.opencontainers.image.description=Ubuntu generic kernel headers for ${series}")
+
+IFS=',' read -ra plats <<< "${platforms}"
+for plat in "${plats[@]}"; do
+    echo "  Extracting versions for ${plat} ..."
+    plat_versions=$(
+        docker save --platform "${plat}" "${tmp_tag}" 2>/dev/null \
+            | python3 -c "
+import tarfile, json, io, sys, re
+from collections import defaultdict
+
+tar = tarfile.open(fileobj=sys.stdin.buffer, mode='r|')
+
+content = {}
+for member in tar:
+    if member.isfile():
+        data = tar.extractfile(member).read()
+        content[member.name] = data
+
+# Determine format: OCI (index.json) or Docker (manifest.json)
+if 'index.json' in content:
+    idx = json.loads(content['index.json'])
+    manifest_desc = idx['manifests'][0]
+    manifest_blob = content['blobs/' + manifest_desc['digest'].replace(':', '/')]
+    manifest = json.loads(manifest_blob)
+    layers = [content['blobs/' + l['digest'].replace(':', '/')] for l in manifest['layers']]
+else:
+    mf = json.loads(content['manifest.json'])
+    layers = [content[l] for l in mf[0]['Layers']]
+
+# Extract var/lib/dpkg/status from the topmost layer that has it
+dpkg_status = None
+for layer_data in layers:
+    try:
+        lt = tarfile.open(fileobj=io.BytesIO(layer_data), mode='r:*')
+        for m in lt:
+            if m.name in ('var/lib/dpkg/status', './var/lib/dpkg/status'):
+                dpkg_status = lt.extractfile(m).read().decode()
+                break
+        lt.close()
+    except Exception:
+        pass
+
+if not dpkg_status:
+    sys.exit(0)
+
+# Parse installed linux-headers-*-generic packages.
+# Package name pattern: linux-headers-<version>-<abi>-generic
+# Record the deb version (from the Version: field) keyed by <version>-<abi>.
+versions = {}
+current_pkg = ''
+current_version = ''
+for block in dpkg_status.split('\n\n'):
+    if 'Package: linux-headers-' not in block:
+        continue
+    if 'Status: install ok installed' not in block:
+        continue
+    pkg = ''
+    ver = ''
+    for line in block.splitlines():
+        if line.startswith('Package: '):
+            pkg = line[9:]
+        elif line.startswith('Version: '):
+            ver = line[9:]
+    if not pkg.startswith('linux-headers-'):
+        continue
+    # Match linux-headers-<ver>-<abi>-generic
+    m = re.match(r'^linux-headers-(\d+\.\d+\.\d+-\d+)-generic$', pkg)
+    if m:
+        kabi = m.group(1)
+        versions[kabi] = ver
+
+if versions:
+    print(json.dumps(versions, separators=(',', ':')))
+" 2>/dev/null
+    ) || true
+
+    if [ -n "${plat_versions}" ]; then
+        echo "    Versions: ${plat_versions}"
+        annotation_args+=(--annotation "manifest-descriptor[${plat}]:dev.mainline-kernel-headers.versions=${plat_versions}")
+    fi
+done
+
+# ---------------------------------------------------------------------------
+# Rebuild with annotations and push/load
+# ---------------------------------------------------------------------------
+echo ""
+echo "--- ${push:+Pushing}${push:-Loading} with annotations ---"
+
+docker rmi "${generic_tag}" >/dev/null 2>&1 || true
+docker buildx build \
+    --platform "${platforms}" \
+    --build-arg "SERIES=${series}" \
+    --build-arg "BASE_IMAGE=${base_image}" \
+    -f "${repo_dir}/Dockerfile.ubuntu" \
+    "${annotation_args[@]}" \
+    -t "${generic_tag}" \
+    -t "${alias_tag}" \
+    ${push:---load} \
+    "${repo_dir}"
+
+# Clean up tmp tag
+docker rmi "${tmp_tag}" >/dev/null 2>&1 || true
+
+# ---------------------------------------------------------------------------
+# Inspect results
+# ---------------------------------------------------------------------------
+echo ""
+echo "--- Install image inspection ---"
+IFS=',' read -ra plats <<< "${platforms}"
+for plat in "${plats[@]}"; do
+    if [ -n "${push}" ]; then
+        val=$(docker buildx imagetools inspect "${generic_tag}" --raw 2>/dev/null \
+            | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for m in data.get('manifests', []):
+    p = m.get('platform', {})
+    plat_str = p.get('os','') + '/' + p.get('architecture','')
+    if p.get('variant'):
+        plat_str += '/' + p['variant']
+    if plat_str == '${plat}':
+        print(m.get('annotations', {}).get('dev.mainline-kernel-headers.versions', ''))
+        break
+" 2>/dev/null) || true
+    else
+        val=$(docker image inspect --platform "${plat}" "${generic_tag}" \
+            --format '{{index .Descriptor.Annotations "dev.mainline-kernel-headers.versions"}}' 2>/dev/null) || true
+    fi
+    echo "  ${plat}: dev.mainline-kernel-headers.versions=${val:-<none>}"
+done
+
+echo ""
+echo "=== Done: ${series} ==="
+echo "  Generic: ${generic_tag}"
+echo "  Alias:   ${alias_tag}"

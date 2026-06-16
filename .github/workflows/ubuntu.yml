@@ -65,45 +65,5 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Determine base image
-        id: base
-        run: |
-          tag="vicamo/mainline-kernel-headers:${{ matrix.series }}-generic"
-          if docker buildx imagetools inspect "${tag}" >/dev/null 2>&1; then
-            echo "image=${tag}" >> "$GITHUB_OUTPUT"
-          else
-            echo "image=vicamo/mainline-kernel-headers:${{ matrix.series }}-dkms" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Detect platforms
-        id: platforms
-        run: |
-          platforms=$(docker buildx imagetools inspect "${{ steps.base.outputs.image }}" --raw | python3 -c "
-          import json, sys
-          manifest = json.load(sys.stdin)
-          platforms = []
-          for m in manifest.get('manifests', []):
-              p = m['platform']
-              if p['os'] != 'linux':
-                  continue
-              arch = 'linux/' + p['architecture']
-              if p.get('variant'):
-                  arch += '/' + p['variant']
-              platforms.append(arch)
-          print(','.join(sorted(platforms)))
-          ")
-          echo "list=${platforms}" >> "$GITHUB_OUTPUT"
-
       - name: Build and push headers image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile.ubuntu
-          platforms: ${{ steps.platforms.outputs.list }}
-          build-args: |
-            SERIES=${{ matrix.series }}
-            BASE_IMAGE=${{ steps.base.outputs.image }}
-          push: true
-          tags: |
-            vicamo/mainline-kernel-headers:${{ matrix.series }}-generic
-            vicamo/mainline-kernel-headers:${{ matrix.series }}
+        run: ./scripts/build-ubuntu "${{ matrix.series }}" --push
