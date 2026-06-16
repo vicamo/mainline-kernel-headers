@@ -266,7 +266,13 @@ jobs:
           # Copy dashboard
           cp pages/index.html gh-pages/index.html
 
-          # Merge new JSON reports into existing data
+          # Seed with pre-generated data (won't overwrite fresher CI results)
+          for f in pages/data/*.json; do
+            dest="gh-pages/data/$(basename "${f}")"
+            [ -f "${dest}" ] || cp "${f}" "${dest}"
+          done
+
+          # Merge new JSON reports (overwrite with fresh data)
           for f in _site/data/*.json; do
             [ -f "${f}" ] && cp "${f}" "gh-pages/data/$(basename "${f}")"
           done
