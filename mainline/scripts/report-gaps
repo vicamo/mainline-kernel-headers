@@ -82,7 +82,11 @@ def get_active_series():
 
 
 def get_upstream_versions(kver):
-    """Discover versions available on kernel.ubuntu.com/mainline for a series."""
+    """Discover versions available on kernel.ubuntu.com/mainline for a series.
+
+    Returns {version: {arch: [flavours]}} where each arch lists the flavour
+    variants that have headers debs available upstream.
+    """
     index = fetch(f"{BASE_URL}/")
     if not index:
         return {}
@@ -91,15 +95,19 @@ def get_upstream_versions(kver):
 
     # _all.deb may only appear in one subdir (e.g. amd64) but applies to all.
     # An arch is "available" if it has _ARCH.deb AND _all.deb exists anywhere.
+    # Extract flavour from: linux-headers-MAJ.MIN.PATCH-ABI-FLAVOUR_FULLVER_ARCH.deb
+    # ABI is all digits; flavour starts with a letter.
+    flavour_re = re.compile(r'linux-headers-\d+\.\d+\.\d+-\d+-([a-z][a-z0-9-]*)_[^_]+_([a-z0-9]+)\.deb')
+
     def check_version(v):
         ver_url = f"{BASE_URL}/v{v}/"
         page = fetch(ver_url)
         if not page:
-            return v, set()
+            return v, {}
         archdirs = set(re.findall(r'href="([a-z0-9]+)/"', page)) - {
             "BUILT", "CHANGES", "HEADER", "FOOTER"
         }
-        found_archs = set()
+        arch_flavours = {}  # {arch: set(flavours)}
         has_all_deb = False
 
         if archdirs:
@@ -110,25 +118,28 @@ def get_upstream_versions(kver):
                     continue
                 if not has_all_deb:
                     has_all_deb = bool(re.search(r'linux-headers-[^"]+_all\.deb', arch_page))
-                if re.search(rf'linux-headers-[^"]+_{ad}\.deb', arch_page):
-                    found_archs.add(ad)
+                for m in flavour_re.finditer(arch_page):
+                    flavour, arch = m.groups()
+                    if arch == ad:
+                        arch_flavours.setdefault(arch, set()).add(flavour)
         else:
             # Flat layout (older kernels): debs are on the version page
             has_all_deb = bool(re.search(r'linux-headers-[^"]+_all\.deb', page))
-            for arch in ARCHS:
-                if re.search(rf'linux-headers-[^"]+_{arch}\.deb', page):
-                    found_archs.add(arch)
+            for m in flavour_re.finditer(page):
+                flavour, arch = m.groups()
+                if arch in ARCHS:
+                    arch_flavours.setdefault(arch, set()).add(flavour)
 
         if not has_all_deb:
-            return v, set()
-        return v, found_archs
+            return v, {}
+        return v, {arch: sorted(flavs) for arch, flavs in arch_flavours.items()}
 
     result = {}
     with ThreadPoolExecutor(max_workers=8) as pool:
         futures = {pool.submit(check_version, v): v for v in versions}
         for f in as_completed(futures):
-            v, archs = f.result()
-            result[v] = archs
+            v, arch_flavours = f.result()
+            result[v] = arch_flavours
     return result
 
 
@@ -219,7 +230,7 @@ def json_to_markdown(data):
         lines.append(f"## Series {kver}\n")
 
         versions = info.get("versions", {})
-        archs = info.get("archs", ARCHS)
+        columns = info.get("columns", [])
         has_archive = info.get("has_archive", False)
         has_install = info.get("has_install", False)
 
@@ -235,11 +246,11 @@ def json_to_markdown(data):
 
         gap_rows = []
         for v in all_versions:
-            arch_status = versions[v]
+            col_status = versions[v]
             cells = []
             has_gap = False
-            for arch in archs:
-                status = arch_status.get(arch, "ok")
+            for col in columns:
+                status = col_status.get(col, "ok")
                 cells.append(status_icon.get(status, "?"))
                 if status != "ok":
                     has_gap = True
@@ -249,8 +260,8 @@ def json_to_markdown(data):
         if not gap_rows:
             lines.append(f"✅ All {len(all_versions)} versions fully available across all architectures.\n")
         else:
-            lines.append(f"| Version | {' | '.join(archs)} |")
-            lines.append(f"|---------|{'|'.join([':---:'] * len(archs))}|")
+            lines.append(f"| Version | {' | '.join(columns)} |")
+            lines.append(f"|---------|{'|'.join([':---:'] * len(columns))}|")
             for v, cells in gap_rows:
                 lines.append(f"| [``{v}``](https://kernel.ubuntu.com/mainline/v{v}/) | {' | '.join(cells)} |")
             lines.append("")
@@ -273,7 +284,10 @@ def generate_report(series_list):
 
 
 def generate_json(series_list):
-    """Generate structured JSON report data."""
+    """Generate structured JSON report data.
+
+    Columns are "flavour/arch" (e.g. "generic/amd64", "generic-64k/arm64").
+    """
     from datetime import datetime, timezone
 
     results = {}
@@ -281,31 +295,47 @@ def generate_json(series_list):
         print(f"  Fetching upstream versions for {kver}...", file=sys.stderr)
         upstream = get_upstream_versions(kver)
         if not upstream:
-            results[kver] = {"versions": {}, "archs": ARCHS}
+            results[kver] = {"versions": {}, "columns": []}
             continue
 
         archive_info = get_archive_info(kver)
         install_info = get_install_info(kver)
 
+        # Discover all flavour/arch columns present across any version
+        columns_set = set()
+        for v, arch_flavours in upstream.items():
+            for arch, flavours in arch_flavours.items():
+                for flav in flavours:
+                    columns_set.add(f"{flav}/{arch}")
+
+        # Sort columns: primary by arch order, secondary by flavour name
+        arch_order = {a: i for i, a in enumerate(ARCHS)}
+        columns = sorted(columns_set, key=lambda c: (
+            arch_order.get(c.split("/")[1], 99), c.split("/")[0]
+        ))
+
         all_versions = sorted(upstream.keys(), key=version_sort_key)
         versions_data = {}
         for v in all_versions:
-            upstream_archs = upstream[v]
-            arch_status = {}
-            for arch in ARCHS:
-                if arch not in upstream_archs:
-                    arch_status[arch] = "unavailable"
-                elif archive_info is not None and arch not in archive_info.get(v, {}):
-                    arch_status[arch] = "missing_archive"
-                elif install_info is not None and arch in install_info and v not in install_info[arch]:
-                    arch_status[arch] = "missing_install"
+            upstream_arch_flavours = upstream[v]
+            col_status = {}
+            for col in columns:
+                flav, arch = col.split("/", 1)
+                upstream_flavours = upstream_arch_flavours.get(arch, [])
+                if flav not in upstream_flavours:
+                    col_status[col] = "unavailable"
+                elif archive_info is not None and flav not in archive_info.get(v, {}).get(arch, []):
+                    col_status[col] = "missing_archive"
+                elif install_info is not None and arch in install_info and \
+                        flav not in install_info[arch].get(v, []):
+                    col_status[col] = "missing_install"
                 else:
-                    arch_status[arch] = "ok"
-            versions_data[v] = arch_status
+                    col_status[col] = "ok"
+            versions_data[v] = col_status
 
         results[kver] = {
             "versions": versions_data,
-            "archs": ARCHS,
+            "columns": columns,
             "has_archive": archive_info is not None,
             "has_install": install_info is not None,
         }

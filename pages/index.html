@@ -159,7 +159,7 @@ function renderSeries(kver, data) {
   section.appendChild(header);
 
   const versions = data.versions || {};
-  const archs = data.archs || [];
+  const columns = data.columns || [];
   const allVersions = Object.keys(versions).sort(versionCompare);
 
   if (!data.has_archive && !data.has_install) {
@@ -187,9 +187,9 @@ function renderSeries(kver, data) {
   const thVer = document.createElement("th");
   thVer.textContent = "Version";
   tr.appendChild(thVer);
-  for (const arch of archs) {
+  for (const col of columns) {
     const th = document.createElement("th");
-    th.textContent = arch;
+    th.textContent = col;
     tr.appendChild(th);
   }
   thead.appendChild(tr);
@@ -210,12 +210,12 @@ function renderSeries(kver, data) {
     row.appendChild(tdVer);
 
     let rowHasGap = false;
-    for (const arch of archs) {
-      const status = versions[v][arch] || "no_image";
+    for (const col of columns) {
+      const status = versions[v][col] || "no_image";
       const td = document.createElement("td");
       td.className = CLASSES[status] || "";
       td.textContent = ICONS[status] || "?";
-      td.title = `${v} / ${arch}: ${status}`;
+      td.title = `${v} / ${col}: ${status}`;
       row.appendChild(td);
       if (status !== "ok") rowHasGap = true;
     }
