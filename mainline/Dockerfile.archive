@@ -23,7 +23,5 @@ FROM busybox:musl AS base
 FROM ${ARCHIVE_IMAGE}
 
 ARG KVER
-ARG VERSIONS_JSON=
 COPY --from=base /bin/sh /bin/cp /bin/ls /bin/
 RUN --mount=type=bind,source=debs/${KVER},target=/mnt/debs cp -a /mnt/debs/. /${KVER}/
-LABEL dev.mainline-kernel-headers.versions="${VERSIONS_JSON}"

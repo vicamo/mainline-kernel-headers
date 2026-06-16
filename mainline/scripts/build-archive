@@ -126,10 +126,20 @@ if versions:
 ") || true
 
 annotation_args=()
+label_args=()
 if [ -n "${versions_json}" ]; then
+    created=$(date -u +%Y-%m-%dT%H:%M:%SZ)
     echo "  Versions: ${versions_json}"
+    echo "  Created: ${created}"
     annotation_args+=(--annotation "manifest:org.opencontainers.image.description=Mainline kernel header .deb archive for series ${kver}")
+    annotation_args+=(--annotation "manifest:org.opencontainers.image.created=${created}")
     annotation_args+=(--annotation "manifest:dev.mainline-kernel-headers.versions=${versions_json}")
+    label_args+=(--label "org.opencontainers.image.title=mainline-kernel-headers:${kver}-archive")
+    label_args+=(--label "org.opencontainers.image.description=Mainline kernel header .deb archive for series ${kver}")
+    label_args+=(--label "org.opencontainers.image.source=https://github.com/vicamo/mainline-kernel-headers")
+    label_args+=(--label "org.opencontainers.image.version=${kver}")
+    label_args+=(--label "org.opencontainers.image.created=${created}")
+    label_args+=(--label "dev.mainline-kernel-headers.versions=${versions_json}")
 fi
 
 # Rebuild with annotations (cached, just updates metadata) and push if requested
@@ -140,7 +150,7 @@ docker buildx build \
     -f "${repo_dir}/Dockerfile.archive" \
     "${archive_args[@]}" \
     "${annotation_args[@]}" \
-    --build-arg "VERSIONS_JSON=${versions_json}" \
+    "${label_args[@]}" \
     -t "${archive_tag}" \
     ${push:---load} \
     "${repo_dir}"
