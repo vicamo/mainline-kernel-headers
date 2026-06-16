@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mainline Kernel Headers — Status</title>
+<style>
+:root {
+  --bg: #0d1117;
+  --fg: #c9d1d9;
+  --fg-muted: #8b949e;
+  --border: #30363d;
+  --surface: #161b22;
+  --ok: #3fb950;
+  --warn: #d29922;
+  --err: #f85149;
+  --unavail: #484f58;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.5;
+  padding: 2rem;
+}
+h1 { margin-bottom: 0.25rem; }
+.subtitle { color: var(--fg-muted); margin-bottom: 2rem; }
+.legend {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 2rem;
+  font-size: 0.85rem;
+}
+.legend-item { display: flex; align-items: center; gap: 0.4rem; }
+.legend-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  display: inline-block;
+}
+.series-section { margin-bottom: 2.5rem; }
+.series-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+}
+.series-header h2 { font-size: 1.2rem; }
+.series-meta { color: var(--fg-muted); font-size: 0.85rem; }
+.grid-table {
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  display: block;
+}
+.grid-table th, .grid-table td {
+  border: 1px solid var(--border);
+  padding: 3px 6px;
+  text-align: center;
+  white-space: nowrap;
+}
+.grid-table th {
+  background: var(--surface);
+  position: sticky;
+  top: 0;
+}
+.grid-table td.ver {
+  text-align: left;
+  font-family: monospace;
+  font-size: 0.75rem;
+}
+.grid-table td.ver a { color: var(--fg); text-decoration: none; }
+.grid-table td.ver a:hover { text-decoration: underline; }
+.cell-ok { background: #1a3a25; color: var(--ok); font-weight: bold; }
+.cell-unavail { background: #21262d; color: #666; }
+.cell-missing-archive { background: #3d1a1a; color: var(--err); font-weight: bold; }
+.cell-missing-install { background: #3d2e0a; color: var(--warn); font-weight: bold; }
+.cell-no-image { background: #1c1c1c; color: #666; }
+.summary { color: var(--fg-muted); font-size: 0.85rem; margin-top: 0.25rem; }
+.loading { color: var(--fg-muted); font-style: italic; }
+.error { color: var(--err); }
+#updated { color: var(--fg-muted); font-size: 0.8rem; margin-bottom: 1.5rem; }
+</style>
+</head>
+<body>
+<h1>Mainline Kernel Headers</h1>
+<p class="subtitle">Build status across architectures</p>
+<div id="updated"></div>
+<div class="legend">
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--ok)"></span> Installed</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--unavail)"></span> Not upstream</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--err)"></span> Missing from archive</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--warn)"></span> In archive, not installed</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:#1c1c1c; border:1px solid var(--border)"></span> No image</span>
+</div>
+<div id="content"><p class="loading">Loading data...</p></div>
+
+<script>
+const ICONS = {
+  ok: "✅",
+  unavailable: "⚪",
+  missing_archive: "❌",
+  missing_install: "🔺",
+  no_image: "⬛",
+};
+const CLASSES = {
+  ok: "cell-ok",
+  unavailable: "cell-unavail",
+  missing_archive: "cell-missing-archive",
+  missing_install: "cell-missing-install",
+  no_image: "cell-no-image",
+};
+
+async function loadMeta() {
+  const resp = await fetch("data/meta.json");
+  if (!resp.ok) throw new Error("meta.json not found");
+  return resp.json();
+}
+
+async function loadSeries(kver) {
+  const resp = await fetch(`data/${kver}.json`);
+  if (!resp.ok) return null;
+  return resp.json();
+}
+
+function versionSortKey(v) {
+  return v.split(".").map(Number);
+}
+
+function versionCompare(a, b) {
+  const aa = versionSortKey(a), bb = versionSortKey(b);
+  for (let i = 0; i < Math.max(aa.length, bb.length); i++) {
+    const d = (aa[i] || 0) - (bb[i] || 0);
+    if (d !== 0) return d;
+  }
+  return 0;
+}
+
+function renderSeries(kver, data) {
+  const section = document.createElement("div");
+  section.className = "series-section";
+
+  const header = document.createElement("div");
+  header.className = "series-header";
+  const h2 = document.createElement("h2");
+  h2.textContent = `Series ${kver}`;
+  header.appendChild(h2);
+
+  if (data.updated) {
+    const meta = document.createElement("span");
+    meta.className = "series-meta";
+    meta.textContent = `updated ${new Date(data.updated).toLocaleString()}`;
+    header.appendChild(meta);
+  }
+  section.appendChild(header);
+
+  const versions = data.versions || {};
+  const archs = data.archs || [];
+  const allVersions = Object.keys(versions).sort(versionCompare);
+
+  if (!data.has_archive && !data.has_install) {
+    const p = document.createElement("p");
+    p.className = "summary";
+    p.textContent = `⬛ No Docker images exist yet (${allVersions.length} versions upstream)`;
+    section.appendChild(p);
+    return section;
+  }
+
+  if (allVersions.length === 0) {
+    const p = document.createElement("p");
+    p.className = "summary";
+    p.textContent = "No versions found upstream.";
+    section.appendChild(p);
+    return section;
+  }
+
+  const table = document.createElement("table");
+  table.className = "grid-table";
+
+  // Header row
+  const thead = document.createElement("thead");
+  const tr = document.createElement("tr");
+  const thVer = document.createElement("th");
+  thVer.textContent = "Version";
+  tr.appendChild(thVer);
+  for (const arch of archs) {
+    const th = document.createElement("th");
+    th.textContent = arch;
+    tr.appendChild(th);
+  }
+  thead.appendChild(tr);
+  table.appendChild(thead);
+
+  // Body
+  const tbody = document.createElement("tbody");
+  let gaps = 0;
+  for (const v of allVersions) {
+    const row = document.createElement("tr");
+    const tdVer = document.createElement("td");
+    tdVer.className = "ver";
+    const a = document.createElement("a");
+    a.href = `https://kernel.ubuntu.com/mainline/v${v}/`;
+    a.textContent = v;
+    a.target = "_blank";
+    tdVer.appendChild(a);
+    row.appendChild(tdVer);
+
+    let rowHasGap = false;
+    for (const arch of archs) {
+      const status = versions[v][arch] || "no_image";
+      const td = document.createElement("td");
+      td.className = CLASSES[status] || "";
+      td.textContent = ICONS[status] || "?";
+      td.title = `${v} / ${arch}: ${status}`;
+      row.appendChild(td);
+      if (status !== "ok") rowHasGap = true;
+    }
+    if (rowHasGap) gaps++;
+    tbody.appendChild(row);
+  }
+  table.appendChild(tbody);
+  section.appendChild(table);
+
+  const summary = document.createElement("p");
+  summary.className = "summary";
+  if (gaps === 0) {
+    summary.textContent = `✅ All ${allVersions.length} versions fully available across all architectures.`;
+  } else {
+    summary.textContent = `${gaps}/${allVersions.length} versions have gaps.`;
+  }
+  section.appendChild(summary);
+
+  return section;
+}
+
+async function main() {
+  const content = document.getElementById("content");
+  const updatedEl = document.getElementById("updated");
+
+  try {
+    const meta = await loadMeta();
+    if (meta.updated) {
+      updatedEl.textContent = `Last updated: ${new Date(meta.updated).toLocaleString()}`;
+    }
+
+    content.innerHTML = "";
+
+    // Sort series descending
+    const seriesList = (meta.series || []).sort((a, b) => versionCompare(b, a));
+
+    for (const kver of seriesList) {
+      const raw = await loadSeries(kver);
+      if (raw) {
+        // Each JSON file wraps data in {updated, series: {kver: {...}}}
+        const data = (raw.series && raw.series[kver]) || raw;
+        if (!data.updated && raw.updated) data.updated = raw.updated;
+        content.appendChild(renderSeries(kver, data));
+      } else {
+        const section = document.createElement("div");
+        section.className = "series-section";
+        const h2 = document.createElement("h2");
+        h2.textContent = `Series ${kver}`;
+        section.appendChild(h2);
+        const p = document.createElement("p");
+        p.className = "error";
+        p.textContent = "Failed to load data.";
+        section.appendChild(p);
+        content.appendChild(section);
+      }
+    }
+  } catch (e) {
+    content.innerHTML = `<p class="error">Failed to load status data: ${e.message}</p>`;
+  }
+}
+
+main();
+</script>
+</body>
+</html>
