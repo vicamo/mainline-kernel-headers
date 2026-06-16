@@ -51,9 +51,9 @@ fi
 archive_tag="${image_prefix}:${kver}-archive"
 headers_tag="${image_prefix}:${kver}"
 
-# Verify archive image exists and capture its version annotation
-archive_versions_json=$("${script_dir}/get-archive-annotation" "${archive_tag}" "dev.mainline-kernel-headers.versions" 2>/dev/null) || true
-if [ -z "${archive_versions_json}" ]; then
+# Verify archive image exists and capture its created timestamp
+archive_created=$("${script_dir}/get-archive-annotation" "${archive_tag}" "org.opencontainers.image.created" 2>/dev/null) || true
+if [ -z "${archive_created}" ]; then
     echo "ERROR: archive image ${archive_tag} not found. Run build-archive first." >&2
     exit 1
 fi
@@ -65,26 +65,20 @@ echo ""
 echo "=== Building headers: ${headers_tag} ==="
 
 # Check if the install image is already up to date with the archive.
-# Extract the version list from the archive manifest annotation.
-archive_versions=$(
-    echo "${archive_versions_json}" | python3 -c "import json,sys; print(','.join(sorted(json.loads(sys.stdin.read()).keys())))"
-) || true
-
-if [ -n "${archive_versions}" ] && \
-   docker buildx imagetools inspect "${headers_tag}" >/dev/null 2>&1; then
-    headers_versions=$(docker buildx imagetools inspect "${headers_tag}" --raw 2>/dev/null \
+# Compare the archive created timestamp against what the headers image recorded.
+if docker buildx imagetools inspect "${headers_tag}" >/dev/null 2>&1; then
+    headers_archive_created=$(docker buildx imagetools inspect "${headers_tag}" --raw 2>/dev/null \
         | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
 annotations = data.get('annotations') or {}
-v = annotations.get('dev.mainline-kernel-headers.archive-versions', '')
+v = annotations.get('dev.mainline-kernel-headers.archive-created', '')
 if v:
     print(v)
 " 2>/dev/null) || true
 
-    if [ -z "${force}" ] && [ -n "${headers_versions}" ] && [ "${archive_versions}" = "${headers_versions}" ]; then
-        echo "  Headers image already matches archive versions"
-        echo "  Versions: ${headers_versions}"
+    if [ -z "${force}" ] && [ -n "${headers_archive_created}" ] && [ "${archive_created}" = "${headers_archive_created}" ]; then
+        echo "  Headers image already matches archive (created: ${archive_created})"
         echo ""
         echo "--- Install image inspection ---"
         docker buildx imagetools inspect "${headers_tag}" --raw 2>/dev/null || true
@@ -174,7 +168,7 @@ echo "--- Extracting per-platform version info ---"
 
 annotation_args=()
 annotation_args+=(--annotation "index:org.opencontainers.image.description=Mainline kernel headers for series ${kver}")
-annotation_args+=(--annotation "index:dev.mainline-kernel-headers.archive-versions=${archive_versions}")
+annotation_args+=(--annotation "index:dev.mainline-kernel-headers.archive-created=${archive_created}")
 
 IFS=',' read -ra plats <<< "${headers_platforms}"
 for plat in "${plats[@]}"; do
