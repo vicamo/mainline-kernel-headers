@@ -66,4 +66,4 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push headers image
-        run: ./scripts/build-ubuntu "${{ matrix.series }}" --push
+        run: ./ubuntu/scripts/build-ubuntu "${{ matrix.series }}" --push

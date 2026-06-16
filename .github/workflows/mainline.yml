@@ -115,7 +115,7 @@ jobs:
 
       - name: Compute dkms series
         run: |
-          source scripts/lib/ubuntu-series.sh
+          source mainline/scripts/lib/ubuntu-series.sh
           seen=()
           for kver in $(echo "${matrix}" | python3 -c "import json,sys; [print(v) for v in json.load(sys.stdin)]"); do
             s=$(ubuntu_series_for_kver "${kver}")
@@ -185,7 +185,7 @@ jobs:
           fi
           echo "Detected platforms: ${platforms}"
           docker buildx build \
-            -f Dockerfile.dkms \
+            -f dkms/Dockerfile.dkms \
             --platform "${platforms}" \
             --build-arg "BASE_IMAGE=${base_image}" \
             --push \
@@ -216,17 +216,17 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push archive for ${{ matrix.kver }}
-        run: ./scripts/build-archive "${{ matrix.kver }}" --push
+        run: ./mainline/scripts/build-archive "${{ matrix.kver }}" --push
 
       - name: Build and push headers for ${{ matrix.kver }}
-        run: ./scripts/build-version "${{ matrix.kver }}" --push ${{ inputs.force_install && '--force' || '' }} ${{ inputs.clean_install && '--clean' || '' }}
+        run: ./mainline/scripts/build-version "${{ matrix.kver }}" --push ${{ inputs.force_install && '--force' || '' }} ${{ inputs.clean_install && '--clean' || '' }}
 
       - name: Gap report for ${{ matrix.kver }}
         if: always()
         run: |
           mkdir -p _site/data
-          python3 scripts/report-gaps --format json "${{ matrix.kver }}" > "_site/data/${{ matrix.kver }}.json"
-          python3 scripts/report-gaps --from-json < "_site/data/${{ matrix.kver }}.json" >> "$GITHUB_STEP_SUMMARY"
+          python3 mainline/scripts/report-gaps --format json "${{ matrix.kver }}" > "_site/data/${{ matrix.kver }}.json"
+          python3 mainline/scripts/report-gaps --from-json < "_site/data/${{ matrix.kver }}.json" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload gap report
         if: always()

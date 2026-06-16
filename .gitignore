@@ -1,3 +1,4 @@
-# Downloaded .deb packages (fetched by scripts/build-archive)
-debs/*/
-!debs/.gitkeep
+# Downloaded .deb packages (fetched by mainline/scripts/build-archive)
+mainline/debs/*/
+!mainline/debs/.gitkeep
+**/__pycache__/
