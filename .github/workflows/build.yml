@@ -223,7 +223,18 @@ jobs:
 
       - name: Gap report for ${{ matrix.kver }}
         if: always()
-        run: python3 scripts/report-gaps "${{ matrix.kver }}" >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          python3 scripts/report-gaps "${{ matrix.kver }}" >> "$GITHUB_STEP_SUMMARY"
+          mkdir -p _site/data
+          python3 scripts/report-gaps --json "${{ matrix.kver }}" > "_site/data/${{ matrix.kver }}.json"
+
+      - name: Upload gap report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gap-report-${{ matrix.kver }}
+          path: _site/data/${{ matrix.kver }}.json
+          retention-days: 1
 
   publish-status:
     needs: [discover, build]
@@ -234,22 +245,12 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v4
+      - name: Download gap reports
+        uses: actions/download-artifact@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Generate JSON reports
-        run: |
-          mkdir -p _site/data
-          for kver in $(echo '${{ needs.discover.outputs.versions }}' | python3 -c "import json,sys; [print(v) for v in json.load(sys.stdin)]"); do
-            echo "Generating report for ${kver}..."
-            python3 scripts/report-gaps --json "${kver}" > "_site/data/${kver}.json" || true
-          done
+          pattern: gap-report-*
+          path: _site/data
+          merge-multiple: true
 
       - name: Checkout gh-pages
         uses: actions/checkout@v6
@@ -272,7 +273,7 @@ jobs:
             [ -f "${dest}" ] || cp "${f}" "${dest}"
           done
 
-          # Merge new JSON reports (overwrite with fresh data)
+          # Merge new JSON reports from artifacts (overwrite with fresh data)
           for f in _site/data/*.json; do
             [ -f "${f}" ] && cp "${f}" "gh-pages/data/$(basename "${f}")"
           done
