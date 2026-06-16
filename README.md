@@ -135,7 +135,7 @@ Build the headers image for a single kernel series. Requires the archive image t
 |------|---------|-------------|
 | `--push` | *(off)* | Push image to the registry; without it, image is loaded locally (native platform only) |
 | `--image` | `vicamo/mainline-kernel-headers` | Image name prefix |
-| `--platforms` | `linux/amd64,linux/arm64,linux/arm/v7,linux/ppc64le,linux/s390x` | Target platforms for the headers image (only with `--push`) |
+| `--platforms` | *(auto-detected from base image)* | Target platforms for the headers image (only with `--push`) |
 | `--force` | *(off)* | Force rebuild even if archive is unchanged |
 | `--clean` | *(off)* | Build from scratch (Ubuntu base) instead of previous headers image |
 
@@ -208,6 +208,15 @@ docker buildx imagetools inspect vicamo/mainline-kernel-headers:7.0
 ## Available versions
 
 Images are available from kernel series `5.19` through `7.0`.
+
+## Status dashboard
+
+A live status page showing upstream availability and build coverage
+across all architectures (4.14–7.0) is published via GitHub Pages:
+
+**https://vicamo.github.io/mainline-kernel-headers/**
+
+The dashboard is updated automatically after each CI build run.
 
 ## License
 
