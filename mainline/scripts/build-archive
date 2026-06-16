@@ -3,7 +3,7 @@
 # Build the archive image for a given kernel series.
 #
 # Usage:
-#   ./scripts/build-archive <KVER> [--push] [--image PREFIX]
+#   ./scripts/build-archive <KVER> [--push] [--force] [--image PREFIX]
 #
 # Examples:
 #   ./scripts/build-archive 7.0
@@ -23,12 +23,14 @@ script_dir="$(cd "$(dirname "$0")" && pwd)"
 repo_dir="$(dirname "${script_dir}")"
 
 push=
+force=
 kver=""
 image_prefix="vicamo/mainline-kernel-headers"
 
 while [ $# -gt 0 ]; do
     case "$1" in
         --push)   push=--push; shift ;;
+        --force)  force=1; shift ;;
         --image)  image_prefix="$2"; shift 2 ;;
         -*)       echo "Unknown flag: $1" >&2; exit 1 ;;
         *)        kver="$1"; shift ;;
@@ -57,7 +59,7 @@ archive_versions_json=$("${script_dir}/get-archive-annotation" "${archive_tag}" 
 # Parallel fetch of .deb packages using Python
 new_versions=$(python3 -u "${script_dir}/fetch-debs" "${kver}" "${base_url}" "${debs_dir}" "${archive_versions_json}")
 
-if [ "${new_versions}" -eq 0 ]; then
+if [ -z "${force}" ] && [ "${new_versions}" -eq 0 ]; then
     echo "=== No new versions found, nothing to do. ==="
     [ -n "${archive_versions_json}" ] && echo "${archive_versions_json}"
     exit 0
