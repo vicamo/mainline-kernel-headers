@@ -138,6 +138,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
         series: ${{ fromJson(needs.discover.outputs.dkms_series) }}
     steps:
@@ -196,6 +197,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
+      max-parallel: 4
       matrix:
         kver: ${{ fromJson(needs.discover.outputs.versions) }}
     steps:
