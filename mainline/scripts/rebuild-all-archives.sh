@@ -1,0 +1,88 @@
+#!/usr/bin/env bash
+#
+# Rebuild all archive images with --force --push, cleaning up local
+# images and debs after each series to conserve disk space.
+#
+# Available series are discovered from kernel.ubuntu.com/mainline.
+#
+# Usage:
+#   ./scripts/rebuild-all-archives.sh [--from KVER] [--to KVER] [--image PREFIX]
+#
+# Examples:
+#   ./scripts/rebuild-all-archives.sh                   # all available series
+#   ./scripts/rebuild-all-archives.sh --from 4.14       # 4.14 and newer
+#   ./scripts/rebuild-all-archives.sh --from 6.0 --to 6.6
+#
+set -euo pipefail
+
+script_dir="$(cd "$(dirname "$0")" && pwd)"
+repo_dir="$(dirname "${script_dir}")"
+
+image_prefix="vicamo/mainline-kernel-headers"
+from_kver=
+to_kver=
+
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --from)   from_kver="$2"; shift 2 ;;
+        --to)     to_kver="$2"; shift 2 ;;
+        --image)  image_prefix="$2"; shift 2 ;;
+        -*)       echo "Unknown flag: $1" >&2; exit 1 ;;
+        *)        echo "Unknown argument: $1" >&2; exit 1 ;;
+    esac
+done
+
+# Discover available series from kernel.ubuntu.com/mainline
+echo "=== Discovering available series ==="
+series=$(python3 -c "
+import re, urllib.request
+html = urllib.request.urlopen('https://kernel.ubuntu.com/mainline/', timeout=30).read().decode()
+seen = set()
+result = []
+for m in re.finditer(r'href=\"v(\d+\.\d+)(?:\.\d+)?/', html):
+    s = m.group(1)
+    if s not in seen:
+        seen.add(s)
+        result.append(s)
+key = lambda v: tuple(int(x) for x in v.split('.'))
+result.sort(key=key)
+lo = key('${from_kver}') if '${from_kver}' else None
+hi = key('${to_kver}') if '${to_kver}' else None
+result = [v for v in result if (not lo or key(v) >= lo) and (not hi or key(v) <= hi)]
+print(' '.join(result))
+")
+
+echo "  Series: ${series}"
+echo ""
+
+for kver in ${series}; do
+    echo ""
+    echo "############################################################"
+    echo "# Rebuilding archive: ${kver}"
+    echo "############################################################"
+    echo ""
+
+    "${script_dir}/build-archive" "${kver}" --push --force --image "${image_prefix}" || {
+        echo "WARNING: build-archive failed for ${kver}, continuing..." >&2
+        continue
+    }
+
+    # Clean up local images to free disk space
+    archive_tag="${image_prefix}:${kver}-archive"
+    docker rmi "${archive_tag}" "${archive_tag}-tmp" 2>/dev/null || true
+
+    # Remove downloaded debs
+    rm -rf "${repo_dir}/debs/${kver}"
+
+    # Prune dangling images/layers
+    docker builder prune -f 2>/dev/null || true
+
+    echo ""
+    echo "=== Cleaned up ${kver} ==="
+    df -h "$(dirname "${repo_dir}")" | tail -1
+done
+
+echo ""
+echo "############################################################"
+echo "# All series rebuilt"
+echo "############################################################"
