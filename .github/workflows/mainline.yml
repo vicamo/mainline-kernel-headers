@@ -203,6 +203,9 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
+      - name: Maximize Docker disk space
+        uses: vicamo/actions-library/maximize-docker-disk@v1
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 

@@ -54,6 +54,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Maximize Docker disk space
+        uses: vicamo/actions-library/maximize-docker-disk@v1
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
