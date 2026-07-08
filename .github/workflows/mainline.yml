@@ -118,7 +118,7 @@ jobs:
           echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
 
   build:
-    needs: [discover, dkms]
+    needs: discover
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
