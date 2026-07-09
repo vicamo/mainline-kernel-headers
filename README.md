@@ -236,6 +236,17 @@ across all architectures (4.14–7.0) is published via GitHub Pages:
 
 The dashboard is updated automatically after each CI build run.
 
+### Local preview
+
+To preview the status page locally, serve the `gh-pages` branch:
+
+```sh
+git checkout gh-pages
+python3 -m http.server 8080
+```
+
+Then open http://localhost:8080 in your browser.
+
 ## Repository layout
 
 ```
