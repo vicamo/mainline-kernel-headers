@@ -201,20 +201,21 @@ jobs:
       - name: Prepare gh-pages content
         run: |
           # Ensure gh-pages directory exists (first run)
-          mkdir -p gh-pages/data
+          mkdir -p gh-pages/data/mainline
 
           # Copy dashboard
           cp pages/index.html gh-pages/index.html
 
           # Seed with pre-generated data (won't overwrite fresher CI results)
-          for f in pages/data/*.json; do
-            dest="gh-pages/data/$(basename "${f}")"
+          for f in pages/data/mainline/*.json; do
+            [ -f "${f}" ] || continue
+            dest="gh-pages/data/mainline/$(basename "${f}")"
             [ -f "${dest}" ] || cp "${f}" "${dest}"
           done
 
           # Merge new JSON reports from artifacts (overwrite with fresh data)
           for f in _site/data/*.json; do
-            [ -f "${f}" ] && cp "${f}" "gh-pages/data/$(basename "${f}")"
+            [ -f "${f}" ] && cp "${f}" "gh-pages/data/mainline/$(basename "${f}")"
           done
 
           # Rebuild meta.json from all available data files
@@ -222,7 +223,7 @@ jobs:
           import json, os, glob
           from datetime import datetime, timezone
 
-          data_dir = 'gh-pages/data'
+          data_dir = 'gh-pages/data/mainline'
           series = []
           for f in sorted(glob.glob(os.path.join(data_dir, '*.json'))):
               name = os.path.splitext(os.path.basename(f))[0]
