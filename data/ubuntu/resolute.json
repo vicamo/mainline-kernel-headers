@@ -1,1 +1,1 @@
-{"updated":"2026-07-09T10:17:10+00:00","series":{"resolute":{"versions":{},"columns":[]}}}
+{"series":{"resolute":{"versions":{"7.0.0-14":{"amd64":"ok","arm64":"ok","armhf":"ok","ppc64el":"ok","s390x":"ok"},"7.0.0-15":{"amd64":"ok","arm64":"ok","armhf":"ok","ppc64el":"ok","s390x":"ok"},"7.0.0-22":{"amd64":"ok","arm64":"ok","armhf":"ok","ppc64el":"ok","s390x":"ok"},"7.0.0-27":{"amd64":"ok","arm64":"ok","armhf":"ok","ppc64el":"ok","s390x":"ok"}},"columns":["amd64","arm64","armhf","ppc64el","s390x"]}},"updated":"2026-07-09T17:07:02+00:00"}

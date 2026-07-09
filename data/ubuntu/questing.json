@@ -1,1 +1,1 @@
-{"updated":"2026-07-09T10:15:48+00:00","series":{"questing":{"versions":{},"columns":[]}}}
+{"series":{"questing":{"versions":{"6.17.0-5":{"amd64":"ok","arm64":"ok","armhf":"ok","ppc64el":"ok","s390x":"ok"},"6.17.0-40":{"amd64":"ok","arm64":"ok","armhf":"ok","ppc64el":"ok","s390x":"ok"}},"columns":["amd64","arm64","armhf","ppc64el","s390x"]}},"updated":"2026-07-09T17:07:02+00:00"}

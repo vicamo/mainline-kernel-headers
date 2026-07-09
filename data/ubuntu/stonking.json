@@ -1,1 +1,1 @@
-{"updated":"2026-07-09T10:11:52+00:00","series":{"stonking":{"versions":{},"columns":[]}}}
+{"series":{"stonking":{"versions":{"7.0.0-14":{"amd64":"ok","arm64":"ok","armhf":"ok","ppc64el":"ok","s390x":"ok"}},"columns":["amd64","arm64","armhf","ppc64el","s390x"]}},"updated":"2026-07-09T17:07:02+00:00"}

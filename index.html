@@ -304,9 +304,13 @@ async function loadTab(prefix, containerId, label, versionLinkFn) {
 
   container.innerHTML = "";
 
-  const seriesList = (meta.series || []).sort((a, b) => versionCompare(b, a));
+  // Normalize series list: strings or {name, version} objects
+  const entries = (meta.series || []).map(s =>
+    typeof s === "string" ? { name: s, version: s } : { name: s.name, version: s.version || s.name }
+  );
+  entries.sort((a, b) => versionCompare(b.version, a.version));
 
-  for (const kver of seriesList) {
+  for (const { name: kver } of entries) {
     const raw = await loadJson(`data/${prefix}/${kver}.json`);
     if (raw) {
       const data = (raw.series && raw.series[kver]) || raw;
