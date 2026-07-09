@@ -282,8 +282,8 @@ def main():
         help="read JSON from stdin and render as markdown",
     )
     parser.add_argument(
-        "series", nargs="+", metavar="SERIES",
-        help="Ubuntu series to report",
+        "series", nargs="*", metavar="SERIES",
+        help="Ubuntu series to report (required unless --from-json)",
     )
     args = parser.parse_args()
 
@@ -291,6 +291,8 @@ def main():
         data = json.load(sys.stdin)
         print(json_to_markdown(data))
     else:
+        if not args.series:
+            parser.error("SERIES is required when not using --from-json")
         data = generate_json(args.series)
         if args.output_format == "json":
             print(json.dumps(data, separators=(",", ":")))
