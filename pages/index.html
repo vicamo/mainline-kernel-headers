@@ -195,7 +195,7 @@ function versionCompare(a, b) {
   return 0;
 }
 
-function renderSeries(label, kver, data, versionLinkFn) {
+function renderSeries(prefix, label, kver, data, versionLinkFn) {
   const section = document.createElement("div");
   section.className = "series-section";
 
@@ -217,7 +217,7 @@ function renderSeries(label, kver, data, versionLinkFn) {
   const columns = data.columns || [];
   const allVersions = Object.keys(versions).sort(versionCompare);
 
-  if (!data.has_archive && !data.has_install) {
+  if (prefix === "mainline" && !data.has_archive && !data.has_install) {
     const p = document.createElement("p");
     p.className = "summary";
     p.textContent = `⬛ No Docker images exist yet (${allVersions.length} versions upstream)`;
@@ -315,7 +315,7 @@ async function loadTab(prefix, containerId, label, versionLinkFn) {
     if (raw) {
       const data = (raw.series && raw.series[kver]) || raw;
       if (!data.updated && raw.updated) data.updated = raw.updated;
-      container.appendChild(renderSeries(label, kver, data, versionLinkFn));
+      container.appendChild(renderSeries(prefix, label, kver, data, versionLinkFn));
     } else {
       const section = document.createElement("div");
       section.className = "series-section";
