@@ -1,1 +1,285 @@
-{"updated":"2026-07-09T07:50:16+00:00","series":["4.10","4.11","4.12","4.13","4.14","4.15","4.16","4.17","4.18","4.19","4.20","4.7","4.8","4.9","5.0","5.1","5.10","5.11","5.12","5.13","5.14","5.15","5.16","5.17","5.18","5.19","5.2","5.3","5.4","5.5","5.6","5.7","5.8","5.9","6.0","6.1","6.10","6.11","6.12","6.13","6.14","6.15","6.16","6.17","6.18","6.19","6.2","6.3","6.4","6.5","6.6","6.7","6.8","6.9","7.0","7.1"]}
+{
+  "updated": "2026-07-09T07:50:16+00:00",
+  "series": [
+    {
+      "name": "4.10",
+      "version": "4.10",
+      "title": "Version 4.10"
+    },
+    {
+      "name": "4.11",
+      "version": "4.11",
+      "title": "Version 4.11"
+    },
+    {
+      "name": "4.12",
+      "version": "4.12",
+      "title": "Version 4.12"
+    },
+    {
+      "name": "4.13",
+      "version": "4.13",
+      "title": "Version 4.13"
+    },
+    {
+      "name": "4.14",
+      "version": "4.14",
+      "title": "Version 4.14"
+    },
+    {
+      "name": "4.15",
+      "version": "4.15",
+      "title": "Version 4.15"
+    },
+    {
+      "name": "4.16",
+      "version": "4.16",
+      "title": "Version 4.16"
+    },
+    {
+      "name": "4.17",
+      "version": "4.17",
+      "title": "Version 4.17"
+    },
+    {
+      "name": "4.18",
+      "version": "4.18",
+      "title": "Version 4.18"
+    },
+    {
+      "name": "4.19",
+      "version": "4.19",
+      "title": "Version 4.19"
+    },
+    {
+      "name": "4.20",
+      "version": "4.20",
+      "title": "Version 4.20"
+    },
+    {
+      "name": "4.7",
+      "version": "4.7",
+      "title": "Version 4.7"
+    },
+    {
+      "name": "4.8",
+      "version": "4.8",
+      "title": "Version 4.8"
+    },
+    {
+      "name": "4.9",
+      "version": "4.9",
+      "title": "Version 4.9"
+    },
+    {
+      "name": "5.0",
+      "version": "5.0",
+      "title": "Version 5.0"
+    },
+    {
+      "name": "5.1",
+      "version": "5.1",
+      "title": "Version 5.1"
+    },
+    {
+      "name": "5.10",
+      "version": "5.10",
+      "title": "Version 5.10"
+    },
+    {
+      "name": "5.11",
+      "version": "5.11",
+      "title": "Version 5.11"
+    },
+    {
+      "name": "5.12",
+      "version": "5.12",
+      "title": "Version 5.12"
+    },
+    {
+      "name": "5.13",
+      "version": "5.13",
+      "title": "Version 5.13"
+    },
+    {
+      "name": "5.14",
+      "version": "5.14",
+      "title": "Version 5.14"
+    },
+    {
+      "name": "5.15",
+      "version": "5.15",
+      "title": "Version 5.15"
+    },
+    {
+      "name": "5.16",
+      "version": "5.16",
+      "title": "Version 5.16"
+    },
+    {
+      "name": "5.17",
+      "version": "5.17",
+      "title": "Version 5.17"
+    },
+    {
+      "name": "5.18",
+      "version": "5.18",
+      "title": "Version 5.18"
+    },
+    {
+      "name": "5.19",
+      "version": "5.19",
+      "title": "Version 5.19"
+    },
+    {
+      "name": "5.2",
+      "version": "5.2",
+      "title": "Version 5.2"
+    },
+    {
+      "name": "5.3",
+      "version": "5.3",
+      "title": "Version 5.3"
+    },
+    {
+      "name": "5.4",
+      "version": "5.4",
+      "title": "Version 5.4"
+    },
+    {
+      "name": "5.5",
+      "version": "5.5",
+      "title": "Version 5.5"
+    },
+    {
+      "name": "5.6",
+      "version": "5.6",
+      "title": "Version 5.6"
+    },
+    {
+      "name": "5.7",
+      "version": "5.7",
+      "title": "Version 5.7"
+    },
+    {
+      "name": "5.8",
+      "version": "5.8",
+      "title": "Version 5.8"
+    },
+    {
+      "name": "5.9",
+      "version": "5.9",
+      "title": "Version 5.9"
+    },
+    {
+      "name": "6.0",
+      "version": "6.0",
+      "title": "Version 6.0"
+    },
+    {
+      "name": "6.1",
+      "version": "6.1",
+      "title": "Version 6.1"
+    },
+    {
+      "name": "6.10",
+      "version": "6.10",
+      "title": "Version 6.10"
+    },
+    {
+      "name": "6.11",
+      "version": "6.11",
+      "title": "Version 6.11"
+    },
+    {
+      "name": "6.12",
+      "version": "6.12",
+      "title": "Version 6.12"
+    },
+    {
+      "name": "6.13",
+      "version": "6.13",
+      "title": "Version 6.13"
+    },
+    {
+      "name": "6.14",
+      "version": "6.14",
+      "title": "Version 6.14"
+    },
+    {
+      "name": "6.15",
+      "version": "6.15",
+      "title": "Version 6.15"
+    },
+    {
+      "name": "6.16",
+      "version": "6.16",
+      "title": "Version 6.16"
+    },
+    {
+      "name": "6.17",
+      "version": "6.17",
+      "title": "Version 6.17"
+    },
+    {
+      "name": "6.18",
+      "version": "6.18",
+      "title": "Version 6.18"
+    },
+    {
+      "name": "6.19",
+      "version": "6.19",
+      "title": "Version 6.19"
+    },
+    {
+      "name": "6.2",
+      "version": "6.2",
+      "title": "Version 6.2"
+    },
+    {
+      "name": "6.3",
+      "version": "6.3",
+      "title": "Version 6.3"
+    },
+    {
+      "name": "6.4",
+      "version": "6.4",
+      "title": "Version 6.4"
+    },
+    {
+      "name": "6.5",
+      "version": "6.5",
+      "title": "Version 6.5"
+    },
+    {
+      "name": "6.6",
+      "version": "6.6",
+      "title": "Version 6.6"
+    },
+    {
+      "name": "6.7",
+      "version": "6.7",
+      "title": "Version 6.7"
+    },
+    {
+      "name": "6.8",
+      "version": "6.8",
+      "title": "Version 6.8"
+    },
+    {
+      "name": "6.9",
+      "version": "6.9",
+      "title": "Version 6.9"
+    },
+    {
+      "name": "7.0",
+      "version": "7.0",
+      "title": "Version 7.0"
+    },
+    {
+      "name": "7.1",
+      "version": "7.1",
+      "title": "Version 7.1"
+    }
+  ]
+}

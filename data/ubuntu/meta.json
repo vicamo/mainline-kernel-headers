@@ -1,1 +1,60 @@
-{"updated":"2026-07-09T17:07:02+00:00","series":[{"name":"bionic","version":"18.04"},{"name":"focal","version":"20.04"},{"name":"jammy","version":"22.04"},{"name":"noble","version":"24.04"},{"name":"oracular","version":"24.10"},{"name":"plucky","version":"25.04"},{"name":"questing","version":"25.10"},{"name":"resolute","version":"26.04"},{"name":"stonking","version":"26.10"},{"name":"trusty","version":"14.04"},{"name":"xenial","version":"16.04"}]}
+{
+  "updated": "2026-07-09T17:07:02+00:00",
+  "series": [
+    {
+      "name": "bionic",
+      "version": "18.04",
+      "title": "Ubuntu 18.04 LTS \"Bionic Beaver\""
+    },
+    {
+      "name": "focal",
+      "version": "20.04",
+      "title": "Ubuntu 20.04 LTS \"Focal Fossa\""
+    },
+    {
+      "name": "jammy",
+      "version": "22.04",
+      "title": "Ubuntu 22.04 LTS \"Jammy Jellyfish\""
+    },
+    {
+      "name": "noble",
+      "version": "24.04",
+      "title": "Ubuntu 24.04 LTS \"Noble Numbat\""
+    },
+    {
+      "name": "oracular",
+      "version": "24.10",
+      "title": "Ubuntu 24.10 \"Oracular Oriole\""
+    },
+    {
+      "name": "plucky",
+      "version": "25.04",
+      "title": "Ubuntu 25.04 \"Plucky Puffin\""
+    },
+    {
+      "name": "questing",
+      "version": "25.10",
+      "title": "Ubuntu 25.10 \"Questing Quokka\""
+    },
+    {
+      "name": "resolute",
+      "version": "26.04",
+      "title": "Ubuntu 26.04 LTS \"Resolute Raccoon\""
+    },
+    {
+      "name": "stonking",
+      "version": "26.10",
+      "title": "Ubuntu 26.10 \"Stonking Stingray\""
+    },
+    {
+      "name": "trusty",
+      "version": "14.04",
+      "title": "Ubuntu 14.04 LTS \"Trusty Tahr\""
+    },
+    {
+      "name": "xenial",
+      "version": "16.04",
+      "title": "Ubuntu 16.04 LTS \"Xenial Xerus\""
+    }
+  ]
+}
