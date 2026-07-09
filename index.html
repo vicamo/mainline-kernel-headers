@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Mainline Kernel Headers — Status</title>
+<title>Kernel Headers — Status</title>
 <style>
 :root {
   --bg: #0d1117;
@@ -15,6 +15,7 @@
   --warn: #d29922;
   --err: #f85149;
   --unavail: #484f58;
+  --accent: #58a6ff;
 }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body {
@@ -25,7 +26,42 @@ body {
   padding: 2rem;
 }
 h1 { margin-bottom: 0.25rem; }
-.subtitle { color: var(--fg-muted); margin-bottom: 2rem; }
+.subtitle { color: var(--fg-muted); margin-bottom: 1.5rem; }
+
+/* Tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 1.5rem;
+}
+.tab {
+  padding: 0.6rem 1.5rem;
+  cursor: pointer;
+  color: var(--fg-muted);
+  border: 1px solid transparent;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  font-size: 0.95rem;
+  user-select: none;
+}
+.tab:hover { color: var(--fg); }
+.tab.active {
+  color: var(--fg);
+  background: var(--surface);
+  border-color: var(--border);
+  position: relative;
+}
+.tab.active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: var(--surface);
+}
+
 .legend {
   display: flex;
   gap: 1.5rem;
@@ -84,20 +120,35 @@ h1 { margin-bottom: 0.25rem; }
 .loading { color: var(--fg-muted); font-style: italic; }
 .error { color: var(--err); }
 #updated { color: var(--fg-muted); font-size: 0.8rem; margin-bottom: 1.5rem; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 </style>
 </head>
 <body>
-<h1>Mainline Kernel Headers</h1>
+<h1>Kernel Headers</h1>
 <p class="subtitle">Build status across architectures</p>
-<div id="updated"></div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="mainline">Mainline</div>
+  <div class="tab" data-tab="ubuntu">Ubuntu</div>
+</div>
+
 <div class="legend">
   <span class="legend-item"><span class="legend-swatch" style="background:var(--ok)"></span> Installed</span>
   <span class="legend-item"><span class="legend-swatch" style="background:var(--unavail)"></span> Not upstream</span>
   <span class="legend-item"><span class="legend-swatch" style="background:var(--err)"></span> Missing from archive</span>
-  <span class="legend-item"><span class="legend-swatch" style="background:var(--warn)"></span> In archive, not installed</span>
+  <span class="legend-item"><span class="legend-swatch" style="background:var(--warn)"></span> Available, not installed</span>
   <span class="legend-item"><span class="legend-swatch" style="background:#1c1c1c; border:1px solid var(--border)"></span> No image</span>
 </div>
-<div id="content"><p class="loading">Loading data...</p></div>
+
+<div id="updated"></div>
+
+<div class="tab-content active" id="mainline-content">
+  <p class="loading">Loading mainline data...</p>
+</div>
+<div class="tab-content" id="ubuntu-content">
+  <p class="loading">Loading ubuntu data...</p>
+</div>
 
 <script>
 const ICONS = {
@@ -115,20 +166,24 @@ const CLASSES = {
   no_image: "cell-no-image",
 };
 
-async function loadMeta() {
-  const resp = await fetch("data/meta.json");
-  if (!resp.ok) throw new Error("meta.json not found");
-  return resp.json();
-}
+// Tab switching
+document.querySelectorAll(".tab").forEach(tab => {
+  tab.addEventListener("click", () => {
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    document.querySelectorAll(".tab-content").forEach(c => c.classList.remove("active"));
+    tab.classList.add("active");
+    document.getElementById(tab.dataset.tab + "-content").classList.add("active");
+  });
+});
 
-async function loadSeries(kver) {
-  const resp = await fetch(`data/${kver}.json`);
+async function loadJson(url) {
+  const resp = await fetch(url);
   if (!resp.ok) return null;
   return resp.json();
 }
 
 function versionSortKey(v) {
-  return v.split(".").map(Number);
+  return v.split(/[.-]/).map(Number);
 }
 
 function versionCompare(a, b) {
@@ -140,14 +195,14 @@ function versionCompare(a, b) {
   return 0;
 }
 
-function renderSeries(kver, data) {
+function renderSeries(label, kver, data, versionLinkFn) {
   const section = document.createElement("div");
   section.className = "series-section";
 
   const header = document.createElement("div");
   header.className = "series-header";
   const h2 = document.createElement("h2");
-  h2.textContent = `Series ${kver}`;
+  h2.textContent = `${label} ${kver}`;
   header.appendChild(h2);
 
   if (data.updated) {
@@ -173,7 +228,7 @@ function renderSeries(kver, data) {
   if (allVersions.length === 0) {
     const p = document.createElement("p");
     p.className = "summary";
-    p.textContent = "No versions found upstream.";
+    p.textContent = "No versions found.";
     section.appendChild(p);
     return section;
   }
@@ -181,7 +236,6 @@ function renderSeries(kver, data) {
   const table = document.createElement("table");
   table.className = "grid-table";
 
-  // Header row
   const thead = document.createElement("thead");
   const tr = document.createElement("tr");
   const thVer = document.createElement("th");
@@ -195,18 +249,21 @@ function renderSeries(kver, data) {
   thead.appendChild(tr);
   table.appendChild(thead);
 
-  // Body
   const tbody = document.createElement("tbody");
   let gaps = 0;
   for (const v of allVersions) {
     const row = document.createElement("tr");
     const tdVer = document.createElement("td");
     tdVer.className = "ver";
-    const a = document.createElement("a");
-    a.href = `https://kernel.ubuntu.com/mainline/v${v}/`;
-    a.textContent = v;
-    a.target = "_blank";
-    tdVer.appendChild(a);
+    if (versionLinkFn) {
+      const a = document.createElement("a");
+      a.href = versionLinkFn(v);
+      a.textContent = v;
+      a.target = "_blank";
+      tdVer.appendChild(a);
+    } else {
+      tdVer.textContent = v;
+    }
     row.appendChild(tdVer);
 
     let rowHasGap = false;
@@ -217,7 +274,7 @@ function renderSeries(kver, data) {
       td.textContent = ICONS[status] || "?";
       td.title = `${v} / ${col}: ${status}`;
       row.appendChild(td);
-      if (status !== "ok") rowHasGap = true;
+      if (status !== "ok" && status !== "unavailable") rowHasGap = true;
     }
     if (rowHasGap) gaps++;
     tbody.appendChild(row);
@@ -228,7 +285,7 @@ function renderSeries(kver, data) {
   const summary = document.createElement("p");
   summary.className = "summary";
   if (gaps === 0) {
-    summary.textContent = `✅ All ${allVersions.length} versions fully available across all architectures.`;
+    summary.textContent = `✅ All ${allVersions.length} versions fully available.`;
   } else {
     summary.textContent = `${gaps}/${allVersions.length} versions have gaps.`;
   }
@@ -237,43 +294,57 @@ function renderSeries(kver, data) {
   return section;
 }
 
+async function loadTab(prefix, containerId, label, versionLinkFn) {
+  const container = document.getElementById(containerId);
+  const meta = await loadJson(`data/${prefix}/meta.json`);
+  if (!meta) {
+    container.innerHTML = `<p class="error">No data available yet.</p>`;
+    return;
+  }
+
+  container.innerHTML = "";
+
+  const seriesList = (meta.series || []).sort((a, b) => versionCompare(b, a));
+
+  for (const kver of seriesList) {
+    const raw = await loadJson(`data/${prefix}/${kver}.json`);
+    if (raw) {
+      const data = (raw.series && raw.series[kver]) || raw;
+      if (!data.updated && raw.updated) data.updated = raw.updated;
+      container.appendChild(renderSeries(label, kver, data, versionLinkFn));
+    } else {
+      const section = document.createElement("div");
+      section.className = "series-section";
+      const h2 = document.createElement("h2");
+      h2.textContent = `${label} ${kver}`;
+      section.appendChild(h2);
+      const p = document.createElement("p");
+      p.className = "error";
+      p.textContent = "Failed to load data.";
+      section.appendChild(p);
+      container.appendChild(section);
+    }
+  }
+}
+
 async function main() {
-  const content = document.getElementById("content");
   const updatedEl = document.getElementById("updated");
 
-  try {
-    const meta = await loadMeta();
-    if (meta.updated) {
-      updatedEl.textContent = `Last updated: ${new Date(meta.updated).toLocaleString()}`;
-    }
+  // Load both tabs
+  await Promise.all([
+    loadTab("mainline", "mainline-content", "Series",
+      v => `https://kernel.ubuntu.com/mainline/v${v}/`),
+    loadTab("ubuntu", "ubuntu-content", "",
+      null),
+  ]);
 
-    content.innerHTML = "";
-
-    // Sort series descending
-    const seriesList = (meta.series || []).sort((a, b) => versionCompare(b, a));
-
-    for (const kver of seriesList) {
-      const raw = await loadSeries(kver);
-      if (raw) {
-        // Each JSON file wraps data in {updated, series: {kver: {...}}}
-        const data = (raw.series && raw.series[kver]) || raw;
-        if (!data.updated && raw.updated) data.updated = raw.updated;
-        content.appendChild(renderSeries(kver, data));
-      } else {
-        const section = document.createElement("div");
-        section.className = "series-section";
-        const h2 = document.createElement("h2");
-        h2.textContent = `Series ${kver}`;
-        section.appendChild(h2);
-        const p = document.createElement("p");
-        p.className = "error";
-        p.textContent = "Failed to load data.";
-        section.appendChild(p);
-        content.appendChild(section);
-      }
-    }
-  } catch (e) {
-    content.innerHTML = `<p class="error">Failed to load status data: ${e.message}</p>`;
+  // Show most recent updated time
+  const mainMeta = await loadJson("data/mainline/meta.json");
+  const ubuntuMeta = await loadJson("data/ubuntu/meta.json");
+  const times = [mainMeta?.updated, ubuntuMeta?.updated].filter(Boolean);
+  if (times.length) {
+    const latest = times.sort().pop();
+    updatedEl.textContent = `Last updated: ${new Date(latest).toLocaleString()}`;
   }
 }
 
