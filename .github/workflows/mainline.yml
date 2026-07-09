@@ -21,6 +21,11 @@ on:
         required: false
         type: boolean
         default: false
+      limit:
+        description: 'Max kernel versions to install per build (0 = unlimited, empty = Dockerfile default 50)'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   discover:
@@ -149,7 +154,11 @@ jobs:
         run: ./mainline/scripts/build-archive "${{ matrix.kver }}" --push
 
       - name: Build and push headers for ${{ matrix.kver }}
-        run: ./mainline/scripts/build-version "${{ matrix.kver }}" --push ${{ inputs.force_install && '--force' || '' }} ${{ inputs.clean_install && '--clean' || '' }}
+        run: |
+          ./mainline/scripts/build-version "${{ matrix.kver }}" --push \
+              ${{ inputs.force_install && '--force' || '' }} \
+              ${{ inputs.clean_install && '--clean' || '' }} \
+              ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }}
 
       - name: Gap report for ${{ matrix.kver }}
         if: always()

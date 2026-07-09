@@ -11,6 +11,11 @@ on:
         required: false
         type: string
         default: 'active'
+      limit:
+        description: 'Max kernels to install per build (0 = unlimited, empty = Dockerfile default 50)'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   discover:
@@ -75,4 +80,6 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and push headers image
-        run: ./ubuntu/scripts/build-ubuntu "${{ matrix.series }}" --push
+        run: |
+          ./ubuntu/scripts/build-ubuntu "${{ matrix.series }}" --push \
+              ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }}
