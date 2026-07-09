@@ -147,19 +147,22 @@ jobs:
 
           data_dir = 'gh-pages/data/ubuntu'
 
-          # Map codename -> version via ubuntu-distro-info
-          ver_map = {}
+          # Map codename -> {version, title} via ubuntu-distro-info
+          info_map = {}
           try:
               r = subprocess.run(
                   ['ubuntu-distro-info', '--all', '-f'],
                   capture_output=True, text=True, timeout=10,
               )
+              import re
               for line in r.stdout.strip().splitlines():
-                  # e.g. 'Ubuntu 24.04 LTS \"Noble Numbat\"'
-                  import re
-                  m = re.search(r'(\d+\.\d+)\b.*?\"(\w+)', line)
+                  # e.g. 'Ubuntu 24.04 LTS "Noble Numbat"'
+                  m = re.search(r'(\d+\.\d+)\b.*?"(\w+)', line)
                   if m:
-                      ver_map[m.group(2).lower()] = m.group(1)
+                      info_map[m.group(2).lower()] = {
+                          'version': m.group(1),
+                          'title': line.strip(),
+                      }
           except Exception:
               pass
 
@@ -169,8 +172,9 @@ jobs:
               if name == 'meta':
                   continue
               entry = {'name': name}
-              if name in ver_map:
-                  entry['version'] = ver_map[name]
+              if name in info_map:
+                  entry['version'] = info_map[name]['version']
+                  entry['title'] = info_map[name]['title']
               series.append(entry)
 
           meta = {

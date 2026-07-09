@@ -229,7 +229,7 @@ jobs:
               name = os.path.splitext(os.path.basename(f))[0]
               if name == 'meta':
                   continue
-              series.append(name)
+              series.append({'name': name, 'version': name, 'title': f'Version {name}'})
 
           meta = {
               'updated': datetime.now(timezone.utc).isoformat(timespec='seconds'),

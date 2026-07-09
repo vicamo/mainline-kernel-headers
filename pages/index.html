@@ -195,14 +195,14 @@ function versionCompare(a, b) {
   return 0;
 }
 
-function renderSeries(prefix, label, kver, data, versionLinkFn) {
+function renderSeries(prefix, kver, data, versionLinkFn, title) {
   const section = document.createElement("div");
   section.className = "series-section";
 
   const header = document.createElement("div");
   header.className = "series-header";
   const h2 = document.createElement("h2");
-  h2.textContent = `${label} ${kver}`;
+  h2.textContent = title;
   header.appendChild(h2);
 
   if (data.updated) {
@@ -294,7 +294,7 @@ function renderSeries(prefix, label, kver, data, versionLinkFn) {
   return section;
 }
 
-async function loadTab(prefix, containerId, label, versionLinkFn) {
+async function loadTab(prefix, containerId, versionLinkFn) {
   const container = document.getElementById(containerId);
   const meta = await loadJson(`data/${prefix}/meta.json`);
   if (!meta) {
@@ -304,23 +304,23 @@ async function loadTab(prefix, containerId, label, versionLinkFn) {
 
   container.innerHTML = "";
 
-  // Normalize series list: strings or {name, version} objects
+  // Normalize series list: strings or {name, version, title} objects
   const entries = (meta.series || []).map(s =>
-    typeof s === "string" ? { name: s, version: s } : { name: s.name, version: s.version || s.name }
+    typeof s === "string" ? { name: s, version: s } : { name: s.name, version: s.version || s.name, title: s.title }
   );
   entries.sort((a, b) => versionCompare(b.version, a.version));
 
-  for (const { name: kver } of entries) {
+  for (const { name: kver, title } of entries) {
     const raw = await loadJson(`data/${prefix}/${kver}.json`);
     if (raw) {
       const data = (raw.series && raw.series[kver]) || raw;
       if (!data.updated && raw.updated) data.updated = raw.updated;
-      container.appendChild(renderSeries(prefix, label, kver, data, versionLinkFn));
+      container.appendChild(renderSeries(prefix, kver, data, versionLinkFn, title));
     } else {
       const section = document.createElement("div");
       section.className = "series-section";
       const h2 = document.createElement("h2");
-      h2.textContent = `${label} ${kver}`;
+      h2.textContent = title;
       section.appendChild(h2);
       const p = document.createElement("p");
       p.className = "error";
@@ -336,9 +336,9 @@ async function main() {
 
   // Load both tabs
   await Promise.all([
-    loadTab("mainline", "mainline-content", "Version",
+    loadTab("mainline", "mainline-content",
       v => `https://kernel.ubuntu.com/mainline/v${v}/`),
-    loadTab("ubuntu", "ubuntu-content", "",
+    loadTab("ubuntu", "ubuntu-content",
       null),
   ]);
 
