@@ -3,14 +3,14 @@
 # Build the Ubuntu generic kernel headers image for a given Ubuntu series.
 #
 # Usage:
-#   ./scripts/build-ubuntu <SERIES> [--push] [--unlimit] [--image PREFIX] [--platforms PLATFORMS]
+#   ./scripts/build-ubuntu <SERIES> [--push] [--limit N] [--image PREFIX] [--platforms PLATFORMS]
 #
 # Examples:
 #   ./scripts/build-ubuntu noble
 #   ./scripts/build-ubuntu noble --push
 #   ./scripts/build-ubuntu noble --push --image myrepo/kernel-headers
 #   ./scripts/build-ubuntu noble --push --platforms linux/amd64,linux/arm64
-#   ./scripts/build-ubuntu noble --unlimit   # install all kernels (no 50-kernel cap)
+#   ./scripts/build-ubuntu noble --limit 0   # install all kernels (no cap)
 #
 set -euo pipefail
 
@@ -26,7 +26,7 @@ repo_dir="$(dirname "${script_dir}")"
 
 push=
 clean=
-unlimit=
+limit=
 series=""
 image_prefix="vicamo/mainline-kernel-headers"
 platforms=""
@@ -35,7 +35,7 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --push)          push=--push; shift ;;
         --clean)         clean=1; shift ;;
-        --unlimit)       unlimit=1; shift ;;
+        --limit)         limit="$2"; shift 2 ;;
         --image)         image_prefix="$2"; shift 2 ;;
         --platforms)     platforms="$2"; shift 2 ;;
         -*)              echo "Unknown flag: $1" >&2; exit 1 ;;
@@ -44,7 +44,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "${series}" ]; then
-    echo "Usage: $0 <SERIES> [--push] [--clean] [--unlimit] [--image PREFIX] [--platforms PLATFORMS]" >&2
+    echo "Usage: $0 <SERIES> [--push] [--clean] [--limit N] [--image PREFIX] [--platforms PLATFORMS]" >&2
     exit 1
 fi
 
@@ -108,7 +108,7 @@ docker buildx build \
     --platform "${platforms}" \
     --build-arg "SERIES=${series}" \
     --build-arg "BASE_IMAGE=${base_image}" \
-    ${unlimit:+--build-arg MAX_KERNELS=0} \
+    ${limit:+--build-arg MAX_KERNELS="${limit}"} \
     -f "${repo_dir}/Dockerfile.ubuntu" \
     -t "${tmp_tag}" \
     --load \
@@ -213,7 +213,7 @@ docker buildx build \
     --platform "${platforms}" \
     --build-arg "SERIES=${series}" \
     --build-arg "BASE_IMAGE=${base_image}" \
-    ${unlimit:+--build-arg MAX_KERNELS=0} \
+    ${limit:+--build-arg MAX_KERNELS="${limit}"} \
     -f "${repo_dir}/Dockerfile.ubuntu" \
     "${annotation_args[@]}" \
     -t "${generic_tag}" \
