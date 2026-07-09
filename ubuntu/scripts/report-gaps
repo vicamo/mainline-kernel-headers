@@ -14,12 +14,12 @@ Options:
 When no SERIES are given, discovers active Ubuntu series from ubuntu-releases.
 
 For each Ubuntu series, compares:
-  1. Kernel versions available in the Ubuntu archive (via rmadison)
+  1. Kernel versions available in the Ubuntu archive (via Packages.gz)
   2. Versions installed in the Docker headers image (per-platform annotations)
 
 Icons indicate status:
   ✅ - available and installed
-  ⚪ - not available for this arch (rmadison reports it missing)
+  ⚪ - not available for this arch
   🔺 - available but not installed (needs rebuild)
   ⬛ - no Docker image exists for this series
 """
@@ -42,174 +42,63 @@ OCI_TO_DEB = {
 }
 # Pockets to query (excludes -proposed)
 POCKETS = ["", "-updates", "-security"]
+# Archive mirrors by architecture
+ARCHIVE_URL = "http://archive.ubuntu.com/ubuntu"
+PORTS_URL = "http://ports.ubuntu.com/ubuntu-ports"
+ARCHIVE_ARCHS = {"amd64", "i386"}
 
 
-def is_lts(series):
-    """Check if a series is LTS via ubuntu-distro-info."""
-    try:
-        r = subprocess.run(
-            ["ubuntu-distro-info", "--series=" + series, "--fullname"],
-            capture_output=True, text=True, timeout=10,
-        )
-        return "LTS" in r.stdout
-    except Exception:
-        return False
+def _mirror_for_arch(arch):
+    """Return the base archive URL for a given architecture."""
+    return ARCHIVE_URL if arch in ARCHIVE_ARCHS else PORTS_URL
 
 
-def _linux_version_for_series(series):
-    """Get linux source package major.minor for a series.
+def _fetch_packages(series, arch, flavour="generic"):
+    """Fetch linux-headers-*-<flavour> binary package names from the archive.
 
-    Tries rmadison first (fast, works for active series), falls back to
-    the Launchpad publishing API (works for EOL series).
+    Downloads Packages.gz from each pocket for the given series+arch,
+    extracts matching package names. This mirrors what `apt-cache search`
+    sees inside the Dockerfile.
 
-    Returns "X.Y" string or None.
+    Returns a set of kabi strings, e.g. {"6.8.0-31", "6.11.0-8"}.
     """
-    # Try rmadison (active series)
-    try:
-        r = subprocess.run(
-            ["rmadison", "-s", series, "linux"],
-            capture_output=True, text=True, timeout=30,
-        )
-        if r.returncode == 0 and r.stdout.strip():
-            for line in r.stdout.splitlines():
-                if "source" in line:
-                    parts = [p.strip() for p in line.split("|")]
-                    m = re.match(r'(\d+)\.(\d+)', parts[1])
+    import gzip
+    import urllib.request
+
+    base_url = _mirror_for_arch(arch)
+    pattern = re.compile(
+        rf'^Package: linux-headers-(\d+\.\d+\.\d+-\d+)-{re.escape(flavour)}$'
+    )
+    kabis = set()
+
+    for pocket in POCKETS:
+        suite = f"{series}{pocket}"
+        url = f"{base_url}/dists/{suite}/main/binary-{arch}/Packages.gz"
+        try:
+            with urllib.request.urlopen(url, timeout=30) as resp:
+                data = gzip.decompress(resp.read()).decode("utf-8", errors="replace")
+                for line in data.splitlines():
+                    m = pattern.match(line)
                     if m:
-                        return f"{m.group(1)}.{m.group(2)}"
-    except Exception:
-        pass
+                        kabis.add(m.group(1))
+        except Exception:
+            continue
 
-    # Fallback: Launchpad API (EOL series)
-    try:
-        import urllib.request
-        import json as _json
-        url = (
-            "https://api.launchpad.net/1.0/ubuntu/+archive/primary"
-            "?ws.op=getPublishedSources"
-            "&source_name=linux&exact_match=true"
-            f"&distro_series=https://api.launchpad.net/1.0/ubuntu/{series}"
-            "&pocket=Release&ws.size=1"
-        )
-        with urllib.request.urlopen(url, timeout=30) as resp:
-            data = _json.loads(resp.read())
-            for entry in data.get("entries", []):
-                m = re.match(r'(\d+)\.(\d+)', entry["source_package_version"])
-                if m:
-                    return f"{m.group(1)}.{m.group(2)}"
-    except Exception:
-        pass
-
-    return None
+    return kabis
 
 
-def get_hwe_sources(series):
-    """Discover HWE source package names for an LTS series.
+def discover_versions(series, archs=None, flavour="generic"):
+    """Discover available linux-headers packages for a series.
 
-    LTS gets up to 3 HWE kernels, one per interim release between this
-    LTS and the next. Each linux-hwe-X.Y corresponds to the linux source
-    package version of the N+1, N+2, N+3 interim series.
-
-    Discovery: for each interim series, query its linux source package
-    version via rmadison (active series) or Launchpad API (EOL series).
-
-    Returns a list of source package names, e.g. ["linux-hwe-6.11", ...].
+    Returns {kabi: [arch, ...]} by fetching Packages.gz from the Ubuntu
+    archive for each arch+pocket. No source package involvement.
     """
-    if not is_lts(series):
-        return []
-
-    # Get ordered series list
-    try:
-        r = subprocess.run(
-            ["ubuntu-distro-info", "--all"],
-            capture_output=True, text=True, timeout=10,
-        )
-        all_series = r.stdout.strip().splitlines()
-    except Exception:
-        return []
-
-    try:
-        idx = all_series.index(series)
-    except ValueError:
-        return []
-
-    # Next 3 series (stop before the next LTS)
-    interim = []
-    for s in all_series[idx + 1:]:
-        if is_lts(s):
-            break
-        interim.append(s)
-    interim = interim[:3]
-
-    if not interim:
-        return []
-
-    # Query the linux source version for each interim series
-    hwe_sources = []
-    for s in interim:
-        ver = _linux_version_for_series(s)
-        if ver:
-            hwe_sources.append(f"linux-hwe-{ver}")
-
-    return hwe_sources
-
-
-def run_rmadison(series, archs=None, flavour="generic"):
-    """Query rmadison for linux-headers-*-<flavour> packages in a series.
-
-    Returns {kabi: [arch, ...]} where kabi is e.g. "6.8.0-31".
-    Only tracks the single flavour the Dockerfile installs.
-
-    Source packages queried:
-      - "linux" (base kernel, every series has this)
-      - "linux-hwe-X.Y" (HWE kernels, LTS only, up to 3 interim releases)
-
-    HWE discovery: query the linux source package version of the next 3
-    interim series (N+1, N+2, N+3) via ubuntu-distro-info + rmadison.
-    Non-LTS series skip HWE entirely.
-    """
-    suites = ",".join(f"{series}{p}" for p in POCKETS)
-    arch_arg = ",".join(archs or ARCHS)
-
-    sources = ["linux"] + get_hwe_sources(series)
-
-    # Query all source packages for binary headers in one call
+    arch_list = archs or list(ARCHS)
     result = {}  # {kabi: set(arch)}
-    try:
-        r = subprocess.run(
-            ["rmadison", "-S", "-s", suites, "-a", arch_arg] + sources,
-            capture_output=True, text=True, timeout=60,
-        )
-        if r.returncode != 0:
-            return {}
-    except Exception:
-        return {}
 
-    for line in r.stdout.splitlines():
-        line = line.strip()
-        if not line:
-            continue
-        parts = [p.strip() for p in line.split("|")]
-        if len(parts) < 4:
-            continue
-        pkg_name = parts[0]
-        pkg_archs = [a.strip() for a in parts[3].split(",")]
-
-        # Match linux-headers-<ver>-<abi>-<flavour> (exact flavour)
-        m = re.match(
-            rf'^linux-headers-(\d+\.\d+\.\d+-\d+)-{re.escape(flavour)}$',
-            pkg_name,
-        )
-        if not m:
-            continue
-        kabi = m.group(1)
-
-        if kabi not in result:
-            result[kabi] = set()
-        for arch in pkg_archs:
-            arch = arch.strip()
-            if arch in ARCHS:
-                result[kabi].add(arch)
+    for arch in arch_list:
+        for kabi in _fetch_packages(series, arch, flavour):
+            result.setdefault(kabi, set()).add(arch)
 
     return {k: sorted(v) for k, v in result.items()}
 
@@ -267,8 +156,8 @@ def generate_json(series_list):
 
     results = {}
     for series in series_list:
-        print(f"  Querying rmadison for {series}...", file=sys.stderr)
-        available = run_rmadison(series)
+        print(f"  Querying archive for {series}...", file=sys.stderr)
+        available = discover_versions(series)
         if not available:
             results[series] = {"versions": {}, "columns": []}
             continue
