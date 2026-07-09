@@ -130,6 +130,7 @@ h1 { margin-bottom: 0.25rem; }
 
 <div class="tabs">
   <div class="tab active" data-tab="mainline">Mainline</div>
+  <div class="tab" data-tab="ubuntu">Ubuntu</div>
 </div>
 
 <div class="legend">
@@ -144,6 +145,9 @@ h1 { margin-bottom: 0.25rem; }
 
 <div class="tab-content active" id="mainline-content">
   <p class="loading">Loading mainline data...</p>
+</div>
+<div class="tab-content" id="ubuntu-content">
+  <p class="loading">Loading ubuntu data...</p>
 </div>
 
 <script>
@@ -326,12 +330,21 @@ async function loadTab(prefix, containerId, label, versionLinkFn) {
 async function main() {
   const updatedEl = document.getElementById("updated");
 
-  await loadTab("mainline", "mainline-content", "Series",
-    v => `https://kernel.ubuntu.com/mainline/v${v}/`);
+  // Load both tabs
+  await Promise.all([
+    loadTab("mainline", "mainline-content", "Series",
+      v => `https://kernel.ubuntu.com/mainline/v${v}/`),
+    loadTab("ubuntu", "ubuntu-content", "",
+      null),
+  ]);
 
-  const meta = await loadJson("data/mainline/meta.json");
-  if (meta && meta.updated) {
-    updatedEl.textContent = `Last updated: ${new Date(meta.updated).toLocaleString()}`;
+  // Show most recent updated time
+  const mainMeta = await loadJson("data/mainline/meta.json");
+  const ubuntuMeta = await loadJson("data/ubuntu/meta.json");
+  const times = [mainMeta?.updated, ubuntuMeta?.updated].filter(Boolean);
+  if (times.length) {
+    const latest = times.sort().pop();
+    updatedEl.textContent = `Last updated: ${new Date(latest).toLocaleString()}`;
   }
 }
 

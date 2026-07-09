@@ -83,3 +83,87 @@ jobs:
         run: |
           ./ubuntu/scripts/build-ubuntu "${{ matrix.series }}" --push \
               ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }}
+
+      - name: Generate gap report
+        if: always()
+        run: |
+          mkdir -p _site/data
+          python3 ubuntu/scripts/report-gaps --format json "${{ matrix.series }}" > "_site/data/${{ matrix.series }}.json"
+          python3 ubuntu/scripts/report-gaps --from-json < "_site/data/${{ matrix.series }}.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload gap report
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ubuntu-gap-report-${{ matrix.series }}
+          path: _site/data/${{ matrix.series }}.json
+          retention-days: 1
+
+  publish-status:
+    needs: [discover, headers]
+    if: always() && needs.headers.result != 'cancelled'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Download gap reports
+        uses: actions/download-artifact@v8
+        with:
+          pattern: ubuntu-gap-report-*
+          path: _site/data
+          merge-multiple: true
+
+      - name: Checkout gh-pages
+        uses: actions/checkout@v7
+        with:
+          ref: gh-pages
+          path: gh-pages
+        continue-on-error: true
+
+      - name: Prepare gh-pages content
+        run: |
+          mkdir -p gh-pages/data/ubuntu
+
+          cp pages/index.html gh-pages/index.html
+
+          # Seed with pre-generated data (won't overwrite fresher CI results)
+          for f in pages/data/ubuntu/*.json; do
+            [ -f "${f}" ] || continue
+            dest="gh-pages/data/ubuntu/$(basename "${f}")"
+            [ -f "${dest}" ] || cp "${f}" "${dest}"
+          done
+
+          # Merge new JSON reports from artifacts (overwrite with fresh data)
+          for f in _site/data/*.json; do
+            [ -f "${f}" ] && cp "${f}" "gh-pages/data/ubuntu/$(basename "${f}")"
+          done
+
+          # Rebuild meta.json from all available data files
+          python3 -c "
+          import json, os, glob
+          from datetime import datetime, timezone
+
+          data_dir = 'gh-pages/data/ubuntu'
+          series = []
+          for f in sorted(glob.glob(os.path.join(data_dir, '*.json'))):
+              name = os.path.splitext(os.path.basename(f))[0]
+              if name == 'meta':
+                  continue
+              series.append(name)
+
+          meta = {
+              'updated': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+              'series': series,
+          }
+          with open(os.path.join(data_dir, 'meta.json'), 'w') as f:
+              json.dump(meta, f, separators=(',', ':'))
+          "
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./gh-pages
+          keep_files: true

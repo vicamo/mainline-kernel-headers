@@ -1,0 +1,426 @@
+#!/usr/bin/env python3
+"""
+Generate a gap report for Ubuntu generic kernel headers Docker images.
+
+Usage:
+    report-gaps [OPTIONS] [SERIES...]
+
+Options:
+    --format markdown|json   Output format (default: markdown)
+    --json                   Shorthand for --format json
+    --from-json              Read JSON data from stdin and render as markdown.
+                             Ignores SERIES args; skips all network/docker queries.
+
+When no SERIES are given, discovers active Ubuntu series from ubuntu-releases.
+
+For each Ubuntu series, compares:
+  1. Kernel versions available in the Ubuntu archive (via rmadison)
+  2. Versions installed in the Docker headers image (per-platform annotations)
+
+Icons indicate status:
+  ✅ - available and installed
+  ⚪ - not available for this arch (rmadison reports it missing)
+  🔺 - available but not installed (needs rebuild)
+  ⬛ - no Docker image exists for this series
+"""
+
+import json
+import re
+import subprocess
+import sys
+
+IMAGE_PREFIX = "vicamo/mainline-kernel-headers"
+# Architectures we track (Debian names)
+ARCHS = ["amd64", "arm64", "armhf", "ppc64el", "s390x"]
+OCI_TO_DEB = {
+    "linux/amd64": "amd64",
+    "linux/arm64": "arm64",
+    "linux/arm": "armhf",
+    "linux/arm/v7": "armhf",
+    "linux/ppc64le": "ppc64el",
+    "linux/s390x": "s390x",
+}
+# Pockets to query (excludes -proposed)
+POCKETS = ["", "-updates", "-security"]
+
+
+def is_lts(series):
+    """Check if a series is LTS via ubuntu-distro-info."""
+    try:
+        r = subprocess.run(
+            ["ubuntu-distro-info", "--series=" + series, "--fullname"],
+            capture_output=True, text=True, timeout=10,
+        )
+        return "LTS" in r.stdout
+    except Exception:
+        return False
+
+
+def _linux_version_for_series(series):
+    """Get linux source package major.minor for a series.
+
+    Tries rmadison first (fast, works for active series), falls back to
+    the Launchpad publishing API (works for EOL series).
+
+    Returns "X.Y" string or None.
+    """
+    # Try rmadison (active series)
+    try:
+        r = subprocess.run(
+            ["rmadison", "-s", series, "linux"],
+            capture_output=True, text=True, timeout=30,
+        )
+        if r.returncode == 0 and r.stdout.strip():
+            for line in r.stdout.splitlines():
+                if "source" in line:
+                    parts = [p.strip() for p in line.split("|")]
+                    m = re.match(r'(\d+)\.(\d+)', parts[1])
+                    if m:
+                        return f"{m.group(1)}.{m.group(2)}"
+    except Exception:
+        pass
+
+    # Fallback: Launchpad API (EOL series)
+    try:
+        import urllib.request
+        import json as _json
+        url = (
+            "https://api.launchpad.net/1.0/ubuntu/+archive/primary"
+            "?ws.op=getPublishedSources"
+            "&source_name=linux&exact_match=true"
+            f"&distro_series=https://api.launchpad.net/1.0/ubuntu/{series}"
+            "&pocket=Release&ws.size=1"
+        )
+        with urllib.request.urlopen(url, timeout=30) as resp:
+            data = _json.loads(resp.read())
+            for entry in data.get("entries", []):
+                m = re.match(r'(\d+)\.(\d+)', entry["source_package_version"])
+                if m:
+                    return f"{m.group(1)}.{m.group(2)}"
+    except Exception:
+        pass
+
+    return None
+
+
+def get_hwe_sources(series):
+    """Discover HWE source package names for an LTS series.
+
+    LTS gets up to 3 HWE kernels, one per interim release between this
+    LTS and the next. Each linux-hwe-X.Y corresponds to the linux source
+    package version of the N+1, N+2, N+3 interim series.
+
+    Discovery: for each interim series, query its linux source package
+    version via rmadison (active series) or Launchpad API (EOL series).
+
+    Returns a list of source package names, e.g. ["linux-hwe-6.11", ...].
+    """
+    if not is_lts(series):
+        return []
+
+    # Get ordered series list
+    try:
+        r = subprocess.run(
+            ["ubuntu-distro-info", "--all"],
+            capture_output=True, text=True, timeout=10,
+        )
+        all_series = r.stdout.strip().splitlines()
+    except Exception:
+        return []
+
+    try:
+        idx = all_series.index(series)
+    except ValueError:
+        return []
+
+    # Next 3 series (stop before the next LTS)
+    interim = []
+    for s in all_series[idx + 1:]:
+        if is_lts(s):
+            break
+        interim.append(s)
+    interim = interim[:3]
+
+    if not interim:
+        return []
+
+    # Query the linux source version for each interim series
+    hwe_sources = []
+    for s in interim:
+        ver = _linux_version_for_series(s)
+        if ver:
+            hwe_sources.append(f"linux-hwe-{ver}")
+
+    return hwe_sources
+
+
+def run_rmadison(series, archs=None, flavour="generic"):
+    """Query rmadison for linux-headers-*-<flavour> packages in a series.
+
+    Returns {kabi: [arch, ...]} where kabi is e.g. "6.8.0-31".
+    Only tracks the single flavour the Dockerfile installs.
+
+    Source packages queried:
+      - "linux" (base kernel, every series has this)
+      - "linux-hwe-X.Y" (HWE kernels, LTS only, up to 3 interim releases)
+
+    HWE discovery: query the linux source package version of the next 3
+    interim series (N+1, N+2, N+3) via ubuntu-distro-info + rmadison.
+    Non-LTS series skip HWE entirely.
+    """
+    suites = ",".join(f"{series}{p}" for p in POCKETS)
+    arch_arg = ",".join(archs or ARCHS)
+
+    sources = ["linux"] + get_hwe_sources(series)
+
+    # Query all source packages for binary headers in one call
+    result = {}  # {kabi: set(arch)}
+    try:
+        r = subprocess.run(
+            ["rmadison", "-S", "-s", suites, "-a", arch_arg] + sources,
+            capture_output=True, text=True, timeout=60,
+        )
+        if r.returncode != 0:
+            return {}
+    except Exception:
+        return {}
+
+    for line in r.stdout.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        parts = [p.strip() for p in line.split("|")]
+        if len(parts) < 4:
+            continue
+        pkg_name = parts[0]
+        pkg_archs = [a.strip() for a in parts[3].split(",")]
+
+        # Match linux-headers-<ver>-<abi>-<flavour> (exact flavour)
+        m = re.match(
+            rf'^linux-headers-(\d+\.\d+\.\d+-\d+)-{re.escape(flavour)}$',
+            pkg_name,
+        )
+        if not m:
+            continue
+        kabi = m.group(1)
+
+        if kabi not in result:
+            result[kabi] = set()
+        for arch in pkg_archs:
+            arch = arch.strip()
+            if arch in ARCHS:
+                result[kabi].add(arch)
+
+    return {k: sorted(v) for k, v in result.items()}
+
+
+def get_install_info(series):
+    """Get installed versions from the Docker image annotations.
+
+    Returns {arch: {kabi: [flavours]}} or None if image doesn't exist.
+    """
+    tag = f"{IMAGE_PREFIX}:{series}-generic"
+    try:
+        r = subprocess.run(
+            ["docker", "buildx", "imagetools", "inspect", tag, "--raw"],
+            capture_output=True, text=True, timeout=30,
+        )
+        if r.returncode != 0:
+            return None
+        data = json.loads(r.stdout)
+    except Exception:
+        return None
+
+    result = {}
+    for m in data.get("manifests", []):
+        plat = m.get("platform", {})
+        if plat.get("os", "") != "linux":
+            continue
+        arch = plat.get("architecture", "")
+        variant = plat.get("variant", "")
+        oci_plat = f"linux/{arch}/{variant}" if variant else f"linux/{arch}"
+        deb_arch = OCI_TO_DEB.get(oci_plat) or OCI_TO_DEB.get(f"linux/{arch}")
+        if not deb_arch:
+            continue
+        ann = m.get("annotations", {})
+        versions_str = ann.get("dev.mainline-kernel-headers.versions", "")
+        if versions_str:
+            # Format: {kabi: [flavours]}
+            result[deb_arch] = json.loads(versions_str)
+        else:
+            result[deb_arch] = {}
+    return result if result else None
+
+
+def kabi_sort_key(kabi):
+    """Sort key for kernel ABI strings like '6.8.0-31'."""
+    parts = re.split(r'[.-]', kabi)
+    return tuple(int(p) for p in parts if p.isdigit())
+
+
+def generate_json(series_list):
+    """Generate structured JSON report data.
+
+    Columns are architecture names (e.g. "amd64", "arm64").
+    """
+    from datetime import datetime, timezone
+
+    results = {}
+    for series in series_list:
+        print(f"  Querying rmadison for {series}...", file=sys.stderr)
+        available = run_rmadison(series)
+        if not available:
+            results[series] = {"versions": {}, "columns": []}
+            continue
+
+        install_info = get_install_info(series)
+
+        # Columns = architectures present in any version
+        columns_set = set()
+        for kabi, archs in available.items():
+            columns_set.update(archs)
+
+        arch_order = {a: i for i, a in enumerate(ARCHS)}
+        columns = sorted(columns_set, key=lambda a: arch_order.get(a, 99))
+
+        all_kabis = sorted(available.keys(), key=kabi_sort_key)
+        versions_data = {}
+        for kabi in all_kabis:
+            avail_archs = available[kabi]
+            col_status = {}
+            for arch in columns:
+                if arch not in avail_archs:
+                    col_status[arch] = "unavailable"
+                elif install_info is not None and arch in install_info and \
+                        "generic" not in install_info[arch].get(kabi, []):
+                    col_status[arch] = "missing_install"
+                else:
+                    col_status[arch] = "ok"
+            versions_data[kabi] = col_status
+
+        results[series] = {
+            "versions": versions_data,
+            "columns": columns,
+            "has_install": install_info is not None,
+        }
+
+    return {
+        "updated": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "series": results,
+    }
+
+
+def json_to_markdown(data):
+    """Render JSON report data as GitHub-flavored Markdown."""
+    lines = []
+    lines.append("# Ubuntu Kernel Headers — Gap Report\n")
+    lines.append("| Icon | Meaning |")
+    lines.append("|------|---------|")
+    lines.append("| ✅ | Available and installed |")
+    lines.append("| ⚪ | Not available for this arch |")
+    lines.append("| 🔺 | Available but not installed (needs rebuild) |")
+    lines.append("| ⬛ | No Docker image exists for this series |")
+    lines.append("")
+
+    status_icon = {
+        "ok": "✅",
+        "unavailable": "⚪",
+        "missing_install": "🔺",
+    }
+
+    series_data = data.get("series", {})
+    for series in sorted(series_data.keys()):
+        info = series_data[series]
+        lines.append(f"## {series}\n")
+
+        versions = info.get("versions", {})
+        columns = info.get("columns", [])
+        has_install = info.get("has_install", False)
+
+        if not versions:
+            lines.append("> No versions found in archive.\n")
+            continue
+
+        if not has_install:
+            lines.append(f"> ⬛ No Docker image exists yet ({len(versions)} versions in archive)\n")
+            continue
+
+        all_kabis = sorted(versions.keys(), key=kabi_sort_key)
+
+        gap_rows = []
+        for kabi in all_kabis:
+            col_status = versions[kabi]
+            cells = []
+            has_gap = False
+            for col in columns:
+                status = col_status.get(col, "ok")
+                cells.append(status_icon.get(status, "?"))
+                if status not in ("ok", "unavailable"):
+                    has_gap = True
+            if has_gap:
+                gap_rows.append((kabi, cells))
+
+        if not gap_rows:
+            lines.append(f"✅ All {len(all_kabis)} versions fully installed across all architectures.\n")
+        else:
+            lines.append(f"| Version | {' | '.join(columns)} |")
+            lines.append(f"|---------|{'|'.join([':---:'] * len(columns))}|")
+            for kabi, cells in gap_rows:
+                lines.append(f"| ``{kabi}`` | {' | '.join(cells)} |")
+            lines.append("")
+            lines.append(f"_{len(gap_rows)}/{len(all_kabis)} versions have gaps_\n")
+
+            complete = [k for k in all_kabis if k not in {r[0] for r in gap_rows}]
+            if complete:
+                links = ", ".join(f"`{k}`" for k in complete)
+                lines.append(f"<details><summary>✅ {len(complete)} complete versions</summary>\n")
+                lines.append(f"{links}\n")
+                lines.append("</details>\n")
+
+    return "\n".join(lines)
+
+
+def main():
+    output_format = "markdown"
+    from_json = False
+    series_list = []
+
+    args = sys.argv[1:]
+    i = 0
+    while i < len(args):
+        if args[i] == "--json":
+            output_format = "json"
+        elif args[i] == "--format":
+            i += 1
+            if i >= len(args):
+                print("ERROR: --format requires an argument (markdown or json)", file=sys.stderr)
+                sys.exit(1)
+            output_format = args[i]
+            if output_format not in ("markdown", "json"):
+                print(f"ERROR: --format must be 'markdown' or 'json', got '{output_format}'", file=sys.stderr)
+                sys.exit(1)
+        elif args[i] == "--from-json":
+            from_json = True
+        else:
+            series_list.append(args[i])
+        i += 1
+
+    if from_json:
+        data = json.load(sys.stdin)
+        print(json_to_markdown(data))
+    elif output_format == "json":
+        if not series_list:
+            print("ERROR: SERIES argument(s) required", file=sys.stderr)
+            sys.exit(1)
+        data = generate_json(series_list)
+        print(json.dumps(data, separators=(",", ":")))
+    else:
+        if not series_list:
+            print("ERROR: SERIES argument(s) required", file=sys.stderr)
+            sys.exit(1)
+        data = generate_json(series_list)
+        print(json_to_markdown(data))
+
+
+if __name__ == "__main__":
+    main()
