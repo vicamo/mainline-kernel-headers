@@ -21,7 +21,6 @@ Icons indicate status:
   ✅ - available and installed
   ⚪ - not available for this arch
   🔺 - available but not installed (needs rebuild)
-  ⬛ - no Docker image exists for this series
 """
 
 import json
@@ -180,7 +179,9 @@ def generate_json(series_list):
             for arch in columns:
                 if arch not in avail_archs:
                     col_status[arch] = "unavailable"
-                elif install_info is not None and arch in install_info and \
+                elif install_info is None:
+                    col_status[arch] = "missing_install"
+                elif arch in install_info and \
                         "generic" not in install_info[arch].get(kabi, []):
                     col_status[arch] = "missing_install"
                 else:
@@ -190,7 +191,6 @@ def generate_json(series_list):
         results[series] = {
             "versions": versions_data,
             "columns": columns,
-            "has_install": install_info is not None,
         }
 
     return {
@@ -208,7 +208,6 @@ def json_to_markdown(data):
     lines.append("| ✅ | Available and installed |")
     lines.append("| ⚪ | Not available for this arch |")
     lines.append("| 🔺 | Available but not installed (needs rebuild) |")
-    lines.append("| ⬛ | No Docker image exists for this series |")
     lines.append("")
 
     status_icon = {
@@ -224,14 +223,9 @@ def json_to_markdown(data):
 
         versions = info.get("versions", {})
         columns = info.get("columns", [])
-        has_install = info.get("has_install", False)
 
         if not versions:
             lines.append("> No versions found in archive.\n")
-            continue
-
-        if not has_install:
-            lines.append(f"> ⬛ No Docker image exists yet ({len(versions)} versions in archive)\n")
             continue
 
         all_kabis = sorted(versions.keys(), key=kabi_sort_key)
