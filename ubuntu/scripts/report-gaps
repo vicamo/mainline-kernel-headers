@@ -264,45 +264,38 @@ def json_to_markdown(data):
 
 
 def main():
-    output_format = "markdown"
-    from_json = False
-    series_list = []
+    import argparse
 
-    args = sys.argv[1:]
-    i = 0
-    while i < len(args):
-        if args[i] == "--json":
-            output_format = "json"
-        elif args[i] == "--format":
-            i += 1
-            if i >= len(args):
-                print("ERROR: --format requires an argument (markdown or json)", file=sys.stderr)
-                sys.exit(1)
-            output_format = args[i]
-            if output_format not in ("markdown", "json"):
-                print(f"ERROR: --format must be 'markdown' or 'json', got '{output_format}'", file=sys.stderr)
-                sys.exit(1)
-        elif args[i] == "--from-json":
-            from_json = True
-        else:
-            series_list.append(args[i])
-        i += 1
+    parser = argparse.ArgumentParser(
+        description="Generate a gap report for Ubuntu generic kernel headers Docker images.",
+    )
+    parser.add_argument(
+        "--format", choices=("markdown", "json"), default="markdown",
+        dest="output_format", help="output format (default: markdown)",
+    )
+    parser.add_argument(
+        "--json", action="store_const", const="json", dest="output_format",
+        help="shorthand for --format json",
+    )
+    parser.add_argument(
+        "--from-json", action="store_true",
+        help="read JSON from stdin and render as markdown",
+    )
+    parser.add_argument(
+        "series", nargs="+", metavar="SERIES",
+        help="Ubuntu series to report",
+    )
+    args = parser.parse_args()
 
-    if from_json:
+    if args.from_json:
         data = json.load(sys.stdin)
         print(json_to_markdown(data))
-    elif output_format == "json":
-        if not series_list:
-            print("ERROR: SERIES argument(s) required", file=sys.stderr)
-            sys.exit(1)
-        data = generate_json(series_list)
-        print(json.dumps(data, separators=(",", ":")))
     else:
-        if not series_list:
-            print("ERROR: SERIES argument(s) required", file=sys.stderr)
-            sys.exit(1)
-        data = generate_json(series_list)
-        print(json_to_markdown(data))
+        data = generate_json(args.series)
+        if args.output_format == "json":
+            print(json.dumps(data, separators=(",", ":")))
+        else:
+            print(json_to_markdown(data))
 
 
 if __name__ == "__main__":

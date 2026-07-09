@@ -347,45 +347,39 @@ def generate_json(series_list):
 
 
 def main():
-    output_format = "markdown"
-    from_json = False
-    series_list = []
+    import argparse
 
-    args = sys.argv[1:]
-    i = 0
-    while i < len(args):
-        if args[i] == "--json":
-            # Legacy flag, equivalent to --format json
-            output_format = "json"
-        elif args[i] == "--format":
-            i += 1
-            if i >= len(args):
-                print("ERROR: --format requires an argument (markdown or json)", file=sys.stderr)
-                sys.exit(1)
-            output_format = args[i]
-            if output_format not in ("markdown", "json"):
-                print(f"ERROR: --format must be 'markdown' or 'json', got '{output_format}'", file=sys.stderr)
-                sys.exit(1)
-        elif args[i] == "--from-json":
-            from_json = True
-        else:
-            series_list.append(args[i])
-        i += 1
+    parser = argparse.ArgumentParser(
+        description="Generate a gap report for mainline-kernel-headers Docker images.",
+    )
+    parser.add_argument(
+        "--format", choices=("markdown", "json"), default="markdown",
+        dest="output_format", help="output format (default: markdown)",
+    )
+    parser.add_argument(
+        "--json", action="store_const", const="json", dest="output_format",
+        help="shorthand for --format json",
+    )
+    parser.add_argument(
+        "--from-json", action="store_true",
+        help="read JSON from stdin and render as markdown",
+    )
+    parser.add_argument(
+        "series", nargs="*", metavar="SERIES",
+        help="kernel series to report (default: auto-discover from kernel.org)",
+    )
+    args = parser.parse_args()
 
-    if from_json:
-        # Read JSON from stdin and render as markdown
+    if args.from_json:
         data = json.load(sys.stdin)
         print(json_to_markdown(data))
-    elif output_format == "json":
-        if not series_list:
-            series_list = get_active_series()
-        data = generate_json(series_list)
-        print(json.dumps(data, separators=(",", ":")))
     else:
-        if not series_list:
-            series_list = get_active_series()
+        series_list = args.series or get_active_series()
         data = generate_json(series_list)
-        print(json_to_markdown(data))
+        if args.output_format == "json":
+            print(json.dumps(data, separators=(",", ":")))
+        else:
+            print(json_to_markdown(data))
 
 
 if __name__ == "__main__":
