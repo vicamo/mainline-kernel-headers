@@ -42,6 +42,7 @@ ARG KVER
 ARG BASE_IMAGE=mainline-kernel-headers:${KVER}
 ARG ARCHIVE_IMAGE=mainline-kernel-headers:${KVER}-archive
 ARG ARCHIVE_PLATFORM=linux/amd64
+ARG MAX_KERNELS=50
 
 # ===========================================================================
 # Stage 1: archive — source of all .debs under /X.Y/X.Y.Z/
@@ -55,6 +56,7 @@ FROM ${BASE_IMAGE} AS install
 
 ARG KVER
 ARG TARGETARCH
+ARG MAX_KERNELS
 
 SHELL ["/bin/bash", "-c"]
 RUN --mount=from=archive,source=/${KVER},target=/tmp/archive/${KVER} <<'INSTALL'
@@ -74,9 +76,14 @@ esac
 
 shopt -s nullglob
 
+# Enforce per-build kernel limit (0 = unlimited)
+max_kernels="${MAX_KERNELS:-50}"
+
 # Collect matching pairs: for each version dir, only install if BOTH
 # the _all.deb (common headers) and _ARCH.deb (arch-specific) exist.
-debs=()
+# A version dir may have multiple flavours (e.g. generic + generic-m68k).
+to_install=()
+new_versions=0
 for verdir in /tmp/archive/${KVER}/*/; do
     all=("${verdir}"*_all.deb)
     arch_specific=("${verdir}"*_${arch}.deb)
@@ -84,24 +91,28 @@ for verdir in /tmp/archive/${KVER}/*/; do
         echo "  SKIP $(basename "${verdir}"): missing _all.deb or _${arch}.deb"
         continue
     fi
-    debs+=("${all[@]}" "${arch_specific[@]}")
-done
 
-if [ ${#debs[@]} -eq 0 ]; then
-    echo "=== No packages found for ${arch}. ==="
-    exit 0
-fi
+    # Filter out already-installed packages
+    ver_debs=()
+    for deb in "${all[@]}" "${arch_specific[@]}"; do
+        pkg=$(dpkg-deb -f "${deb}" Package 2>/dev/null) || continue
+        ver=$(dpkg-deb -f "${deb}" Version 2>/dev/null) || continue
+        if dpkg-query -W -f='${Version}' "${pkg}" 2>/dev/null | grep -qxF "${ver}"; then
+            echo "  SKIP ${pkg} ${ver} (already installed)"
+        else
+            ver_debs+=("${deb}")
+        fi
+    done
 
-# Filter out already-installed packages
-to_install=()
-for deb in "${debs[@]}"; do
-    pkg=$(dpkg-deb -f "${deb}" Package 2>/dev/null) || continue
-    ver=$(dpkg-deb -f "${deb}" Version 2>/dev/null) || continue
-    if dpkg-query -W -f='${Version}' "${pkg}" 2>/dev/null | grep -qxF "${ver}"; then
-        echo "  SKIP ${pkg} ${ver} (already installed)"
-    else
-        to_install+=("${deb}")
+    [ ${#ver_debs[@]} -eq 0 ] && continue
+
+    # Check kernel limit before adding this version
+    if [ "${max_kernels}" -gt 0 ] && [ "${new_versions}" -ge "${max_kernels}" ]; then
+        continue
     fi
+
+    to_install+=("${ver_debs[@]}")
+    ((new_versions++)) || true
 done
 
 if [ ${#to_install[@]} -eq 0 ]; then
@@ -109,7 +120,11 @@ if [ ${#to_install[@]} -eq 0 ]; then
     exit 0
 fi
 
-echo ">>> Installing ${#to_install[@]} header package(s) for ${arch} ..."
+if [ "${max_kernels}" -gt 0 ] && [ "${new_versions}" -ge "${max_kernels}" ]; then
+    echo ">>> Limited to ${max_kernels} kernel versions (MAX_KERNELS=${max_kernels})"
+fi
+
+echo ">>> Installing ${#to_install[@]} header package(s) for ${arch} (${new_versions} versions) ..."
 dpkg --force-depends -i "${to_install[@]}"
 apt-get update -qq && apt-get install -yqq --fix-broken --no-install-recommends
 

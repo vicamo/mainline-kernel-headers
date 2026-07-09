@@ -100,7 +100,7 @@ Build the archive image for a single kernel series.
 Build the headers image for a single kernel series. Requires the archive image.
 
 ```sh
-./mainline/scripts/build-version <KVER> [--push] [--image PREFIX] [--platforms PLATFORMS] [--force] [--clean]
+./mainline/scripts/build-version <KVER> [--push] [--image PREFIX] [--platforms PLATFORMS] [--force] [--clean] [--unlimit]
 ```
 
 | Flag | Default | Description |
@@ -110,6 +110,7 @@ Build the headers image for a single kernel series. Requires the archive image.
 | `--platforms` | *(auto-detected from base image)* | Target platforms |
 | `--force` | *(off)* | Force rebuild even if archive is unchanged |
 | `--clean` | *(off)* | Build from scratch (dkms base) instead of previous headers image |
+| `--unlimit` | *(off)* | Disable the 50-kernel-per-build limit |
 
 ```sh
 ./mainline/scripts/build-version 7.0 --push
@@ -142,6 +143,7 @@ All flags are passed through to `build-version` for each series.
 | `BASE_IMAGE` | No | `mainline-kernel-headers:<KVER>` | Previous headers image; `<SERIES>-dkms` for cold start |
 | `ARCHIVE_IMAGE` | No | `mainline-kernel-headers:<KVER>-archive` | Archive image containing the `.deb` files |
 | `ARCHIVE_PLATFORM` | No | `linux/amd64` | Platform of the archive image |
+| `MAX_KERNELS` | No | `50` | Max kernel versions to install per build (0 = unlimited) |
 
 ---
 
@@ -169,7 +171,7 @@ new kernel ABIs are added on top of the previous image.
 #### ubuntu/scripts/build-ubuntu
 
 ```sh
-./ubuntu/scripts/build-ubuntu <SERIES> [--push] [--image PREFIX] [--platforms PLATFORMS] [--clean]
+./ubuntu/scripts/build-ubuntu <SERIES> [--push] [--image PREFIX] [--platforms PLATFORMS] [--clean] [--unlimit]
 ```
 
 | Flag | Default | Description |
@@ -178,6 +180,7 @@ new kernel ABIs are added on top of the previous image.
 | `--image` | `vicamo/mainline-kernel-headers` | Image name prefix |
 | `--platforms` | *(auto-detected from base image)* | Target platforms |
 | `--clean` | *(off)* | Build from scratch (dkms base) instead of previous generic image |
+| `--unlimit` | *(off)* | Disable the 50-kernel-per-build limit |
 
 ```sh
 ./ubuntu/scripts/build-ubuntu noble --push
@@ -191,6 +194,7 @@ new kernel ABIs are added on top of the previous image.
 |-----|----------|---------|-------------|
 | `SERIES` | No | `noble` | Ubuntu series codename |
 | `BASE_IMAGE` | No | `mainline-kernel-headers:<SERIES>-generic` | Previous image; `<SERIES>-dkms` for cold start |
+| `MAX_KERNELS` | No | `50` | Max kernel packages to install per build (0 = unlimited) |
 
 ---
 

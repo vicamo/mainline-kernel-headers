@@ -13,9 +13,11 @@
 
 ARG SERIES=noble
 ARG BASE_IMAGE=vicamo/mainline-kernel-headers:${SERIES}-generic
+ARG MAX_KERNELS=50
 
 FROM ${BASE_IMAGE}
 
+ARG MAX_KERNELS
 SHELL ["/bin/bash", "-c"]
 RUN <<'INSTALL'
 set -euo pipefail
@@ -45,6 +47,13 @@ if [ ${#to_install[@]} -eq 0 ]; then
     echo "=== All packages already installed. Up to date. ==="
     rm -rf /var/lib/apt/lists/*
     exit 0
+fi
+
+# Enforce per-build kernel limit (0 = unlimited)
+max_kernels="${MAX_KERNELS:-50}"
+if [ "${max_kernels}" -gt 0 ] && [ ${#to_install[@]} -gt "${max_kernels}" ]; then
+    echo ">>> Limiting install to ${max_kernels} of ${#to_install[@]} kernels (MAX_KERNELS=${max_kernels})"
+    to_install=("${to_install[@]:0:${max_kernels}}")
 fi
 
 echo ">>> Installing ${#to_install[@]} header package(s):"
