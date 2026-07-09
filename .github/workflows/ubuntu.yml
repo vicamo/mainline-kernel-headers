@@ -142,16 +142,36 @@ jobs:
 
           # Rebuild meta.json from all available data files
           python3 -c "
-          import json, os, glob
+          import json, os, glob, subprocess
           from datetime import datetime, timezone
 
           data_dir = 'gh-pages/data/ubuntu'
+
+          # Map codename -> version via ubuntu-distro-info
+          ver_map = {}
+          try:
+              r = subprocess.run(
+                  ['ubuntu-distro-info', '--all', '-f'],
+                  capture_output=True, text=True, timeout=10,
+              )
+              for line in r.stdout.strip().splitlines():
+                  # e.g. 'Ubuntu 24.04 LTS \"Noble Numbat\"'
+                  import re
+                  m = re.search(r'(\d+\.\d+)\b.*?\"(\w+)', line)
+                  if m:
+                      ver_map[m.group(2).lower()] = m.group(1)
+          except Exception:
+              pass
+
           series = []
           for f in sorted(glob.glob(os.path.join(data_dir, '*.json'))):
               name = os.path.splitext(os.path.basename(f))[0]
               if name == 'meta':
                   continue
-              series.append(name)
+              entry = {'name': name}
+              if name in ver_map:
+                  entry['version'] = ver_map[name]
+              series.append(entry)
 
           meta = {
               'updated': datetime.now(timezone.utc).isoformat(timespec='seconds'),
