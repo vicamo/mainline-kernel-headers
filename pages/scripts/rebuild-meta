@@ -1,0 +1,93 @@
+#!/usr/bin/env python3
+"""Rebuild meta.json for a gh-pages data directory.
+
+Usage: rebuild-meta <prefix> <data-dir>
+
+  prefix: "ubuntu" or "mainline"
+  data-dir: path to the data directory (e.g. gh-pages/data/ubuntu)
+
+For ubuntu, enriches entries with version/title from ubuntu-distro-info.
+For mainline, derives title from the version number.
+"""
+
+import glob
+import json
+import os
+import re
+import subprocess
+import sys
+from datetime import datetime, timezone
+
+
+def ubuntu_info_map():
+    """Map codename -> {version, title} via ubuntu-distro-info."""
+    info = {}
+    try:
+        r = subprocess.run(
+            ['ubuntu-distro-info', '--all', '-f'],
+            capture_output=True, text=True, timeout=10,
+        )
+        for line in r.stdout.strip().splitlines():
+            m = re.search(r'(\d+\.\d+)\b.*?"(\w+)', line)
+            if m:
+                info[m.group(2).lower()] = {
+                    'version': m.group(1),
+                    'title': line.strip(),
+                }
+    except Exception:
+        pass
+    return info
+
+
+def build_series(prefix, data_dir):
+    """Scan data_dir for JSON files and build the series list."""
+    info = ubuntu_info_map() if prefix == "ubuntu" else {}
+    series = []
+
+    for f in sorted(glob.glob(os.path.join(data_dir, '*.json'))):
+        name = os.path.splitext(os.path.basename(f))[0]
+        if name == 'meta':
+            continue
+
+        if prefix == "ubuntu":
+            entry = {'name': name}
+            if name in info:
+                entry['version'] = info[name]['version']
+                entry['title'] = info[name]['title']
+            series.append(entry)
+        else:
+            series.append({
+                'name': name,
+                'version': name,
+                'title': f'Version {name}',
+            })
+
+    return series
+
+
+def main():
+    if len(sys.argv) != 3:
+        print(f"Usage: {sys.argv[0]} <prefix> <data-dir>", file=sys.stderr)
+        sys.exit(1)
+
+    prefix = sys.argv[1]
+    data_dir = sys.argv[2]
+
+    if prefix not in ("ubuntu", "mainline"):
+        print(f"Unknown prefix: {prefix}", file=sys.stderr)
+        sys.exit(1)
+
+    series = build_series(prefix, data_dir)
+    meta = {
+        'updated': datetime.now(timezone.utc).isoformat(timespec='seconds'),
+        'series': series,
+    }
+
+    json.dump(meta, sys.stdout, indent=2, sort_keys=True)
+    sys.stdout.write('\n')
+
+    print(f"Wrote {len(series)} series", file=sys.stderr)
+
+
+if __name__ == '__main__':
+    main()

@@ -128,61 +128,13 @@ jobs:
 
           cp pages/index.html gh-pages/index.html
 
-          # Seed with pre-generated data (won't overwrite fresher CI results)
-          for f in pages/data/ubuntu/*.json; do
-            [ -f "${f}" ] || continue
-            dest="gh-pages/data/ubuntu/$(basename "${f}")"
-            [ -f "${dest}" ] || cp "${f}" "${dest}"
-          done
-
           # Merge new JSON reports from artifacts (overwrite with fresh data)
           for f in _site/data/*.json; do
             [ -f "${f}" ] && cp "${f}" "gh-pages/data/ubuntu/$(basename "${f}")"
           done
 
-          # Rebuild meta.json from all available data files
-          python3 << 'PYEOF'
-          import json, os, glob, re, subprocess
-          from datetime import datetime, timezone
-
-          data_dir = 'gh-pages/data/ubuntu'
-
-          # Map codename -> {version, title} via ubuntu-distro-info
-          info_map = {}
-          try:
-              r = subprocess.run(
-                  ['ubuntu-distro-info', '--all', '-f'],
-                  capture_output=True, text=True, timeout=10,
-              )
-              for line in r.stdout.strip().splitlines():
-                  # e.g. 'Ubuntu 24.04 LTS "Noble Numbat"'
-                  m = re.search(r'(\d+\.\d+)\b.*?"(\w+)', line)
-                  if m:
-                      info_map[m.group(2).lower()] = {
-                          'version': m.group(1),
-                          'title': line.strip(),
-                      }
-          except Exception:
-              pass
-
-          series = []
-          for f in sorted(glob.glob(os.path.join(data_dir, '*.json'))):
-              name = os.path.splitext(os.path.basename(f))[0]
-              if name == 'meta':
-                  continue
-              entry = {'name': name}
-              if name in info_map:
-                  entry['version'] = info_map[name]['version']
-                  entry['title'] = info_map[name]['title']
-              series.append(entry)
-
-          meta = {
-              'updated': datetime.now(timezone.utc).isoformat(timespec='seconds'),
-              'series': series,
-          }
-          with open(os.path.join(data_dir, 'meta.json'), 'w') as f:
-              json.dump(meta, f, separators=(',', ':'))
-          PYEOF
+          python3 pages/scripts/rebuild-meta ubuntu gh-pages/data/ubuntu \
+            | tee gh-pages/data/ubuntu/meta.json
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
