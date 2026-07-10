@@ -18,7 +18,7 @@ set -euo pipefail
 script_dir="$(cd "$(dirname "$0")" && pwd)"
 repo_dir="$(dirname "${script_dir}")"
 
-image_prefix="vicamo/mainline-kernel-headers"
+image_prefix="ghcr.io/vicamo/linux-headers"
 from_kver=
 to_kver=
 

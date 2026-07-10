@@ -125,6 +125,8 @@ jobs:
   build:
     needs: discover
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
     strategy:
       fail-fast: false
       max-parallel: 4
@@ -144,11 +146,12 @@ jobs:
           echo '{"features":{"containerd-snapshotter":true}}' | sudo tee /etc/docker/daemon.json
           sudo systemctl restart docker
 
-      - name: Log in to Docker Hub
+      - name: Log in to GHCR
         uses: docker/login-action@v4
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push archive for ${{ matrix.kver }}
         run: ./mainline/scripts/build-archive "${{ matrix.kver }}" --push

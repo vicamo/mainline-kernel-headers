@@ -30,7 +30,7 @@ import subprocess
 import sys
 import urllib.request
 
-IMAGE_PREFIX = "vicamo/mainline-kernel-headers"
+IMAGE_PREFIX = "ghcr.io/vicamo/linux-headers"
 OCI_TO_DEB = {
     "linux/386": "i386",
     "linux/amd64": "amd64",

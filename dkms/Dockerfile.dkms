@@ -1,4 +1,4 @@
-ARG BASE_IMAGE=vicamo/ubuntu:noble
+ARG BASE_IMAGE=ghcr.io/vicamo/ubuntu:noble
 FROM ${BASE_IMAGE}
 
 RUN apt-get update && \

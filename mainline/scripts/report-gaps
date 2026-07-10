@@ -38,7 +38,7 @@ import urllib.request
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-IMAGE_PREFIX = "vicamo/mainline-kernel-headers"
+IMAGE_PREFIX = "ghcr.io/vicamo/linux-headers"
 BASE_URL = "https://kernel.ubuntu.com/mainline"
 OCI_TO_DEB = {
     "linux/386": "i386",

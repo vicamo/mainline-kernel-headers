@@ -8,11 +8,11 @@
 # Build args:
 #   SERIES     - Ubuntu series codename (e.g. "noble")
 #   BASE_IMAGE - override for cold start
-#                (default: vicamo/mainline-kernel-headers:<SERIES>-generic)
+#                (default: ghcr.io/vicamo/linux-headers:<SERIES>-generic)
 #
 
 ARG SERIES=noble
-ARG BASE_IMAGE=vicamo/mainline-kernel-headers:${SERIES}-generic
+ARG BASE_IMAGE=ghcr.io/vicamo/linux-headers:${SERIES}-generic
 ARG MAX_KERNELS=50
 
 FROM ${BASE_IMAGE}

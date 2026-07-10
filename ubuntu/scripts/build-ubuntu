@@ -28,7 +28,7 @@ push=
 clean=
 limit=
 series=""
-image_prefix="vicamo/mainline-kernel-headers"
+image_prefix="ghcr.io/vicamo/linux-headers"
 platforms=""
 
 while [ $# -gt 0 ]; do

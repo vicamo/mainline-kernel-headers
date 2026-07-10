@@ -12,8 +12,8 @@ Two families of images are built:
 
 Both families share multi-platform dkms base images (`<SERIES>-dkms`).
 
-All images are published to Docker Hub under
-[`vicamo/mainline-kernel-headers`](https://hub.docker.com/r/vicamo/mainline-kernel-headers).
+All images are published to GHCR under
+[`ghcr.io/vicamo/linux-headers`](https://github.com/vicamo/mainline-kernel-headers/pkgs/container/linux-headers).
 
 ## Quick start
 
@@ -21,10 +21,10 @@ All images are published to Docker Hub under
 
 ```sh
 # List installed mainline kernel header versions
-docker run --rm vicamo/mainline-kernel-headers:7.0
+docker run --rm ghcr.io/vicamo/linux-headers:7.0
 
 # Use as a base for out-of-tree module builds
-docker run --rm vicamo/mainline-kernel-headers:7.0 \
+docker run --rm ghcr.io/vicamo/linux-headers:7.0 \
   ls /usr/src/linux-headers-*
 ```
 
@@ -32,18 +32,18 @@ docker run --rm vicamo/mainline-kernel-headers:7.0 \
 
 ```sh
 # List installed Ubuntu generic kernel headers
-docker run --rm vicamo/mainline-kernel-headers:noble-generic \
+docker run --rm ghcr.io/vicamo/linux-headers:noble-generic \
   dpkg -l 'linux-headers-*-generic'
 
 # Use as a base for DKMS module builds
-docker run --rm vicamo/mainline-kernel-headers:noble-generic \
+docker run --rm ghcr.io/vicamo/linux-headers:noble-generic \
   ls /usr/src/linux-headers-*
 ```
 
 ### Building an out-of-tree module
 
 ```dockerfile
-FROM vicamo/mainline-kernel-headers:noble-generic
+FROM ghcr.io/vicamo/linux-headers:noble-generic
 RUN apt-get update && apt-get install -y build-essential dkms
 # Build your module against any installed kernel version
 ```
@@ -59,8 +59,8 @@ covering stable and longterm series (currently 5.19 through 7.0).
 
 | Image | Purpose | Platforms |
 |-------|---------|-----------|
-| `vicamo/mainline-kernel-headers:<KVER>-archive` | Architecture-independent archive of all `.deb` files | linux/amd64 |
-| `vicamo/mainline-kernel-headers:<KVER>` | Installed kernel headers (Ubuntu-based) | *(auto-detected from base)* |
+| `ghcr.io/vicamo/linux-headers:<KVER>-archive` | Architecture-independent archive of all `.deb` files | linux/amd64 |
+| `ghcr.io/vicamo/linux-headers:<KVER>` | Installed kernel headers (Ubuntu-based) | *(auto-detected from base)* |
 
 ### How it works
 
@@ -89,7 +89,7 @@ Build the archive image for a single kernel series.
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--push` | *(off)* | Push image to the registry; without it, image is loaded locally |
-| `--image` | `vicamo/mainline-kernel-headers` | Image name prefix |
+| `--image` | `ghcr.io/vicamo/linux-headers` | Image name prefix |
 
 ```sh
 ./mainline/scripts/build-archive 7.0 --push
@@ -106,7 +106,7 @@ Build the headers image for a single kernel series. Requires the archive image.
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--push` | *(off)* | Push to registry; without it, loaded locally |
-| `--image` | `vicamo/mainline-kernel-headers` | Image name prefix |
+| `--image` | `ghcr.io/vicamo/linux-headers` | Image name prefix |
 | `--platforms` | *(auto-detected from base image)* | Target platforms |
 | `--force` | *(off)* | Force rebuild even if archive is unchanged |
 | `--clean` | *(off)* | Build from scratch (dkms base) instead of previous headers image |
@@ -156,8 +156,8 @@ built for each active Ubuntu release (noble, questing, resolute, etc.).
 
 | Image | Purpose | Platforms |
 |-------|---------|-----------|
-| `vicamo/mainline-kernel-headers:<SERIES>-generic` | All `linux-headers-*-generic` packages installed | *(auto-detected from base)* |
-| `vicamo/mainline-kernel-headers:<SERIES>` | Alias for `<SERIES>-generic` | *(same)* |
+| `ghcr.io/vicamo/linux-headers:<SERIES>-generic` | All `linux-headers-*-generic` packages installed | *(auto-detected from base)* |
+| `ghcr.io/vicamo/linux-headers:<SERIES>` | Alias for `<SERIES>-generic` | *(same)* |
 
 ### How it works
 
@@ -177,7 +177,7 @@ new kernel ABIs are added on top of the previous image.
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--push` | *(off)* | Push to registry; without it, loaded locally |
-| `--image` | `vicamo/mainline-kernel-headers` | Image name prefix |
+| `--image` | `ghcr.io/vicamo/linux-headers` | Image name prefix |
 | `--platforms` | *(auto-detected from base image)* | Target platforms |
 | `--clean` | *(off)* | Build from scratch (dkms base) instead of previous generic image |
 | `--limit` | *(Dockerfile default: 50)* | Max kernel packages to install per build (0 = unlimited) |
@@ -204,7 +204,7 @@ Both families use a shared multi-platform base image per Ubuntu series:
 
 | Image | Purpose | Platforms |
 |-------|---------|-----------|
-| `vicamo/mainline-kernel-headers:<SERIES>-dkms` | Ubuntu base with `dkms` pre-installed | *(auto-detected from `vicamo/ubuntu:<SERIES>`)* |
+| `ghcr.io/vicamo/linux-headers:<SERIES>-dkms` | Ubuntu base with `dkms` pre-installed | *(auto-detected from `ghcr.io/vicamo/ubuntu:<SERIES>`)* |
 
 Multiple kernel series may share the same dkms image (e.g. 6.17, 6.18, 6.19
 all use `questing-dkms`).
@@ -221,10 +221,10 @@ all use `questing-dkms`).
 
 ```sh
 # Check available platforms
-docker buildx imagetools inspect vicamo/mainline-kernel-headers:7.0
+docker buildx imagetools inspect ghcr.io/vicamo/linux-headers:7.0
 
 # View per-platform version annotations
-docker buildx imagetools inspect vicamo/mainline-kernel-headers:7.0 --raw
+docker buildx imagetools inspect ghcr.io/vicamo/linux-headers:7.0 --raw
 ```
 
 ## Status dashboard
