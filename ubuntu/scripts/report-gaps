@@ -23,14 +23,14 @@ Icons indicate status:
   🔺 - available but not installed (needs rebuild)
 """
 
+import gzip
 import json
 import re
 import subprocess
 import sys
+import urllib.request
 
 IMAGE_PREFIX = "vicamo/mainline-kernel-headers"
-# Architectures we track (Debian names)
-ARCHS = ["amd64", "arm64", "armhf", "ppc64el", "s390x"]
 OCI_TO_DEB = {
     "linux/386": "i386",
     "linux/amd64": "amd64",
@@ -48,12 +48,29 @@ POCKETS = ["", "-updates", "-security"]
 # Archive mirrors by architecture
 ARCHIVE_URL = "http://archive.ubuntu.com/ubuntu"
 PORTS_URL = "http://ports.ubuntu.com/ubuntu-ports"
-ARCHIVE_ARCHS = {"amd64", "i386"}
+ARCHIVE_ARCHS = {"amd64", "amd64v3", "arm64", "i386"}
 
 
 def _mirror_for_arch(arch):
     """Return the base archive URL for a given architecture."""
     return ARCHIVE_URL if arch in ARCHIVE_ARCHS else PORTS_URL
+
+
+def _discover_archs(series):
+    """Discover supported architectures for a series from the archive.
+
+    Checks which binary-<arch>/ directories exist in the main component.
+    """
+    archs = set()
+    for base_url in (ARCHIVE_URL, PORTS_URL):
+        url = f"{base_url}/dists/{series}/main/"
+        try:
+            resp = urllib.request.urlopen(url, timeout=10)
+            html = resp.read().decode()
+            archs.update(re.findall(r"binary-([a-z0-9]+)", html))
+        except Exception:
+            pass
+    return sorted(archs)
 
 
 def _fetch_packages(series, arch, flavour="generic"):
@@ -65,9 +82,6 @@ def _fetch_packages(series, arch, flavour="generic"):
 
     Returns a set of kabi strings, e.g. {"6.8.0-31", "6.11.0-8"}.
     """
-    import gzip
-    import urllib.request
-
     base_url = _mirror_for_arch(arch)
     pattern = re.compile(
         rf'^Package: linux-headers-(\d+\.\d+\.\d+-\d+)-{re.escape(flavour)}$'
@@ -96,7 +110,7 @@ def discover_versions(series, archs=None, flavour="generic"):
     Returns {kabi: [arch, ...]} by fetching Packages.gz from the Ubuntu
     archive for each arch+pocket. No source package involvement.
     """
-    arch_list = archs or list(ARCHS)
+    arch_list = archs or _discover_archs(series)
     result = {}  # {kabi: set(arch)}
 
     for arch in arch_list:
@@ -161,35 +175,45 @@ def generate_json(series_list):
     for series in series_list:
         print(f"  Querying archive for {series}...", file=sys.stderr)
         available = discover_versions(series)
-        if not available:
+        install_info = get_install_info(series)
+
+        if not available and not install_info:
             results[series] = {"versions": {}, "columns": []}
             continue
 
-        install_info = get_install_info(series)
-
-        # Columns = architectures present in any version
+        # Columns = architectures present in archive or image
         columns_set = set()
         for kabi, archs in available.items():
             columns_set.update(archs)
+        if install_info:
+            columns_set.update(install_info.keys())
 
-        arch_order = {a: i for i, a in enumerate(ARCHS)}
-        columns = sorted(columns_set, key=lambda a: arch_order.get(a, 99))
+        columns = sorted(columns_set)
 
-        all_kabis = sorted(available.keys(), key=kabi_sort_key)
+        # Merge version sets from archive and image
+        all_kabis_set = set(available.keys())
+        if install_info:
+            for arch_data in install_info.values():
+                all_kabis_set.update(arch_data.keys())
+        all_kabis = sorted(all_kabis_set, key=kabi_sort_key)
+
         versions_data = {}
         for kabi in all_kabis:
-            avail_archs = available[kabi]
+            avail_archs = available.get(kabi, [])
             col_status = {}
             for arch in columns:
-                if arch not in avail_archs:
-                    col_status[arch] = "unavailable"
-                elif install_info is None:
+                has_archive = arch in avail_archs
+                has_install = (install_info is not None and
+                              arch in install_info and
+                              "generic" in install_info[arch].get(kabi, []))
+                if has_install:
+                    col_status[arch] = "ok"
+                elif has_archive:
                     col_status[arch] = "missing_install"
-                elif arch in install_info and \
-                        "generic" not in install_info[arch].get(kabi, []):
+                elif install_info is None and arch in avail_archs:
                     col_status[arch] = "missing_install"
                 else:
-                    col_status[arch] = "ok"
+                    col_status[arch] = "unavailable"
             versions_data[kabi] = col_status
 
         results[series] = {

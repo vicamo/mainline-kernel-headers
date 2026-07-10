@@ -40,7 +40,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 IMAGE_PREFIX = "vicamo/mainline-kernel-headers"
 BASE_URL = "https://kernel.ubuntu.com/mainline"
-ARCHS = ["amd64", "arm64", "armhf", "ppc64el", "s390x"]
 OCI_TO_DEB = {
     "linux/386": "i386",
     "linux/amd64": "amd64",
@@ -131,8 +130,7 @@ def get_upstream_versions(kver):
             has_all_deb = bool(re.search(r'linux-headers-[^"]+_all\.deb', page))
             for m in flavour_re.finditer(page):
                 flavour, arch = m.groups()
-                if arch in ARCHS:
-                    arch_flavours.setdefault(arch, set()).add(flavour)
+                arch_flavours.setdefault(arch, set()).add(flavour)
 
         if not has_all_deb:
             return v, {}
@@ -312,10 +310,9 @@ def generate_json(series_list):
                 for flav in flavours:
                     columns_set.add(f"{flav}/{arch}")
 
-        # Sort columns: primary by arch order, secondary by flavour name
-        arch_order = {a: i for i, a in enumerate(ARCHS)}
+        # Sort columns: primary by arch, secondary by flavour
         columns = sorted(columns_set, key=lambda c: (
-            arch_order.get(c.split("/")[1], 99), c.split("/")[0]
+            c.split("/")[1], c.split("/")[0]
         ))
 
         all_versions = sorted(upstream.keys(), key=version_sort_key)
