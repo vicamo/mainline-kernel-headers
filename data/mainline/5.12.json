@@ -1,1 +1,141 @@
-{"updated":"2026-06-19T09:39:06+00:00","series":{"5.12":{"versions":{"5.12":{"generic/amd64":"ok","lowlatency/amd64":"ok","generic/arm64":"ok","generic-64k/arm64":"ok","generic/armhf":"ok","generic-lpae/armhf":"ok","generic/ppc64el":"ok","generic/s390x":"ok"},"5.12.5":{"generic/amd64":"ok","lowlatency/amd64":"ok","generic/arm64":"ok","generic-64k/arm64":"ok","generic/armhf":"ok","generic-lpae/armhf":"ok","generic/ppc64el":"ok","generic/s390x":"ok"},"5.12.10":{"generic/amd64":"ok","lowlatency/amd64":"ok","generic/arm64":"ok","generic-64k/arm64":"ok","generic/armhf":"ok","generic-lpae/armhf":"ok","generic/ppc64el":"ok","generic/s390x":"ok"},"5.12.11":{"generic/amd64":"ok","lowlatency/amd64":"ok","generic/arm64":"ok","generic-64k/arm64":"ok","generic/armhf":"ok","generic-lpae/armhf":"ok","generic/ppc64el":"ok","generic/s390x":"ok"},"5.12.12":{"generic/amd64":"ok","lowlatency/amd64":"ok","generic/arm64":"ok","generic-64k/arm64":"ok","generic/armhf":"ok","generic-lpae/armhf":"ok","generic/ppc64el":"ok","generic/s390x":"ok"},"5.12.13":{"generic/amd64":"ok","lowlatency/amd64":"ok","generic/arm64":"ok","generic-64k/arm64":"ok","generic/armhf":"ok","generic-lpae/armhf":"ok","generic/ppc64el":"ok","generic/s390x":"ok"},"5.12.14":{"generic/amd64":"ok","lowlatency/amd64":"ok","generic/arm64":"ok","generic-64k/arm64":"ok","generic/armhf":"ok","generic-lpae/armhf":"ok","generic/ppc64el":"ok","generic/s390x":"ok"},"5.12.15":{"generic/amd64":"ok","lowlatency/amd64":"ok","generic/arm64":"ok","generic-64k/arm64":"ok","generic/armhf":"ok","generic-lpae/armhf":"ok","generic/ppc64el":"ok","generic/s390x":"ok"},"5.12.16":{"generic/amd64":"ok","lowlatency/amd64":"ok","generic/arm64":"ok","generic-64k/arm64":"ok","generic/armhf":"ok","generic-lpae/armhf":"ok","generic/ppc64el":"ok","generic/s390x":"ok"},"5.12.17":{"generic/amd64":"ok","lowlatency/amd64":"ok","generic/arm64":"ok","generic-64k/arm64":"ok","generic/armhf":"ok","generic-lpae/armhf":"ok","generic/ppc64el":"ok","generic/s390x":"ok"},"5.12.18":{"generic/amd64":"ok","lowlatency/amd64":"ok","generic/arm64":"ok","generic-64k/arm64":"ok","generic/armhf":"ok","generic-lpae/armhf":"ok","generic/ppc64el":"ok","generic/s390x":"ok"},"5.12.19":{"generic/amd64":"ok","lowlatency/amd64":"ok","generic/arm64":"ok","generic-64k/arm64":"ok","generic/armhf":"ok","generic-lpae/armhf":"ok","generic/ppc64el":"ok","generic/s390x":"ok"}},"columns":["generic/amd64","lowlatency/amd64","generic/arm64","generic-64k/arm64","generic/armhf","generic-lpae/armhf","generic/ppc64el","generic/s390x"],"has_archive":true,"has_install":true}}}
+{
+  "series": {
+    "5.12": {
+      "columns": [
+        "generic/amd64",
+        "lowlatency/amd64",
+        "generic/arm64",
+        "generic-64k/arm64",
+        "generic/armhf",
+        "generic-lpae/armhf",
+        "generic/ppc64el",
+        "generic/s390x"
+      ],
+      "has_archive": true,
+      "has_install": true,
+      "versions": {
+        "5.12": {
+          "generic-64k/arm64": "ok",
+          "generic-lpae/armhf": "ok",
+          "generic/amd64": "ok",
+          "generic/arm64": "ok",
+          "generic/armhf": "ok",
+          "generic/ppc64el": "ok",
+          "generic/s390x": "ok",
+          "lowlatency/amd64": "ok"
+        },
+        "5.12.10": {
+          "generic-64k/arm64": "ok",
+          "generic-lpae/armhf": "ok",
+          "generic/amd64": "ok",
+          "generic/arm64": "ok",
+          "generic/armhf": "ok",
+          "generic/ppc64el": "ok",
+          "generic/s390x": "ok",
+          "lowlatency/amd64": "ok"
+        },
+        "5.12.11": {
+          "generic-64k/arm64": "ok",
+          "generic-lpae/armhf": "ok",
+          "generic/amd64": "ok",
+          "generic/arm64": "ok",
+          "generic/armhf": "ok",
+          "generic/ppc64el": "ok",
+          "generic/s390x": "ok",
+          "lowlatency/amd64": "ok"
+        },
+        "5.12.12": {
+          "generic-64k/arm64": "ok",
+          "generic-lpae/armhf": "ok",
+          "generic/amd64": "ok",
+          "generic/arm64": "ok",
+          "generic/armhf": "ok",
+          "generic/ppc64el": "ok",
+          "generic/s390x": "ok",
+          "lowlatency/amd64": "ok"
+        },
+        "5.12.13": {
+          "generic-64k/arm64": "ok",
+          "generic-lpae/armhf": "ok",
+          "generic/amd64": "ok",
+          "generic/arm64": "ok",
+          "generic/armhf": "ok",
+          "generic/ppc64el": "ok",
+          "generic/s390x": "ok",
+          "lowlatency/amd64": "ok"
+        },
+        "5.12.14": {
+          "generic-64k/arm64": "ok",
+          "generic-lpae/armhf": "ok",
+          "generic/amd64": "ok",
+          "generic/arm64": "ok",
+          "generic/armhf": "ok",
+          "generic/ppc64el": "ok",
+          "generic/s390x": "ok",
+          "lowlatency/amd64": "ok"
+        },
+        "5.12.15": {
+          "generic-64k/arm64": "ok",
+          "generic-lpae/armhf": "ok",
+          "generic/amd64": "ok",
+          "generic/arm64": "ok",
+          "generic/armhf": "ok",
+          "generic/ppc64el": "ok",
+          "generic/s390x": "ok",
+          "lowlatency/amd64": "ok"
+        },
+        "5.12.16": {
+          "generic-64k/arm64": "ok",
+          "generic-lpae/armhf": "ok",
+          "generic/amd64": "ok",
+          "generic/arm64": "ok",
+          "generic/armhf": "ok",
+          "generic/ppc64el": "ok",
+          "generic/s390x": "ok",
+          "lowlatency/amd64": "ok"
+        },
+        "5.12.17": {
+          "generic-64k/arm64": "ok",
+          "generic-lpae/armhf": "ok",
+          "generic/amd64": "ok",
+          "generic/arm64": "ok",
+          "generic/armhf": "ok",
+          "generic/ppc64el": "ok",
+          "generic/s390x": "ok",
+          "lowlatency/amd64": "ok"
+        },
+        "5.12.18": {
+          "generic-64k/arm64": "ok",
+          "generic-lpae/armhf": "ok",
+          "generic/amd64": "ok",
+          "generic/arm64": "ok",
+          "generic/armhf": "ok",
+          "generic/ppc64el": "ok",
+          "generic/s390x": "ok",
+          "lowlatency/amd64": "ok"
+        },
+        "5.12.19": {
+          "generic-64k/arm64": "ok",
+          "generic-lpae/armhf": "ok",
+          "generic/amd64": "ok",
+          "generic/arm64": "ok",
+          "generic/armhf": "ok",
+          "generic/ppc64el": "ok",
+          "generic/s390x": "ok",
+          "lowlatency/amd64": "ok"
+        },
+        "5.12.5": {
+          "generic-64k/arm64": "ok",
+          "generic-lpae/armhf": "ok",
+          "generic/amd64": "ok",
+          "generic/arm64": "ok",
+          "generic/armhf": "ok",
+          "generic/ppc64el": "ok",
+          "generic/s390x": "ok",
+          "lowlatency/amd64": "ok"
+        }
+      }
+    }
+  },
+  "updated": "2026-06-19T09:39:06+00:00"
+}

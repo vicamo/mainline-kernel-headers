@@ -1,1 +1,33 @@
-{"updated":"2026-07-10T02:56:14+00:00","series":{"oracular":{"versions":{"6.11.0-8":{"amd64":"ok","arm64":"ok","armhf":"ok","ppc64el":"ok","riscv64":"missing_install","s390x":"ok"},"6.11.0-29":{"amd64":"ok","arm64":"ok","armhf":"ok","ppc64el":"ok","riscv64":"missing_install","s390x":"ok"}},"columns":["amd64","arm64","armhf","ppc64el","riscv64","s390x"]}}}
+{
+  "series": {
+    "oracular": {
+      "columns": [
+        "amd64",
+        "arm64",
+        "armhf",
+        "ppc64el",
+        "riscv64",
+        "s390x"
+      ],
+      "versions": {
+        "6.11.0-29": {
+          "amd64": "ok",
+          "arm64": "ok",
+          "armhf": "ok",
+          "ppc64el": "ok",
+          "riscv64": "missing_install",
+          "s390x": "ok"
+        },
+        "6.11.0-8": {
+          "amd64": "ok",
+          "arm64": "ok",
+          "armhf": "ok",
+          "ppc64el": "ok",
+          "riscv64": "missing_install",
+          "s390x": "ok"
+        }
+      }
+    }
+  },
+  "updated": "2026-07-10T02:56:14+00:00"
+}
