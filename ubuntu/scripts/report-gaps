@@ -48,21 +48,24 @@ POCKETS = ["", "-updates", "-security"]
 # Archive mirrors by architecture
 ARCHIVE_URL = "http://archive.ubuntu.com/ubuntu"
 PORTS_URL = "http://ports.ubuntu.com/ubuntu-ports"
+OLD_RELEASES_URL = "http://old-releases.ubuntu.com/ubuntu"
 ARCHIVE_ARCHS = {"amd64", "amd64v3", "arm64", "i386"}
 
 
-def _mirror_for_arch(arch):
-    """Return the base archive URL for a given architecture."""
-    return ARCHIVE_URL if arch in ARCHIVE_ARCHS else PORTS_URL
+def _mirrors_for_arch(arch):
+    """Return candidate base URLs for a given architecture (primary + fallback)."""
+    primary = ARCHIVE_URL if arch in ARCHIVE_ARCHS else PORTS_URL
+    return [primary, OLD_RELEASES_URL]
 
 
 def _discover_archs(series):
     """Discover supported architectures for a series from the archive.
 
     Checks which binary-<arch>/ directories exist in the main component.
+    Falls back to old-releases.ubuntu.com for EOL series.
     """
     archs = set()
-    for base_url in (ARCHIVE_URL, PORTS_URL):
+    for base_url in (ARCHIVE_URL, PORTS_URL, OLD_RELEASES_URL):
         url = f"{base_url}/dists/{series}/main/"
         try:
             resp = urllib.request.urlopen(url, timeout=10)
@@ -82,24 +85,26 @@ def _fetch_packages(series, arch, flavour="generic"):
 
     Returns a set of kabi strings, e.g. {"6.8.0-31", "6.11.0-8"}.
     """
-    base_url = _mirror_for_arch(arch)
     pattern = re.compile(
         rf'^Package: linux-headers-(\d+\.\d+\.\d+-\d+)-{re.escape(flavour)}$'
     )
     kabis = set()
 
-    for pocket in POCKETS:
-        suite = f"{series}{pocket}"
-        url = f"{base_url}/dists/{suite}/main/binary-{arch}/Packages.gz"
-        try:
-            with urllib.request.urlopen(url, timeout=30) as resp:
-                data = gzip.decompress(resp.read()).decode("utf-8", errors="replace")
-                for line in data.splitlines():
-                    m = pattern.match(line)
-                    if m:
-                        kabis.add(m.group(1))
-        except Exception:
-            continue
+    for base_url in _mirrors_for_arch(arch):
+        for pocket in POCKETS:
+            suite = f"{series}{pocket}"
+            url = f"{base_url}/dists/{suite}/main/binary-{arch}/Packages.gz"
+            try:
+                with urllib.request.urlopen(url, timeout=30) as resp:
+                    data = gzip.decompress(resp.read()).decode("utf-8", errors="replace")
+                    for line in data.splitlines():
+                        m = pattern.match(line)
+                        if m:
+                            kabis.add(m.group(1))
+            except Exception:
+                continue
+        if kabis:
+            break
 
     return kabis
 
