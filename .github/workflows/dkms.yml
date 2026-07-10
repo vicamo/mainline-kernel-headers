@@ -11,6 +11,11 @@ on:
         required: false
         type: string
         default: 'active'
+      force:
+        description: 'Force rebuild even if the image already exists'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   discover:
@@ -66,7 +71,7 @@ jobs:
       - name: Build and push dkms image for ${{ matrix.series }}
         run: |
           tag="vicamo/mainline-kernel-headers:${{ matrix.series }}-dkms"
-          if docker buildx imagetools inspect "${tag}" >/dev/null 2>&1; then
+          if [ "${{ inputs.force }}" != "true" ] && docker buildx imagetools inspect "${tag}" >/dev/null 2>&1; then
             echo "dkms image ${tag} already exists, skipping"
             exit 0
           fi
