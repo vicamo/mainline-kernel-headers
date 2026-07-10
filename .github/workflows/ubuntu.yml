@@ -141,8 +141,8 @@ jobs:
           done
 
           # Rebuild meta.json from all available data files
-          python3 -c "
-          import json, os, glob, subprocess
+          python3 << 'PYEOF'
+          import json, os, glob, re, subprocess
           from datetime import datetime, timezone
 
           data_dir = 'gh-pages/data/ubuntu'
@@ -154,7 +154,6 @@ jobs:
                   ['ubuntu-distro-info', '--all', '-f'],
                   capture_output=True, text=True, timeout=10,
               )
-              import re
               for line in r.stdout.strip().splitlines():
                   # e.g. 'Ubuntu 24.04 LTS "Noble Numbat"'
                   m = re.search(r'(\d+\.\d+)\b.*?"(\w+)', line)
@@ -183,7 +182,7 @@ jobs:
           }
           with open(os.path.join(data_dir, 'meta.json'), 'w') as f:
               json.dump(meta, f, separators=(',', ':'))
-          "
+          PYEOF
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4
