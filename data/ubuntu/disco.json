@@ -1,0 +1,1 @@
+{"updated":"2026-07-10T02:44:57+00:00","series":{"disco":{"versions":{"5.0.0-13":{"amd64":"ok","arm64":"ok","armhf":"ok","i386":"missing_install","ppc64el":"ok","s390x":"ok"},"5.0.0-38":{"amd64":"ok","arm64":"ok","armhf":"ok","i386":"missing_install","ppc64el":"ok","s390x":"ok"}},"columns":["amd64","arm64","armhf","i386","ppc64el","s390x"]}}}

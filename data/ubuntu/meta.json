@@ -2,39 +2,9 @@
   "updated": "2026-07-09T17:07:02+00:00",
   "series": [
     {
-      "name": "bionic",
-      "version": "18.04",
-      "title": "Ubuntu 18.04 LTS \"Bionic Beaver\""
-    },
-    {
-      "name": "focal",
-      "version": "20.04",
-      "title": "Ubuntu 20.04 LTS \"Focal Fossa\""
-    },
-    {
-      "name": "jammy",
-      "version": "22.04",
-      "title": "Ubuntu 22.04 LTS \"Jammy Jellyfish\""
-    },
-    {
-      "name": "noble",
-      "version": "24.04",
-      "title": "Ubuntu 24.04 LTS \"Noble Numbat\""
-    },
-    {
-      "name": "oracular",
-      "version": "24.10",
-      "title": "Ubuntu 24.10 \"Oracular Oriole\""
-    },
-    {
-      "name": "plucky",
-      "version": "25.04",
-      "title": "Ubuntu 25.04 \"Plucky Puffin\""
-    },
-    {
-      "name": "questing",
-      "version": "25.10",
-      "title": "Ubuntu 25.10 \"Questing Quokka\""
+      "name": "stonking",
+      "version": "26.10",
+      "title": "Ubuntu 26.10 \"Stonking Stingray\""
     },
     {
       "name": "resolute",
@@ -42,19 +12,94 @@
       "title": "Ubuntu 26.04 LTS \"Resolute Raccoon\""
     },
     {
-      "name": "stonking",
-      "version": "26.10",
-      "title": "Ubuntu 26.10 \"Stonking Stingray\""
+      "name": "questing",
+      "version": "25.10",
+      "title": "Ubuntu 25.10 \"Questing Quokka\""
     },
     {
-      "name": "trusty",
-      "version": "14.04",
-      "title": "Ubuntu 14.04 LTS \"Trusty Tahr\""
+      "name": "plucky",
+      "version": "25.04",
+      "title": "Ubuntu 25.04 \"Plucky Puffin\""
+    },
+    {
+      "name": "oracular",
+      "version": "24.10",
+      "title": "Ubuntu 24.10 \"Oracular Oriole\""
+    },
+    {
+      "name": "noble",
+      "version": "24.04",
+      "title": "Ubuntu 24.04 LTS \"Noble Numbat\""
+    },
+    {
+      "name": "mantic",
+      "version": "23.10",
+      "title": "Ubuntu 23.10 \"Mantic Minotaur\""
+    },
+    {
+      "name": "lunar",
+      "version": "23.04",
+      "title": "Ubuntu 23.04 \"Lunar Lobster\""
+    },
+    {
+      "name": "kinetic",
+      "version": "22.10",
+      "title": "Ubuntu 22.10 \"Kinetic Kudu\""
+    },
+    {
+      "name": "jammy",
+      "version": "22.04",
+      "title": "Ubuntu 22.04 LTS \"Jammy Jellyfish\""
+    },
+    {
+      "name": "impish",
+      "version": "21.10",
+      "title": "Ubuntu 21.10 \"Impish Indri\""
+    },
+    {
+      "name": "hirsute",
+      "version": "21.04",
+      "title": "Ubuntu 21.04 \"Hirsute Hippo\""
+    },
+    {
+      "name": "groovy",
+      "version": "20.10",
+      "title": "Ubuntu 20.10 \"Groovy Gorilla\""
+    },
+    {
+      "name": "focal",
+      "version": "20.04",
+      "title": "Ubuntu 20.04 LTS \"Focal Fossa\""
+    },
+    {
+      "name": "eoan",
+      "version": "19.10",
+      "title": "Ubuntu 19.10 \"Eoan Ermine\""
+    },
+    {
+      "name": "disco",
+      "version": "19.04",
+      "title": "Ubuntu 19.04 \"Disco Dingo\""
+    },
+    {
+      "name": "cosmic",
+      "version": "18.10",
+      "title": "Ubuntu 18.10 \"Cosmic Cuttlefish\""
+    },
+    {
+      "name": "bionic",
+      "version": "18.04",
+      "title": "Ubuntu 18.04 LTS \"Bionic Beaver\""
     },
     {
       "name": "xenial",
       "version": "16.04",
       "title": "Ubuntu 16.04 LTS \"Xenial Xerus\""
+    },
+    {
+      "name": "trusty",
+      "version": "14.04",
+      "title": "Ubuntu 14.04 LTS \"Trusty Tahr\""
     }
   ]
 }
