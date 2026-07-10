@@ -32,11 +32,15 @@ IMAGE_PREFIX = "vicamo/mainline-kernel-headers"
 # Architectures we track (Debian names)
 ARCHS = ["amd64", "arm64", "armhf", "ppc64el", "s390x"]
 OCI_TO_DEB = {
+    "linux/386": "i386",
     "linux/amd64": "amd64",
-    "linux/arm64": "arm64",
+    "linux/amd64/v3": "amd64v3",
     "linux/arm": "armhf",
     "linux/arm/v7": "armhf",
+    "linux/arm64": "arm64",
+    "linux/ppc": "powerpc",
     "linux/ppc64le": "ppc64el",
+    "linux/riscv64": "riscv64",
     "linux/s390x": "s390x",
 }
 # Pockets to query (excludes -proposed)
