@@ -3,7 +3,7 @@
 # Build the Ubuntu generic kernel headers image for a given Ubuntu series.
 #
 # Usage:
-#   ./scripts/build-ubuntu <SERIES> [--push] [--limit N] [--image PREFIX] [--platforms PLATFORMS]
+#   ./scripts/build-ubuntu <SERIES> [--push] [--limit N] [--image PREFIX] [--platforms PLATFORMS] [--suite SUITE] [--release RELEASE]
 #
 # Examples:
 #   ./scripts/build-ubuntu noble
@@ -30,6 +30,8 @@ limit=
 series=""
 image_prefix="ghcr.io/vicamo/linux-headers"
 platforms=""
+suite=""
+release=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -38,18 +40,19 @@ while [ $# -gt 0 ]; do
         --limit)         limit="$2"; shift 2 ;;
         --image)         image_prefix="$2"; shift 2 ;;
         --platforms)     platforms="$2"; shift 2 ;;
+        --suite)         suite="$2"; shift 2 ;;
+        --release)       release="$2"; shift 2 ;;
         -*)              echo "Unknown flag: $1" >&2; exit 1 ;;
         *)               series="$1"; shift ;;
     esac
 done
 
 if [ -z "${series}" ]; then
-    echo "Usage: $0 <SERIES> [--push] [--clean] [--limit N] [--image PREFIX] [--platforms PLATFORMS]" >&2
+    echo "Usage: $0 <SERIES> [--push] [--clean] [--limit N] [--image PREFIX] [--platforms PLATFORMS] [--suite SUITE] [--release RELEASE]" >&2
     exit 1
 fi
 
 generic_tag="${image_prefix}:${series}-generic"
-alias_tag="${image_prefix}:${series}"
 dkms_tag="${image_prefix}:${series}-dkms"
 
 # ---------------------------------------------------------------------------
@@ -208,6 +211,15 @@ done
 echo ""
 echo "--- ${push:+Pushing}${push:-Loading} with annotations ---"
 
+# Build alias tag arguments
+alias_tag_args=(-t "${image_prefix}:${series}")
+if [ -n "${suite}" ]; then
+    alias_tag_args+=(-t "${image_prefix}:${suite}-generic" -t "${image_prefix}:${suite}")
+fi
+if [ -n "${release}" ]; then
+    alias_tag_args+=(-t "${image_prefix}:${release}-generic" -t "${image_prefix}:${release}")
+fi
+
 docker rmi "${generic_tag}" >/dev/null 2>&1 || true
 docker buildx build \
     --platform "${platforms}" \
@@ -217,7 +229,7 @@ docker buildx build \
     -f "${repo_dir}/Dockerfile.ubuntu" \
     "${annotation_args[@]}" \
     -t "${generic_tag}" \
-    -t "${alias_tag}" \
+    "${alias_tag_args[@]}" \
     ${push:---load} \
     "${repo_dir}"
 
@@ -255,4 +267,4 @@ done
 echo ""
 echo "=== Done: ${series} ==="
 echo "  Generic: ${generic_tag}"
-echo "  Alias:   ${alias_tag}"
+echo "  Aliases: ${alias_tag_args[*]}"

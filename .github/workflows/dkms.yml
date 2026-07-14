@@ -30,22 +30,30 @@ jobs:
       - name: Filter active series
         id: filter
         run: |
-          input="${{ inputs.series || 'active' }}"
-          if [ "${input}" = "active" ]; then
-            series=$(echo '${{ steps.releases.outputs.json }}' | python3 -c "
-          import json, sys
-          releases = json.load(sys.stdin)
-          active = [r['codename'] for r in releases if r['active']]
-          print(json.dumps(active))
+          series=$(python3 -c "
+          import json, os
+          input_series = os.environ['INPUT_SERIES']
+          releases = json.loads(os.environ['RELEASES_JSON'])
+          by_codename = {r['codename']: r for r in releases}
+          if input_series == 'active':
+              names = [r['codename'] for r in releases if r['active']]
+          else:
+              names = [s.strip() for s in input_series.split(',') if s.strip()]
+          result = []
+          for name in names:
+              entry = {'codename': name, 'tags': [name + '-dkms']}
+              r = by_codename.get(name, {})
+              if r.get('suite'):
+                  entry['tags'].append(r['suite'] + '-dkms')
+              if r.get('release'):
+                  entry['tags'].append(r['release'] + '-dkms')
+              result.append(entry)
+          print(json.dumps(result))
           ")
-          else
-            series=$(echo "${input}" | python3 -c "
-          import json, sys
-          names = [s.strip() for s in sys.stdin.read().split(',') if s.strip()]
-          print(json.dumps(names))
-          ")
-          fi
           echo "series=${series}" >> "$GITHUB_OUTPUT"
+        env:
+          INPUT_SERIES: ${{ inputs.series || 'active' }}
+          RELEASES_JSON: ${{ steps.releases.outputs.json }}
 
   dkms:
     needs: discover
@@ -57,7 +65,7 @@ jobs:
       fail-fast: false
       max-parallel: 4
       matrix:
-        series: ${{ fromJson(needs.discover.outputs.series) }}
+        include: ${{ fromJson(needs.discover.outputs.series) }}
     steps:
       - uses: actions/checkout@v7
 
@@ -76,14 +84,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push dkms image for ${{ matrix.series }}
+      - name: Build and push dkms image for ${{ matrix.codename }}
         run: |
-          tag="ghcr.io/vicamo/linux-headers:${{ matrix.series }}-dkms"
-          if [ "${{ inputs.force }}" != "true" ] && docker buildx imagetools inspect "${tag}" >/dev/null 2>&1; then
-            echo "dkms image ${tag} already exists, skipping"
+          primary_tag="ghcr.io/vicamo/linux-headers:${{ matrix.codename }}-dkms"
+          if [ "${{ inputs.force }}" != "true" ] && docker buildx imagetools inspect "${primary_tag}" >/dev/null 2>&1; then
+            echo "dkms image ${primary_tag} already exists, skipping"
             exit 0
           fi
-          base_image="ghcr.io/vicamo/ubuntu:${{ matrix.series }}"
+          base_image="ghcr.io/vicamo/ubuntu:${{ matrix.codename }}"
           platforms=$(docker buildx imagetools inspect "${base_image}" --raw \
             | python3 -c "
           import json, sys
@@ -108,9 +116,16 @@ jobs:
             exit 1
           fi
           echo "Detected platforms: ${platforms}"
+
+          # Build tag arguments
+          tag_args=()
+          for tag in $(echo '${{ toJson(matrix.tags) }}' | python3 -c "import json,sys; [print(t) for t in json.load(sys.stdin)]"); do
+            tag_args+=(-t "ghcr.io/vicamo/linux-headers:${tag}")
+          done
+
           docker buildx build \
             -f dkms/Dockerfile.dkms \
             --platform "${platforms}" \
             --build-arg "BASE_IMAGE=${base_image}" \
             --push \
-            -t "${tag}" .
+            "${tag_args[@]}" .
