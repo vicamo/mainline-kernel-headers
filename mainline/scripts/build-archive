@@ -136,7 +136,7 @@ if [ -n "${versions_json}" ]; then
     annotation_args+=(--annotation "manifest:org.opencontainers.image.description=Mainline kernel header .deb archive for series ${kver}")
     annotation_args+=(--annotation "manifest:org.opencontainers.image.created=${created}")
     annotation_args+=(--annotation "manifest:dev.mainline-kernel-headers.versions=${versions_json}")
-    label_args+=(--label "org.opencontainers.image.title=mainline-kernel-headers:${kver}-archive")
+    label_args+=(--label "org.opencontainers.image.title=ghcr.io/vicamo/linux-headers:${kver}-archive")
     label_args+=(--label "org.opencontainers.image.description=Mainline kernel header .deb archive for series ${kver}")
     label_args+=(--label "org.opencontainers.image.source=https://github.com/vicamo/mainline-kernel-headers")
     label_args+=(--label "org.opencontainers.image.version=${kver}")

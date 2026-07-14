@@ -133,15 +133,15 @@ All flags are passed through to `build-mainline` for each series.
 | Arg | Required | Default | Description |
 |-----|----------|---------|-------------|
 | `KVER` | Yes | — | Kernel series, e.g. `6.14`, `7.0` |
-| `ARCHIVE_IMAGE` | No | `mainline-kernel-headers:<KVER>-archive` | Previous archive image; `scratch` for cold start |
+| `ARCHIVE_IMAGE` | No | `ghcr.io/vicamo/linux-headers:<KVER>-archive` | Previous archive image; `scratch` for cold start |
 
 #### mainline/Dockerfile.mainline
 
 | Arg | Required | Default | Description |
 |-----|----------|---------|-------------|
 | `KVER` | Yes | — | Kernel series, e.g. `6.14`, `7.0` |
-| `BASE_IMAGE` | No | `mainline-kernel-headers:<KVER>` | Previous mainline image; `<SERIES>-dkms` for cold start |
-| `ARCHIVE_IMAGE` | No | `mainline-kernel-headers:<KVER>-archive` | Archive image containing the `.deb` files |
+| `BASE_IMAGE` | No | `ghcr.io/vicamo/linux-headers:<KVER>` | Previous mainline image; `<SERIES>-dkms` for cold start |
+| `ARCHIVE_IMAGE` | No | `ghcr.io/vicamo/linux-headers:<KVER>-archive` | Archive image containing the `.deb` files |
 | `ARCHIVE_PLATFORM` | No | `linux/amd64` | Platform of the archive image |
 | `MAX_KERNELS` | No | `50` | Max kernel versions to install per build (0 = unlimited) |
 
@@ -193,7 +193,7 @@ new kernel ABIs are added on top of the previous image.
 | Arg | Required | Default | Description |
 |-----|----------|---------|-------------|
 | `SERIES` | No | `noble` | Ubuntu series codename |
-| `BASE_IMAGE` | No | `mainline-kernel-headers:<SERIES>-generic` | Previous image; `<SERIES>-dkms` for cold start |
+| `BASE_IMAGE` | No | `ghcr.io/vicamo/linux-headers:<SERIES>-generic` | Previous image; `<SERIES>-dkms` for cold start |
 | `MAX_KERNELS` | No | `50` | Max kernel packages to install per build (0 = unlimited) |
 
 ---

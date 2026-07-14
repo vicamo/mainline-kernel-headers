@@ -2,18 +2,18 @@
 #
 # Dockerfile — architecture-dependent install of mainline kernel headers.
 #
-#   Stage 1 "archive":  FROM mainline-kernel-headers:X.Y-archive
+#   Stage 1 "archive":  FROM ghcr.io/vicamo/linux-headers:X.Y-archive
 #                        Provides all archived .debs under /X.Y/X.Y.Z/.
 #
-#   Stage 2 "install":  FROM mainline-kernel-headers:X.Y
+#   Stage 2 "install":  FROM ghcr.io/vicamo/linux-headers:X.Y
 #                        Copies all .debs from archive, installs only those
 #                        not yet installed (matching TARGETARCH).
-#                        Tag as: mainline-kernel-headers:X.Y (the mainline image)
+#                        Tag as: ghcr.io/vicamo/linux-headers:X.Y (the mainline image)
 #
 # Build args:
 #   KVER          - kernel series, e.g. "6.14" (required)
 #   BASE_IMAGE    - override for cold start (default: previous mainline image)
-#   ARCHIVE_IMAGE    - the archive image (default: mainline-kernel-headers:KVER-archive)
+#   ARCHIVE_IMAGE    - the archive image (default: ghcr.io/vicamo/linux-headers:KVER-archive)
 #   ARCHIVE_PLATFORM - platform of the archive image (default: linux/amd64)
 #
 # TARGETARCH is set automatically by Docker based on --platform.
@@ -22,7 +22,7 @@
 #
 #   docker build --build-arg KVER=6.14 \
 #     --build-arg BASE_IMAGE=ubuntu:24.04 \
-#     -t mainline-kernel-headers:6.14 .
+#     -t ghcr.io/vicamo/linux-headers:6.14 .
 #
 # === Cold start (multi-platform via buildx) ===
 #
@@ -30,17 +30,17 @@
 #     --platform linux/amd64,linux/arm64 \
 #     --build-arg KVER=6.14 \
 #     --build-arg BASE_IMAGE=ubuntu:24.04 \
-#     -t mainline-kernel-headers:6.14 .
+#     -t ghcr.io/vicamo/linux-headers:6.14 .
 #
 # === Incremental ===
 #
 #   docker build --build-arg KVER=6.14 \
-#     -t mainline-kernel-headers:6.14 .
+#     -t ghcr.io/vicamo/linux-headers:6.14 .
 #
 
 ARG KVER
-ARG BASE_IMAGE=mainline-kernel-headers:${KVER}
-ARG ARCHIVE_IMAGE=mainline-kernel-headers:${KVER}-archive
+ARG BASE_IMAGE=ghcr.io/vicamo/linux-headers:${KVER}
+ARG ARCHIVE_IMAGE=ghcr.io/vicamo/linux-headers:${KVER}-archive
 ARG ARCHIVE_PLATFORM=linux/amd64
 ARG MAX_KERNELS=50
 

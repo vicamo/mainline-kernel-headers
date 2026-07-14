@@ -9,12 +9,12 @@
 # Build args:
 #   KVER          - kernel series, e.g. "6.14" (required)
 #   ARCHIVE_IMAGE - previous archive image for incremental builds
-#                   (default: mainline-kernel-headers:<KVER>-archive)
+#                   (default: ghcr.io/vicamo/linux-headers:<KVER>-archive)
 #                   Set to "scratch" for cold start.
 #
 
 ARG KVER
-ARG ARCHIVE_IMAGE=mainline-kernel-headers:${KVER}-archive
+ARG ARCHIVE_IMAGE=ghcr.io/vicamo/linux-headers:${KVER}-archive
 
 # ===========================================================================
 # Accumulate .debs under /<KVER>/<version>/

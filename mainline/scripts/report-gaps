@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Generate a gap report for mainline-kernel-headers Docker images.
+Generate a gap report for built Docker images.
 
 Usage:
     report-gaps [OPTIONS] [SERIES...]
@@ -351,7 +351,7 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-        description="Generate a gap report for mainline-kernel-headers Docker images.",
+        description="Generate a gap report for built Docker images.",
     )
     parser.add_argument(
         "--format", choices=("markdown", "json"), default="markdown",
