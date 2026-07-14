@@ -125,8 +125,7 @@ if [ "${max_kernels}" -gt 0 ] && [ "${new_versions}" -ge "${max_kernels}" ]; the
 fi
 
 echo ">>> Installing ${#to_install[@]} header package(s) for ${arch} (${new_versions} versions) ..."
-dpkg --force-depends -i "${to_install[@]}"
-apt-get update -qq && apt-get install -yqq --fix-broken --no-install-recommends
+apt-get update -qq && apt-get install -y --no-install-recommends "${to_install[@]}"
 
 echo "=== Done installing kernel headers for ${arch} ==="
 INSTALL
