@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
-"""
-Parallel .deb fetcher for mainline kernel headers.
-
-Usage:
-    fetch-debs <KVER> <BASE_URL> <DEBS_DIR> [<ARCHIVE_VERSIONS_JSON>]
+"""Parallel .deb fetcher for mainline kernel headers.
 
 Discovers versions for the given kernel series from kernel.ubuntu.com/mainline,
 validates existing local debs, and downloads missing ones — all in parallel.
@@ -26,14 +22,19 @@ import subprocess
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-from urllib.request import urlopen, Request
 from urllib.error import URLError
+from urllib.request import Request, urlopen
+
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _script_dir)
+from lib import MAINLINE_BASE_URL
 
 MAX_DISCOVER_WORKERS = 8
 MAX_DOWNLOAD_WORKERS = 16
 
 
-def fetch(url, retries=3):
+def fetch(url: str, retries: int = 3) -> str | None:
+    """Fetch a URL and return its text content, or None on failure."""
     for attempt in range(retries):
         try:
             with urlopen(Request(url), timeout=30) as r:
@@ -43,7 +44,8 @@ def fetch(url, retries=3):
                 return None
 
 
-def download(url, dest, retries=3):
+def download(url: str, dest: str, retries: int = 3) -> bool:
+    """Download a URL to a local path. Returns True on success."""
     for attempt in range(retries):
         try:
             with urlopen(Request(url), timeout=60) as r:
@@ -56,7 +58,7 @@ def download(url, dest, retries=3):
                 return False
 
 
-def validate_debs(debs_dir):
+def validate_debs(debs_dir: str) -> None:
     """Validate all local .deb files in parallel. Exits on corruption."""
     debs = list(Path(debs_dir).rglob("*.deb"))
     if not debs:
@@ -83,25 +85,32 @@ def validate_debs(debs_dir):
         sys.exit(1)
 
 
-def flavour_from_deb(fname):
+def flavour_from_deb(fname: str) -> tuple[str, str] | None:
     """Extract (flavour, arch) from a deb filename, or None.
+
     linux[-<derived>]-headers-<ver>-<abi>-<flavour>_<ver>_<arch>.deb  (arch != all)
-    linux[-<derived>]-headers-<ver>-<abi>_<ver>_all.deb               (arch == all, no flavour)
+    linux[-<derived>]-headers-<ver>-<abi>_<ver>_all.deb               (arch == all)
     """
-    m = re.match(r'linux(?:-.+)?-headers-\d+\.\d+\.\d+-\d+(?:-(.+))?_.+_([^_]+)\.deb', fname)
+    m = re.match(
+        r'linux(?:-.+)?-headers-\d+\.\d+\.\d+-\d+(?:-(.+))?_.+_([^_]+)\.deb', fname)
     if m:
-        return (m.group(1) or 'all', m.group(2))
+        return (m.group(1) or "all", m.group(2))
     return None
 
 
-def discover_version(base_url, kver_dir, vnum, out_dir, archive_flavours):
-    """
-    Discover and download missing debs for one version.
+def discover_version(
+    base_url: str,
+    kver_dir: str,
+    vnum: str,
+    out_dir: str,
+    archive_flavours: dict[str, list[str]],
+) -> tuple[str, bool, str | None]:
+    """Discover and download missing debs for one version.
 
     archive_flavours: {arch: [flavours]} for this version from the archive
                       annotation, or {} if not in archive.
 
-    Returns (vnum, is_changed: bool, error: str|None).
+    Returns (vnum, is_changed, error).
     """
     ver_url = f"{base_url}/{kver_dir}/"
     os.makedirs(out_dir, exist_ok=True)
@@ -120,12 +129,13 @@ def discover_version(base_url, kver_dir, vnum, out_dir, archive_flavours):
     }
 
     # Collect all deb URLs to download
-    downloads = []  # (url, local_path)
+    downloads: list[tuple[str, str]] = []
 
-    def scan_page(page_url, page_content):
+    def scan_page(page_url: str, page_content: str) -> list[tuple[str, str]]:
         """Scan a page for header debs and return download items."""
         items = []
-        for deb in set(re.findall(r'href="(linux(?:-.+)?-headers-[^"]+\.deb)"', page_content)):
+        for deb in set(re.findall(
+                r'href="(linux(?:-.+)?-headers-[^"]+\.deb)"', page_content)):
             local = os.path.join(out_dir, deb)
             if os.path.isfile(local):
                 continue
@@ -156,7 +166,7 @@ def discover_version(base_url, kver_dir, vnum, out_dir, archive_flavours):
         downloads.extend(scan_page(ver_url, top))
 
     # Deduplicate (same _all.deb may appear in multiple archdirs)
-    seen = set()
+    seen: set[str] = set()
     unique_downloads = []
     for url, local in downloads:
         if local not in seen:
@@ -169,7 +179,10 @@ def discover_version(base_url, kver_dir, vnum, out_dir, archive_flavours):
     # Download missing debs in parallel
     failed = []
     with ThreadPoolExecutor(max_workers=MAX_DOWNLOAD_WORKERS) as pool:
-        futures = {pool.submit(download, url, local): (url, local) for url, local in unique_downloads}
+        futures = {
+            pool.submit(download, url, local): (url, local)
+            for url, local in unique_downloads
+        }
         for f in as_completed(futures):
             url, local = futures[f]
             if not f.result():
@@ -183,22 +196,14 @@ def discover_version(base_url, kver_dir, vnum, out_dir, archive_flavours):
     return (vnum, True, None)
 
 
-def main():
-    if len(sys.argv) < 4:
-        print("Usage: fetch-debs <KVER> <BASE_URL> <DEBS_DIR> [<ARCHIVE_VERSIONS_JSON>]", file=sys.stderr)
-        sys.exit(1)
-
-    kver = sys.argv[1]
-    base_url = sys.argv[2].rstrip("/")
-    debs_dir = sys.argv[3]
-
-    # Parse archive annotation: {version: {arch: [flavours]}}
-    archive = {}
-    if len(sys.argv) >= 5 and sys.argv[4]:
-        try:
-            archive = json.loads(sys.argv[4])
-        except (json.JSONDecodeError, ValueError):
-            pass
+def fetch_debs(
+    kver: str,
+    base_url: str,
+    debs_dir: str,
+    archive_versions: dict[str, dict[str, list[str]]] | None = None,
+) -> int:
+    """Fetch all debs for a kernel series. Returns the number of changed versions."""
+    archive = archive_versions or {}
 
     # Validate all local debs upfront
     validate_debs(debs_dir)
@@ -211,13 +216,17 @@ def main():
         sys.exit(1)
 
     pattern = re.compile(rf'href="v({re.escape(kver)}(?:\.\d+)?)/?"')
-    versions = sorted(set(pattern.findall(index)), key=lambda v: [int(p) for p in v.split(".")])
+    versions = sorted(
+        set(pattern.findall(index)),
+        key=lambda v: [int(p) for p in v.split(".")],
+    )
 
     if not versions:
         print(f"ERROR: no versions matching {kver} at {base_url}/", file=sys.stderr)
         sys.exit(1)
 
-    print(f"Found {len(versions)} version(s): {versions[0]} .. {versions[-1]}", file=sys.stderr)
+    print(f"Found {len(versions)} version(s): {versions[0]} .. {versions[-1]}",
+          file=sys.stderr)
 
     # Process all versions in parallel
     new_versions = 0
@@ -229,7 +238,10 @@ def main():
             kver_dir = f"v{vnum}"
             out_dir = os.path.join(debs_dir, vnum)
             archive_flavours = archive.get(vnum, {})
-            futures[pool.submit(discover_version, base_url, kver_dir, vnum, out_dir, archive_flavours)] = vnum
+            futures[pool.submit(
+                discover_version, base_url, kver_dir, vnum,
+                out_dir, archive_flavours,
+            )] = vnum
 
         for f in as_completed(futures):
             vnum, is_changed, error = f.result()
@@ -245,6 +257,32 @@ def main():
         for e in errors:
             print(f"WARNING: {e}", file=sys.stderr)
 
+    return new_versions
+
+
+def main() -> None:
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        description="Parallel .deb fetcher for mainline kernel headers.")
+    parser.add_argument("kver", help="Kernel series (e.g. '6.14')")
+    parser.add_argument("base_url", nargs="?", default=MAINLINE_BASE_URL,
+                        help="Base URL for mainline builds (default: %(default)s)")
+    parser.add_argument("debs_dir", nargs="?", default=os.getcwd(),
+                        help="Local directory to store debs (default: $PWD)")
+    parser.add_argument("archive_versions_json", nargs="?", default="",
+                        help="JSON: {version: {arch: [flavours]}} already in archive")
+    args = parser.parse_args()
+
+    archive = {}
+    if args.archive_versions_json:
+        try:
+            archive = json.loads(args.archive_versions_json)
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    new_versions = fetch_debs(args.kver, args.base_url.rstrip("/"),
+                              args.debs_dir, archive)
     print(new_versions)
 
 
