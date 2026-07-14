@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       series:
-        description: 'Comma-separated series names, or "active" for all active series'
+        description: 'Comma-separated series names, "active" for all active, or "all" for all releases'
         required: false
         type: string
         default: 'active'
@@ -37,6 +37,8 @@ jobs:
           by_codename = {r['codename']: r for r in releases}
           if input_series == 'active':
               names = [r['codename'] for r in releases if r['active']]
+          elif input_series == 'all':
+              names = [r['codename'] for r in releases]
           else:
               names = [s.strip() for s in input_series.split(',') if s.strip()]
           result = []
