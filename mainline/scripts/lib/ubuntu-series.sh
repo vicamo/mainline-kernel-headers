@@ -11,48 +11,47 @@ ubuntu_series_for_kver() {
     minor=$(echo "${kver}" | cut -d. -f2)
     ver_num=$(( major * 100 + minor ))
 
-    # Descending order: newest first
+    # Ascending order: oldest first; pick the first release whose kernel >= ver
     local -a releases=(
-        "700 resolute"
-        "617 questing"
-        "614 plucky"
-        "611 oracular"
-        "608 noble"
-        "605 mantic"
-        "602 lunar"
-        "519 kinetic"
-        "515 jammy"
-        "513 impish"
-        "511 hirsute"
-        "508 groovy"
-        "504 focal"
-        "503 eoan"
-        "500 disco"
-        "418 cosmic"
-        "415 bionic"
-        "413 artful"
-        "410 zesty"
-        "408 yakkety"
-        "404 xenial"
-        "402 wily"
-        "319 vivid"
-        "316 utopic"
-        "313 trusty"
-        "311 saucy"
-        "308 raring"
-        "305 quantal"
-        "302 precise"
         "300 oneiric"
+        "302 precise"
+        "305 quantal"
+        "308 raring"
+        "311 saucy"
+        "313 trusty"
+        "316 utopic"
+        "319 vivid"
+        "402 wily"
+        "404 xenial"
+        "408 yakkety"
+        "410 zesty"
+        "413 artful"
+        "415 bionic"
+        "418 cosmic"
+        "500 disco"
+        "503 eoan"
+        "504 focal"
+        "508 groovy"
+        "511 hirsute"
+        "513 impish"
+        "515 jammy"
+        "519 kinetic"
+        "602 lunar"
+        "605 mantic"
+        "608 noble"
+        "611 oracular"
+        "614 plucky"
+        "617 questing"
+        "700 resolute"
+        "9999 devel"
     )
 
     for entry in "${releases[@]}"; do
         local rel_ver="${entry%% *}"
         local rel_name="${entry##* }"
-        if [ ${ver_num} -ge ${rel_ver} ]; then
+        if [ ${ver_num} -le ${rel_ver} ]; then
             echo "${rel_name}"
             return
         fi
     done
-    # Fallback for very old kernels
-    echo "oneiric"
 }
