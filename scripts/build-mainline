@@ -105,8 +105,14 @@ fi
 #
 # We pick the newest Ubuntu release whose kernel version <= KVER.
 # Format: "major_minor codename" sorted descending.
-# shellcheck source=lib/ubuntu-series.sh
-source "${script_dir}/lib/ubuntu-series.sh"
+# Series lookup helper (uses scripts/lib/series.py)
+_series_for_kver() {
+    python3 -c "
+import sys; sys.path.insert(0, '${script_dir}')
+from lib.series import series_for_kver
+print(series_for_kver('$1'${2:+, longterm=True}))
+"
+}
 
 common_image_args=(
     -f "${repo_dir}/mainline/Dockerfile.mainline"
@@ -118,7 +124,7 @@ if [ -z "${clean}" ] && docker buildx imagetools inspect "${image_tag}" >/dev/nu
     echo "  (incremental: previous mainline image found)"
     base_image="${image_tag}"
 else
-    series=$(ubuntu_series_for_kver "${kver}")
+    series=$(_series_for_kver "${kver}")
     dkms_tag="${image_prefix}:${series}-dkms"
     echo "  (cold start: using ${dkms_tag} as base)"
     base_image="${dkms_tag}"
