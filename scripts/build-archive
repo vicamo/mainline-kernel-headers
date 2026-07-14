@@ -1,166 +1,201 @@
-#!/usr/bin/env bash
-#
-# Build the archive image for a given kernel series.
-#
-# Usage:
-#   ./scripts/build-archive <KVER> [--push] [--force] [--image PREFIX]
-#
-# Examples:
-#   ./scripts/build-archive 7.0
-#   ./scripts/build-archive 7.0 --push
-#   ./scripts/build-archive 7.0 --push --image myrepo/kernel-headers
-#
-set -euo pipefail
+#!/usr/bin/env python3
+"""Build the archive image for a given kernel series.
 
-# Require containerd-snapshotter for OCI annotation support in local store
-if ! docker info -f '{{.DriverStatus}}' 2>/dev/null | grep -q 'io.containerd'; then
-    echo "ERROR: containerd-snapshotter is not enabled in Docker daemon." >&2
-    echo "Enable it with: {\"features\":{\"containerd-snapshotter\":true}} in daemon.json" >&2
-    exit 1
-fi
+Orchestrates: fetch-debs → docker buildx build → annotation extraction → final push/load.
 
-script_dir="$(cd "$(dirname "$0")" && pwd)"
-repo_dir="$(dirname "${script_dir}")"
+Examples:
+    ./scripts/build-archive 7.0
+    ./scripts/build-archive 7.0 --push
+    ./scripts/build-archive 7.0 --push --image myrepo/kernel-headers
+"""
 
-push=
-force=
-kver=""
-image_prefix="ghcr.io/vicamo/linux-headers"
-
-while [ $# -gt 0 ]; do
-    case "$1" in
-        --push)   push=--push; shift ;;
-        --force)  force=1; shift ;;
-        --image)  image_prefix="$2"; shift 2 ;;
-        -*)       echo "Unknown flag: $1" >&2; exit 1 ;;
-        *)        kver="$1"; shift ;;
-    esac
-done
-
-if [ -z "${kver}" ]; then
-    echo "Usage: $0 <KVER> [--push] [--image PREFIX]" >&2
-    exit 1
-fi
-
-archive_tag="${image_prefix}:${kver}-archive"
-
-# ---------------------------------------------------------------------------
-# Step 1: Fetch .deb packages into mainline/debs/<KVER>/
-# ---------------------------------------------------------------------------
-echo "=== Fetching kernel headers for series ${kver} ==="
-
-base_url="https://kernel.ubuntu.com/mainline"
-debs_dir="${repo_dir}/mainline/debs/${kver}"
-mkdir -p "${debs_dir}"
-
-# Retrieve existing archive annotation for early-exit check.
-archive_versions_json=$("${script_dir}/get-archive-annotation" "${archive_tag}" "dev.mainline-kernel-headers.versions" 2>/dev/null) || true
-
-# Parallel fetch of .deb packages using Python
-new_versions=$(python3 -u "${script_dir}/fetch-debs" "${kver}" "${base_url}" "${debs_dir}" "${archive_versions_json}")
-
-if [ -z "${force}" ] && [ "${new_versions}" -eq 0 ]; then
-    echo "=== No new versions found, nothing to do. ==="
-    [ -n "${archive_versions_json}" ] && echo "${archive_versions_json}"
-    exit 0
-fi
-
-echo "=== Fetching complete (${new_versions} new version(s)) ==="
-
-# ---------------------------------------------------------------------------
-# Step 2: Build the archive image
-# ---------------------------------------------------------------------------
-echo ""
-echo "=== Building archive: ${archive_tag} ==="
-
-archive_args=(
-    --build-arg "KVER=${kver}"
-)
-
-if docker buildx imagetools inspect "${archive_tag}" >/dev/null 2>&1; then
-    echo "  (incremental: previous archive found)"
-    archive_args+=(--build-arg "ARCHIVE_IMAGE=${archive_tag}")
-else
-    echo "  (cold start: no previous archive)"
-    archive_args+=(--build-arg "ARCHIVE_IMAGE=scratch")
-fi
-
-# Build and load into local docker daemon (temporary tag for extraction)
-docker rmi "${archive_tag}-tmp" >/dev/null 2>&1 || true
-docker buildx build \
-    -f "${repo_dir}/mainline/Dockerfile.archive" \
-    "${archive_args[@]}" \
-    -t "${archive_tag}-tmp" \
-    --load \
-    "${repo_dir}"
-
-# Extract version info by scanning .deb filenames in the archive
-echo ""
-echo "--- Extracting version info from archive ---"
-versions_json=$(docker run --rm "${archive_tag}-tmp" /bin/ls -R "/${kver}/" 2>/dev/null \
-    | python3 -c "
-import sys, re, json
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
 from collections import defaultdict
+from datetime import datetime, timezone
+from pathlib import Path
 
-# {version: {arch: set(flavours)}}
-versions = defaultdict(lambda: defaultdict(set))
-current_ver = ''
-for line in sys.stdin.read().strip().splitlines():
-    if line.endswith(':'):
-        m = re.search(r'/(\d+\.\d+(?:\.\d+)?):$', line)
-        current_ver = m.group(1) if m else ''
-        continue
-    if not current_ver or not line.endswith('.deb'):
-        continue
-    fname = line.strip()
-    # linux[-<derived>]-headers-<ver>-<abi>_<ver>_all.deb (no flavour for arch=all)
-    # linux[-<derived>]-headers-<ver>-<abi>-<flavour>_<ver>_<arch>.deb
-    m = re.match(r'linux(?:-.+)?-headers-\d+\.\d+\.\d+-\d+(?:-(.+))?_.+_([^_]+)\.deb', fname)
-    if not m:
-        continue
-    flavour, arch = m.group(1) or 'all', m.group(2)
-    versions[current_ver][arch].add(flavour)
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _script_dir)
 
-if versions:
+from lib import (ARCHIVE_ANNOTATION_VERSIONS_KEY, IMAGE_PREFIX,
+                 MAINLINE_BASE_URL, check_containerd_snapshotter)
+
+# Re-use fetch_debs and get_archive_annotation directly
+_fetch_debs_path = os.path.join(_script_dir, "fetch-debs")
+_fetch_debs_ns: dict = {"__file__": _fetch_debs_path}
+exec(compile(Path(_fetch_debs_path).read_text(), _fetch_debs_path, "exec"), _fetch_debs_ns)
+fetch_debs = _fetch_debs_ns["fetch_debs"]
+
+_annotation_path = os.path.join(_script_dir, "get-archive-annotation")
+_annotation_ns: dict = {"__file__": _annotation_path}
+exec(compile(Path(_annotation_path).read_text(), _annotation_path, "exec"), _annotation_ns)
+get_archive_annotation = _annotation_ns["get_archive_annotation"]
+
+
+def extract_versions_json(image: str, kver: str) -> str | None:
+    """Extract version info by scanning .deb filenames in the archive image."""
+    r = subprocess.run(
+        ["docker", "run", "--rm", image, "/bin/ls", "-R", f"/{kver}/"],
+        capture_output=True, text=True,
+    )
+    if r.returncode != 0 or not r.stdout.strip():
+        return None
+
+    versions: dict[str, dict[str, set]] = defaultdict(lambda: defaultdict(set))
+    current_ver = ""
+    for line in r.stdout.strip().splitlines():
+        if line.endswith(":"):
+            m = re.search(r'/(\d+\.\d+(?:\.\d+)?):$', line)
+            current_ver = m.group(1) if m else ""
+            continue
+        if not current_ver or not line.endswith(".deb"):
+            continue
+        fname = line.strip()
+        m = re.match(
+            r'linux(?:-.+)?-headers-\d+\.\d+\.\d+-\d+(?:-(.+))?_.+_([^_]+)\.deb', fname)
+        if not m:
+            continue
+        flavour, arch = m.group(1) or "all", m.group(2)
+        versions[current_ver][arch].add(flavour)
+
+    if not versions:
+        return None
+
     result = {v: {a: sorted(f) for a, f in sorted(archs.items())}
               for v, archs in sorted(versions.items())}
-    print(json.dumps(result, separators=(',', ':')))
-") || true
+    return json.dumps(result, separators=(",", ":"))
 
-annotation_args=()
-label_args=()
-if [ -n "${versions_json}" ]; then
-    created=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-    echo "  Versions: ${versions_json}"
-    echo "  Created: ${created}"
-    annotation_args+=(--annotation "manifest:org.opencontainers.image.description=Mainline kernel header .deb archive for series ${kver}")
-    annotation_args+=(--annotation "manifest:org.opencontainers.image.created=${created}")
-    annotation_args+=(--annotation "manifest:dev.mainline-kernel-headers.versions=${versions_json}")
-    label_args+=(--label "org.opencontainers.image.title=ghcr.io/vicamo/linux-headers:${kver}-archive")
-    label_args+=(--label "org.opencontainers.image.description=Mainline kernel header .deb archive for series ${kver}")
-    label_args+=(--label "org.opencontainers.image.source=https://github.com/vicamo/mainline-kernel-headers")
-    label_args+=(--label "org.opencontainers.image.version=${kver}")
-    label_args+=(--label "org.opencontainers.image.created=${created}")
-    label_args+=(--label "dev.mainline-kernel-headers.versions=${versions_json}")
-fi
 
-# Rebuild with annotations (cached, just updates metadata) and push if requested
-echo ""
-echo "--- ${push:+Pushing}${push:-Loading} with annotations ---"
-docker rmi "${archive_tag}" >/dev/null 2>&1 || true
-docker buildx build \
-    -f "${repo_dir}/mainline/Dockerfile.archive" \
-    "${archive_args[@]}" \
-    "${annotation_args[@]}" \
-    "${label_args[@]}" \
-    -t "${archive_tag}" \
-    ${push:---load} \
-    "${repo_dir}"
+def build_archive(
+    kver: str,
+    push: bool = False,
+    force: bool = False,
+    image_prefix: str = IMAGE_PREFIX,
+) -> None:
+    """Build the archive image for a kernel series."""
+    repo_dir = os.path.dirname(_script_dir)
+    archive_tag = f"{image_prefix}:{kver}-archive"
+    debs_dir = os.path.join(repo_dir, "mainline", "debs", kver)
+    os.makedirs(debs_dir, exist_ok=True)
 
-docker rmi "${archive_tag}-tmp" >/dev/null 2>&1
+    check_containerd_snapshotter()
 
-echo ""
-"${script_dir}/get-archive-annotation" "${archive_tag}" "dev.mainline-kernel-headers.versions" || true
+    # Step 1: Fetch .deb packages
+    print(f"=== Fetching kernel headers for series {kver} ===", file=sys.stderr)
 
-echo ""
-echo "=== Done: ${archive_tag} ==="
+    archive_versions_json = get_archive_annotation(archive_tag, ARCHIVE_ANNOTATION_VERSIONS_KEY) or ""
+    archive_versions = {}
+    if archive_versions_json:
+        try:
+            archive_versions = json.loads(archive_versions_json)
+        except (json.JSONDecodeError, ValueError):
+            pass
+
+    new_versions = fetch_debs(kver, MAINLINE_BASE_URL, debs_dir, archive_versions)
+
+    if not force and new_versions == 0:
+        print("=== No new versions found, nothing to do. ===", file=sys.stderr)
+        if archive_versions_json:
+            print(archive_versions_json)
+        return
+
+    print(f"=== Fetching complete ({new_versions} new version(s)) ===", file=sys.stderr)
+
+    # Step 2: Build the archive image
+    print(f"\n=== Building archive: {archive_tag} ===", file=sys.stderr)
+
+    archive_args = [
+        "-f", os.path.join(repo_dir, "mainline", "Dockerfile.archive"),
+        "--build-arg", f"KVER={kver}",
+    ]
+
+    # Check if previous archive exists
+    r = subprocess.run(
+        ["docker", "buildx", "imagetools", "inspect", archive_tag],
+        capture_output=True,
+    )
+    if r.returncode == 0:
+        print("  (incremental: previous archive found)", file=sys.stderr)
+        archive_args += ["--build-arg", f"ARCHIVE_IMAGE={archive_tag}"]
+    else:
+        print("  (cold start: no previous archive)", file=sys.stderr)
+        archive_args += ["--build-arg", "ARCHIVE_IMAGE=scratch"]
+
+    # Build and load into local docker daemon (temporary tag for extraction)
+    tmp_tag = f"{archive_tag}-tmp"
+    subprocess.run(["docker", "rmi", tmp_tag], capture_output=True)
+    subprocess.run(["docker", "buildx", "build",
+         *archive_args,
+         "-t", tmp_tag, "--load", repo_dir],
+        check=True)
+
+    # Extract version info
+    print("\n--- Extracting version info from archive ---", file=sys.stderr)
+    versions_json = extract_versions_json(tmp_tag, kver)
+
+    annotation_args: list[str] = []
+    label_args: list[str] = []
+    if versions_json:
+        created = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        print(f"  Versions: {versions_json}", file=sys.stderr)
+        print(f"  Created: {created}", file=sys.stderr)
+        desc = f"Mainline kernel header .deb archive for series {kver}"
+        annotation_args = [
+            "--annotation", f"manifest:org.opencontainers.image.description={desc}",
+            "--annotation", f"manifest:org.opencontainers.image.created={created}",
+            "--annotation", f"manifest:{ARCHIVE_ANNOTATION_VERSIONS_KEY}={versions_json}",
+        ]
+        label_args = [
+            "--label", f"org.opencontainers.image.title={archive_tag}",
+            "--label", f"org.opencontainers.image.description={desc}",
+            "--label", "org.opencontainers.image.source=https://github.com/vicamo/mainline-kernel-headers",
+            "--label", f"org.opencontainers.image.version={kver}",
+            "--label", f"org.opencontainers.image.created={created}",
+            "--label", f"{ARCHIVE_ANNOTATION_VERSIONS_KEY}={versions_json}",
+        ]
+
+    # Rebuild with annotations and push/load
+    action = "Pushing" if push else "Loading"
+    print(f"\n--- {action} with annotations ---", file=sys.stderr)
+    subprocess.run(["docker", "rmi", archive_tag], capture_output=True)
+    subprocess.run(["docker", "buildx", "build",
+         *archive_args, *annotation_args, *label_args,
+         "-t", archive_tag,
+         *(["--push"] if push else ["--load"]),
+         repo_dir],
+        check=True)
+
+    subprocess.run(["docker", "rmi", tmp_tag], capture_output=True)
+
+    # Print final annotation
+    print("", file=sys.stderr)
+    final = get_archive_annotation(archive_tag, ARCHIVE_ANNOTATION_VERSIONS_KEY)
+    if final:
+        print(final, file=sys.stderr)
+
+    print(f"\n=== Done: {archive_tag} ===", file=sys.stderr)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Build the archive image for a given kernel series.")
+    parser.add_argument("kver", help="Kernel series (e.g. '7.0')")
+    parser.add_argument("--push", action="store_true",
+                        help="Push to registry (default: load locally)")
+    parser.add_argument("--force", action="store_true",
+                        help="Rebuild even if no new versions")
+    parser.add_argument("--image", default=IMAGE_PREFIX, dest="image_prefix",
+                        help="Image prefix (default: %(default)s)")
+    args = parser.parse_args()
+
+    build_archive(args.kver, push=args.push, force=args.force,
+                  image_prefix=args.image_prefix)
+
+
+if __name__ == "__main__":
+    main()
