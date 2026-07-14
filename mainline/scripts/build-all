@@ -3,7 +3,7 @@
 # Build archive and headers images for all active kernel versions.
 #
 # Queries https://www.kernel.org/releases.json for stable and longterm
-# versions that are not end-of-life, then builds each one via build-version.
+# versions that are not end-of-life, then builds each one via build-mainline.
 #
 # Usage:
 #   ./scripts/build-all [--push] [--image PREFIX] [--platforms PLATFORMS]
@@ -55,7 +55,7 @@ for kver in ${versions}; do
     echo "================================================================"
     echo "  Building ${kver}"
     echo "================================================================"
-    if "${script_dir}/build-version" "${kver}" "${extra_args[@]}"; then
+    if "${script_dir}/build-mainline" "${kver}" "${extra_args[@]}"; then
         echo ""
     else
         echo "ERROR: build failed for ${kver}" >&2

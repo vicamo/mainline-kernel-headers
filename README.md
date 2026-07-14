@@ -70,7 +70,7 @@ The build is split into two stages:
    header `.deb` packages for all architectures into a minimal image.
    Supports incremental builds.
 
-2. **Headers** (`mainline/Dockerfile`) — installs the appropriate `.deb`
+2. **Mainline** (`mainline/Dockerfile.mainline`) — installs the appropriate `.deb`
    packages for the target architecture from the archive image using
    `dpkg --force-depends`. Multi-platform via Docker buildx.
 
@@ -95,12 +95,12 @@ Build the archive image for a single kernel series.
 ./mainline/scripts/build-archive 7.0 --push
 ```
 
-#### mainline/scripts/build-version
+#### mainline/scripts/build-mainline
 
-Build the headers image for a single kernel series. Requires the archive image.
+Build the mainline image for a single kernel series. Requires the archive image.
 
 ```sh
-./mainline/scripts/build-version <KVER> [--push] [--image PREFIX] [--platforms PLATFORMS] [--force] [--clean] [--limit N]
+./mainline/scripts/build-mainline <KVER> [--push] [--image PREFIX] [--platforms PLATFORMS] [--force] [--clean] [--limit N]
 ```
 
 | Flag | Default | Description |
@@ -113,7 +113,7 @@ Build the headers image for a single kernel series. Requires the archive image.
 | `--limit` | *(Dockerfile default: 50)* | Max kernel versions to install per build (0 = unlimited) |
 
 ```sh
-./mainline/scripts/build-version 7.0 --push
+./mainline/scripts/build-mainline 7.0 --push
 ```
 
 #### mainline/scripts/build-all
@@ -124,7 +124,7 @@ Build all active kernel versions (stable + longterm, not EOL).
 ./mainline/scripts/build-all [--push] [--image PREFIX] [--platforms PLATFORMS]
 ```
 
-All flags are passed through to `build-version` for each series.
+All flags are passed through to `build-mainline` for each series.
 
 ### Build args
 
@@ -135,12 +135,12 @@ All flags are passed through to `build-version` for each series.
 | `KVER` | Yes | — | Kernel series, e.g. `6.14`, `7.0` |
 | `ARCHIVE_IMAGE` | No | `mainline-kernel-headers:<KVER>-archive` | Previous archive image; `scratch` for cold start |
 
-#### mainline/Dockerfile
+#### mainline/Dockerfile.mainline
 
 | Arg | Required | Default | Description |
 |-----|----------|---------|-------------|
 | `KVER` | Yes | — | Kernel series, e.g. `6.14`, `7.0` |
-| `BASE_IMAGE` | No | `mainline-kernel-headers:<KVER>` | Previous headers image; `<SERIES>-dkms` for cold start |
+| `BASE_IMAGE` | No | `mainline-kernel-headers:<KVER>` | Previous mainline image; `<SERIES>-dkms` for cold start |
 | `ARCHIVE_IMAGE` | No | `mainline-kernel-headers:<KVER>-archive` | Archive image containing the `.deb` files |
 | `ARCHIVE_PLATFORM` | No | `linux/amd64` | Platform of the archive image |
 | `MAX_KERNELS` | No | `50` | Max kernel versions to install per build (0 = unlimited) |
@@ -256,7 +256,7 @@ mainline/                    Mainline kernel headers
   Dockerfile                 Headers image
   Dockerfile.archive         Archive image
   debs/                      Downloaded .deb staging
-  scripts/                   build-archive, build-version, build-all, etc.
+  scripts/                   build-archive, build-mainline, build-all, etc.
 ubuntu/                      Ubuntu generic kernel headers
   Dockerfile.ubuntu          Headers image
   scripts/                   build-ubuntu

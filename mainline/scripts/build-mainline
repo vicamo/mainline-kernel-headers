@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 #
-# Build the headers image for a given kernel series.
+# Build the mainline image for a given kernel version.
 # Requires the archive image to already exist.
 #
 # Usage:
-#   ./scripts/build-version <KVER> [--push] [--limit N] [--image PREFIX] [--platforms PLATFORMS]
+#   ./scripts/build-mainline <KVER> [--push] [--limit N] [--image PREFIX] [--platforms PLATFORMS]
 #
 # Examples:
-#   ./scripts/build-version 7.0
-#   ./scripts/build-version 7.0 --push
-#   ./scripts/build-version 7.0 --push --image myrepo/kernel-headers
-#   ./scripts/build-version 7.0 --push --platforms linux/amd64,linux/arm64
-#   ./scripts/build-version 7.0 --limit 0   # install all kernels (no cap)
+#   ./scripts/build-mainline 7.0
+#   ./scripts/build-mainline 7.0 --push
+#   ./scripts/build-mainline 7.0 --push --image myrepo/kernel-headers
+#   ./scripts/build-mainline 7.0 --push --platforms linux/amd64,linux/arm64
+#   ./scripts/build-mainline 7.0 --limit 0   # install all kernels (no cap)
 #
 set -euo pipefail
 
@@ -31,7 +31,7 @@ clean=
 limit=
 kver=""
 image_prefix="ghcr.io/vicamo/linux-headers"
-headers_platforms=""
+platforms=""
 
 while [ $# -gt 0 ]; do
     case "$1" in
@@ -40,7 +40,7 @@ while [ $# -gt 0 ]; do
         --clean)         clean=1; shift ;;
         --limit)         limit="$2"; shift 2 ;;
         --image)         image_prefix="$2"; shift 2 ;;
-        --platforms)     headers_platforms="$2"; shift 2 ;;
+        --platforms)     platforms="$2"; shift 2 ;;
         -*)              echo "Unknown flag: $1" >&2; exit 1 ;;
         *)               kver="$1"; shift ;;
     esac
@@ -52,7 +52,7 @@ if [ -z "${kver}" ]; then
 fi
 
 archive_tag="${image_prefix}:${kver}-archive"
-headers_tag="${image_prefix}:${kver}"
+image_tag="${image_prefix}:${kver}"
 
 # Verify archive image exists and capture its created timestamp
 archive_created=$("${script_dir}/get-archive-annotation" "${archive_tag}" "org.opencontainers.image.created" 2>/dev/null) || true
@@ -62,15 +62,15 @@ if [ -z "${archive_created}" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Build the headers image (multi-platform)
+# Build the mainline image (multi-platform)
 # ---------------------------------------------------------------------------
 echo ""
-echo "=== Building headers: ${headers_tag} ==="
+echo "=== Building image: ${image_tag} ==="
 
 # Check if the install image is already up to date with the archive.
-# Compare the archive created timestamp against what the headers image recorded.
-if docker buildx imagetools inspect "${headers_tag}" >/dev/null 2>&1; then
-    headers_archive_created=$(docker buildx imagetools inspect "${headers_tag}" --raw 2>/dev/null \
+# Compare the archive created timestamp against what the mainline image recorded.
+if docker buildx imagetools inspect "${image_tag}" >/dev/null 2>&1; then
+    mainline_archive_created=$(docker buildx imagetools inspect "${image_tag}" --raw 2>/dev/null \
         | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
@@ -80,11 +80,11 @@ if v:
     print(v)
 " 2>/dev/null) || true
 
-    if [ -z "${force}" ] && [ -n "${headers_archive_created}" ] && [ "${archive_created}" = "${headers_archive_created}" ]; then
-        echo "  Headers image already matches archive (created: ${archive_created})"
+    if [ -z "${force}" ] && [ -n "${mainline_archive_created}" ] && [ "${archive_created}" = "${mainline_archive_created}" ]; then
+        echo "  Mainline image already matches archive (created: ${archive_created})"
         echo ""
         echo "--- Install image inspection ---"
-        docker buildx imagetools inspect "${headers_tag}" --raw 2>/dev/null || true
+        docker buildx imagetools inspect "${image_tag}" --raw 2>/dev/null || true
         echo ""
         echo "=== Done: ${kver} (up to date) ==="
         exit 0
@@ -108,25 +108,26 @@ fi
 # shellcheck source=lib/ubuntu-series.sh
 source "${script_dir}/lib/ubuntu-series.sh"
 
-headers_args=(
+common_image_args=(
+    -f "${repo_dir}/Dockerfile.mainline"
     --build-arg "KVER=${kver}"
     --build-arg "ARCHIVE_IMAGE=${archive_tag}"
 )
 
-if [ -z "${clean}" ] && docker buildx imagetools inspect "${headers_tag}" >/dev/null 2>&1; then
-    echo "  (incremental: previous headers image found)"
-    base_image="${headers_tag}"
+if [ -z "${clean}" ] && docker buildx imagetools inspect "${image_tag}" >/dev/null 2>&1; then
+    echo "  (incremental: previous mainline image found)"
+    base_image="${image_tag}"
 else
     series=$(ubuntu_series_for_kver "${kver}")
     dkms_tag="${image_prefix}:${series}-dkms"
     echo "  (cold start: using ${dkms_tag} as base)"
     base_image="${dkms_tag}"
 fi
-headers_args+=(--build-arg "BASE_IMAGE=${base_image}")
+common_image_args+=(--build-arg "BASE_IMAGE=${base_image}")
 
 # Auto-detect available platforms from the base image if not explicitly set.
-if [ -z "${headers_platforms}" ]; then
-    headers_platforms=$(docker buildx imagetools inspect "${base_image}" --raw 2>/dev/null \
+if [ -z "${platforms}" ]; then
+    platforms=$(docker buildx imagetools inspect "${base_image}" --raw 2>/dev/null \
         | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
@@ -146,22 +147,24 @@ if platforms:
     print(','.join(platforms))
 " 2>/dev/null) || true
 
-    if [ -z "${headers_platforms}" ]; then
+    if [ -z "${platforms}" ]; then
         echo "ERROR: could not detect platforms from base image ${base_image}" >&2
         exit 1
     fi
-    echo "  (detected platforms from base: ${headers_platforms})"
+    echo "  (detected platforms from base: ${platforms})"
 fi
+common_image_args+=(--platform "${platforms}")
+
+
+[ -z "${limit}" ] || common_image_args+=(--build-arg MAX_KERNELS="${limit}")
 
 # Build all platforms and load locally (tmp tag)
-tmp_tag="${headers_tag}-tmp"
+tmp_tag="${image_tag}-tmp"
 echo ""
 echo "--- Building multi-platform install (tmp) ---"
 docker rmi "${tmp_tag}" >/dev/null 2>&1 || true
 docker buildx build \
-    --platform "${headers_platforms}" \
-    "${headers_args[@]}" \
-    ${limit:+--build-arg MAX_KERNELS="${limit}"} \
+    "${common_image_args[@]}" \
     -t "${tmp_tag}" \
     --load \
     "${repo_dir}"
@@ -171,10 +174,10 @@ echo ""
 echo "--- Extracting per-platform version info ---"
 
 annotation_args=()
-annotation_args+=(--annotation "index:org.opencontainers.image.description=Mainline kernel headers for series ${kver}")
+annotation_args+=(--annotation "index:org.opencontainers.image.description=Mainline kernel headers for ${kver}")
 annotation_args+=(--annotation "index:dev.mainline-kernel-headers.archive-created=${archive_created}")
 
-IFS=',' read -ra plats <<< "${headers_platforms}"
+IFS=',' read -ra plats <<< "${platforms}"
 for plat in "${plats[@]}"; do
     echo "  Extracting versions for ${plat} ..."
     plat_versions=$(
@@ -257,13 +260,11 @@ done
 echo ""
 echo "--- ${push:+Pushing}${push:-Loading} with annotations ---"
 
-docker rmi "${headers_tag}" >/dev/null 2>&1 || true
+docker rmi "${image_tag}" >/dev/null 2>&1 || true
 docker buildx build \
-    --platform "${headers_platforms}" \
-    "${headers_args[@]}" \
-    ${limit:+--build-arg MAX_KERNELS="${limit}"} \
+    "${common_image_args[@]}" \
     "${annotation_args[@]}" \
-    -t "${headers_tag}" \
+    -t "${image_tag}" \
     ${push:---load} \
     "${repo_dir}"
 
@@ -272,10 +273,10 @@ docker rmi "${tmp_tag}" >/dev/null 2>&1 || true
 
 echo ""
 echo "--- Install image inspection ---"
-IFS=',' read -ra plats <<< "${headers_platforms}"
+IFS=',' read -ra plats <<< "${platforms}"
 for plat in "${plats[@]}"; do
     if [ -n "${push}" ]; then
-        val=$(docker buildx imagetools inspect "${headers_tag}" --raw 2>/dev/null \
+        val=$(docker buildx imagetools inspect "${image_tag}" --raw 2>/dev/null \
             | python3 -c "
 import json, sys
 data = json.load(sys.stdin)
@@ -289,7 +290,7 @@ for m in data.get('manifests', []):
         break
 " 2>/dev/null) || true
     else
-        val=$(docker image inspect --platform "${plat}" "${headers_tag}" \
+        val=$(docker image inspect --platform "${plat}" "${image_tag}" \
             --format '{{index .Descriptor.Annotations "dev.mainline-kernel-headers.versions"}}' 2>/dev/null) || true
     fi
     echo "  ${plat}: dev.mainline-kernel-headers.versions=${val:-<none>}"
@@ -298,4 +299,4 @@ done
 echo ""
 echo "=== Done: ${kver} ==="
 echo "  Archive: ${archive_tag}"
-echo "  Headers: ${headers_tag}"
+echo "  Mainline: ${image_tag}"

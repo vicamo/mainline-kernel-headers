@@ -1,4 +1,4 @@
-name: Build mainline kernel headers images
+name: Build mainline kernel images
 
 on:
   schedule:
@@ -12,12 +12,12 @@ on:
         type: string
         default: 'active'
       force_install:
-        description: 'Force rebuild headers image even if archive is unchanged'
+        description: 'Force rebuild mainline image even if archive is unchanged'
         required: false
         type: boolean
         default: false
       clean_install:
-        description: 'Build headers image from scratch instead of the previous image'
+        description: 'Build mainline image from scratch instead of the previous image'
         required: false
         type: boolean
         default: false
@@ -161,9 +161,9 @@ jobs:
       - name: Build and push archive for ${{ matrix.kver }}
         run: ./mainline/scripts/build-archive "${{ matrix.kver }}" --push
 
-      - name: Build and push headers for ${{ matrix.kver }}
+      - name: Build and push mainline image for ${{ matrix.kver }}
         run: |
-          ./mainline/scripts/build-version "${{ matrix.kver }}" --push \
+          ./mainline/scripts/build-mainline "${{ matrix.kver }}" --push \
               ${{ inputs.force_install && '--force' || '' }} \
               ${{ inputs.clean_install && '--clean' || '' }} \
               ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }}

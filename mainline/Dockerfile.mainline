@@ -8,11 +8,11 @@
 #   Stage 2 "install":  FROM mainline-kernel-headers:X.Y
 #                        Copies all .debs from archive, installs only those
 #                        not yet installed (matching TARGETARCH).
-#                        Tag as: mainline-kernel-headers:X.Y
+#                        Tag as: mainline-kernel-headers:X.Y (the mainline image)
 #
 # Build args:
 #   KVER          - kernel series, e.g. "6.14" (required)
-#   BASE_IMAGE    - override for cold start (default: mainline-kernel-headers:KVER)
+#   BASE_IMAGE    - override for cold start (default: previous mainline image)
 #   ARCHIVE_IMAGE    - the archive image (default: mainline-kernel-headers:KVER-archive)
 #   ARCHIVE_PLATFORM - platform of the archive image (default: linux/amd64)
 #
