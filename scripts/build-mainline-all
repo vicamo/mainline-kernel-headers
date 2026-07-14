@@ -6,7 +6,7 @@
 # versions that are not end-of-life, then builds each one via build-mainline.
 #
 # Usage:
-#   ./scripts/build-all [--push] [--image PREFIX] [--platforms PLATFORMS]
+#   ./scripts/build-mainline-all [--push] [--image PREFIX] [--platforms PLATFORMS]
 #
 set -euo pipefail
 

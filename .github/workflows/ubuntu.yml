@@ -96,7 +96,7 @@ jobs:
 
       - name: Build and push headers image
         run: |
-          ./ubuntu/scripts/build-ubuntu "${{ matrix.codename }}" --push \
+          ./scripts/build-ubuntu "${{ matrix.codename }}" --push \
               ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }} \
               ${{ matrix.suite && format('--suite {0}', matrix.suite) || '' }} \
               ${{ matrix.release && format('--release {0}', matrix.release) || '' }}
@@ -105,8 +105,8 @@ jobs:
         if: always()
         run: |
           mkdir -p _site/data
-          python3 ubuntu/scripts/report-gaps --format json "${{ matrix.codename }}" > "_site/data/${{ matrix.codename }}.json"
-          python3 ubuntu/scripts/report-gaps --from-json < "_site/data/${{ matrix.codename }}.json" >> "$GITHUB_STEP_SUMMARY"
+          python3 scripts/report-gaps-ubuntu --format json "${{ matrix.codename }}" > "_site/data/${{ matrix.codename }}.json"
+          python3 scripts/report-gaps-ubuntu --from-json < "_site/data/${{ matrix.codename }}.json" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload gap report
         if: always()
@@ -150,7 +150,7 @@ jobs:
             [ -f "${f}" ] && cp "${f}" "gh-pages/data/ubuntu/$(basename "${f}")"
           done
 
-          python3 pages/scripts/rebuild-meta ubuntu gh-pages/data/ubuntu \
+          python3 scripts/rebuild-pages-meta ubuntu gh-pages/data/ubuntu \
             | tee gh-pages/data/ubuntu/meta.json
 
       - name: Deploy to gh-pages

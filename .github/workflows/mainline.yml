@@ -159,11 +159,11 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and push archive for ${{ matrix.kver }}
-        run: ./mainline/scripts/build-archive "${{ matrix.kver }}" --push
+        run: ./scripts/build-archive "${{ matrix.kver }}" --push
 
       - name: Build and push mainline image for ${{ matrix.kver }}
         run: |
-          ./mainline/scripts/build-mainline "${{ matrix.kver }}" --push \
+          ./scripts/build-mainline "${{ matrix.kver }}" --push \
               ${{ inputs.force_install && '--force' || '' }} \
               ${{ inputs.clean_install && '--clean' || '' }} \
               ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }}
@@ -172,8 +172,8 @@ jobs:
         if: always()
         run: |
           mkdir -p _site/data
-          python3 mainline/scripts/report-gaps --format json "${{ matrix.kver }}" > "_site/data/${{ matrix.kver }}.json"
-          python3 mainline/scripts/report-gaps --from-json < "_site/data/${{ matrix.kver }}.json" >> "$GITHUB_STEP_SUMMARY"
+          python3 scripts/report-gaps-mainline --format json "${{ matrix.kver }}" > "_site/data/${{ matrix.kver }}.json"
+          python3 scripts/report-gaps-mainline --from-json < "_site/data/${{ matrix.kver }}.json" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload gap report
         if: always()
@@ -217,7 +217,7 @@ jobs:
             [ -f "${f}" ] && cp "${f}" "gh-pages/data/mainline/$(basename "${f}")"
           done
 
-          python3 pages/scripts/rebuild-meta mainline gh-pages/data/mainline \
+          python3 scripts/rebuild-pages-meta mainline gh-pages/data/mainline \
             | tee gh-pages/data/mainline/meta.json
 
       - name: Deploy to gh-pages

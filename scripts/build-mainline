@@ -109,7 +109,7 @@ fi
 source "${script_dir}/lib/ubuntu-series.sh"
 
 common_image_args=(
-    -f "${repo_dir}/Dockerfile.mainline"
+    -f "${repo_dir}/mainline/Dockerfile.mainline"
     --build-arg "KVER=${kver}"
     --build-arg "ARCHIVE_IMAGE=${archive_tag}"
 )

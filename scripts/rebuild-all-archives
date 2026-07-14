@@ -72,7 +72,7 @@ for kver in ${series}; do
     docker rmi "${archive_tag}" "${archive_tag}-tmp" 2>/dev/null || true
 
     # Remove downloaded debs
-    rm -rf "${repo_dir}/debs/${kver}"
+    rm -rf "${repo_dir}/mainline/debs/${kver}"
 
     # Prune dangling images/layers
     docker builder prune -f 2>/dev/null || true

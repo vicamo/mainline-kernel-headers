@@ -4,7 +4,7 @@
 # Architecture-independent: stores headers for ALL architectures.
 #
 # The fetching logic lives in scripts/build-archive, which downloads .debs
-# into debs/<KVER>/ before invoking this Dockerfile.
+# into mainline/debs/<KVER>/ before invoking this Dockerfile.
 #
 # Build args:
 #   KVER          - kernel series, e.g. "6.14" (required)
@@ -24,4 +24,4 @@ FROM ${ARCHIVE_IMAGE}
 
 ARG KVER
 COPY --from=base /bin/sh /bin/cp /bin/ls /bin/
-RUN --mount=type=bind,source=debs/${KVER},target=/mnt/debs cp -a /mnt/debs/. /${KVER}/
+RUN --mount=type=bind,source=mainline/debs/${KVER},target=/mnt/debs cp -a /mnt/debs/. /${KVER}/

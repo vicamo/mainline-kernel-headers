@@ -112,7 +112,7 @@ docker buildx build \
     --build-arg "SERIES=${series}" \
     --build-arg "BASE_IMAGE=${base_image}" \
     ${limit:+--build-arg MAX_KERNELS="${limit}"} \
-    -f "${repo_dir}/Dockerfile.ubuntu" \
+    -f "${repo_dir}/ubuntu/Dockerfile.ubuntu" \
     -t "${tmp_tag}" \
     --load \
     "${repo_dir}"
@@ -226,7 +226,7 @@ docker buildx build \
     --build-arg "SERIES=${series}" \
     --build-arg "BASE_IMAGE=${base_image}" \
     ${limit:+--build-arg MAX_KERNELS="${limit}"} \
-    -f "${repo_dir}/Dockerfile.ubuntu" \
+    -f "${repo_dir}/ubuntu/Dockerfile.ubuntu" \
     "${annotation_args[@]}" \
     -t "${generic_tag}" \
     "${alias_tag_args[@]}" \

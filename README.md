@@ -76,14 +76,14 @@ The build is split into two stages:
 
 ### Build scripts
 
-Scripts are under `mainline/scripts/`:
+Scripts are under `scripts/`:
 
-#### mainline/scripts/build-archive
+#### scripts/build-archive
 
 Build the archive image for a single kernel series.
 
 ```sh
-./mainline/scripts/build-archive <KVER> [--push] [--image PREFIX]
+./scripts/build-archive <KVER> [--push] [--image PREFIX]
 ```
 
 | Flag | Default | Description |
@@ -92,15 +92,15 @@ Build the archive image for a single kernel series.
 | `--image` | `ghcr.io/vicamo/linux-headers` | Image name prefix |
 
 ```sh
-./mainline/scripts/build-archive 7.0 --push
+./scripts/build-archive 7.0 --push
 ```
 
-#### mainline/scripts/build-mainline
+#### scripts/build-mainline
 
 Build the mainline image for a single kernel series. Requires the archive image.
 
 ```sh
-./mainline/scripts/build-mainline <KVER> [--push] [--image PREFIX] [--platforms PLATFORMS] [--force] [--clean] [--limit N]
+./scripts/build-mainline <KVER> [--push] [--image PREFIX] [--platforms PLATFORMS] [--force] [--clean] [--limit N]
 ```
 
 | Flag | Default | Description |
@@ -113,15 +113,15 @@ Build the mainline image for a single kernel series. Requires the archive image.
 | `--limit` | *(Dockerfile default: 50)* | Max kernel versions to install per build (0 = unlimited) |
 
 ```sh
-./mainline/scripts/build-mainline 7.0 --push
+./scripts/build-mainline 7.0 --push
 ```
 
-#### mainline/scripts/build-all
+#### scripts/build-mainline-all
 
 Build all active kernel versions (stable + longterm, not EOL).
 
 ```sh
-./mainline/scripts/build-all [--push] [--image PREFIX] [--platforms PLATFORMS]
+./scripts/build-mainline-all [--push] [--image PREFIX] [--platforms PLATFORMS]
 ```
 
 All flags are passed through to `build-mainline` for each series.
@@ -168,10 +168,10 @@ new kernel ABIs are added on top of the previous image.
 
 ### Build script
 
-#### ubuntu/scripts/build-ubuntu
+#### scripts/build-ubuntu
 
 ```sh
-./ubuntu/scripts/build-ubuntu <SERIES> [--push] [--image PREFIX] [--platforms PLATFORMS] [--clean] [--limit N]
+./scripts/build-ubuntu <SERIES> [--push] [--image PREFIX] [--platforms PLATFORMS] [--clean] [--limit N]
 ```
 
 | Flag | Default | Description |
@@ -183,7 +183,7 @@ new kernel ABIs are added on top of the previous image.
 | `--limit` | *(Dockerfile default: 50)* | Max kernel packages to install per build (0 = unlimited) |
 
 ```sh
-./ubuntu/scripts/build-ubuntu noble --push
+./scripts/build-ubuntu noble --push
 ```
 
 ### Build args
@@ -256,10 +256,9 @@ mainline/                    Mainline kernel headers
   Dockerfile                 Headers image
   Dockerfile.archive         Archive image
   debs/                      Downloaded .deb staging
-  scripts/                   build-archive, build-mainline, build-all, etc.
+scripts/                     build-archive, build-mainline, build-mainline-all, build-ubuntu, etc.
 ubuntu/                      Ubuntu generic kernel headers
   Dockerfile.ubuntu          Headers image
-  scripts/                   build-ubuntu
 pages/                       GitHub Pages status dashboard
   index.html
   data/                      Pre-generated JSON reports

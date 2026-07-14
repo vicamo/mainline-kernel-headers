@@ -45,12 +45,12 @@ fi
 archive_tag="${image_prefix}:${kver}-archive"
 
 # ---------------------------------------------------------------------------
-# Step 1: Fetch .deb packages into debs/<KVER>/
+# Step 1: Fetch .deb packages into mainline/debs/<KVER>/
 # ---------------------------------------------------------------------------
 echo "=== Fetching kernel headers for series ${kver} ==="
 
 base_url="https://kernel.ubuntu.com/mainline"
-debs_dir="${repo_dir}/debs/${kver}"
+debs_dir="${repo_dir}/mainline/debs/${kver}"
 mkdir -p "${debs_dir}"
 
 # Retrieve existing archive annotation for early-exit check.
@@ -88,7 +88,7 @@ fi
 # Build and load into local docker daemon (temporary tag for extraction)
 docker rmi "${archive_tag}-tmp" >/dev/null 2>&1 || true
 docker buildx build \
-    -f "${repo_dir}/Dockerfile.archive" \
+    -f "${repo_dir}/mainline/Dockerfile.archive" \
     "${archive_args[@]}" \
     -t "${archive_tag}-tmp" \
     --load \
@@ -149,7 +149,7 @@ echo ""
 echo "--- ${push:+Pushing}${push:-Loading} with annotations ---"
 docker rmi "${archive_tag}" >/dev/null 2>&1 || true
 docker buildx build \
-    -f "${repo_dir}/Dockerfile.archive" \
+    -f "${repo_dir}/mainline/Dockerfile.archive" \
     "${archive_args[@]}" \
     "${annotation_args[@]}" \
     "${label_args[@]}" \
