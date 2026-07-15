@@ -83,12 +83,13 @@ Scripts are under `scripts/`:
 Build the archive image for a single kernel series.
 
 ```sh
-./scripts/build-archive <KVER> [--push] [--image PREFIX]
+./scripts/build-archive <KVER> [--push] [--scratch] [--image PREFIX]
 ```
 
 | Flag | Default | Description |
 |------|---------|-------------|
 | `--push` | *(off)* | Push image to the registry; without it, image is loaded locally |
+| `--scratch` | *(off)* | Ignore existing archive annotation (cold start) |
 | `--image` | `ghcr.io/vicamo/linux-headers` | Image name prefix |
 
 ```sh

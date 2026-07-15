@@ -7,6 +7,7 @@ Examples:
     ./scripts/build-archive 7.0
     ./scripts/build-archive 7.0 --push
     ./scripts/build-archive 7.0 --push --image myrepo/kernel-headers
+    ./scripts/build-archive 7.0 --scratch
 """
 
 import argparse
@@ -75,6 +76,7 @@ def build_archive(
     kver: str,
     push: bool = False,
     force: bool = False,
+    scratch: bool = False,
     image_prefix: str = IMAGE_PREFIX,
 ) -> None:
     """Build the archive image for a kernel series."""
@@ -88,7 +90,8 @@ def build_archive(
     # Step 1: Fetch .deb packages
     print(f"=== Fetching kernel headers for series {kver} ===", file=sys.stderr)
 
-    archive_versions_json = get_archive_annotation(archive_tag, ARCHIVE_ANNOTATION_VERSIONS_KEY) or ""
+    archive_versions_json = "" if scratch else (
+        get_archive_annotation(archive_tag, ARCHIVE_ANNOTATION_VERSIONS_KEY) or "")
     archive_versions = {}
     if archive_versions_json:
         try:
@@ -115,15 +118,19 @@ def build_archive(
     ]
 
     # Check if previous archive exists
-    r = subprocess.run(
-        ["docker", "buildx", "imagetools", "inspect", archive_tag],
-        capture_output=True,
-    )
-    if r.returncode == 0:
-        print("  (incremental: previous archive found)", file=sys.stderr)
-        archive_args += ["--build-arg", f"ARCHIVE_IMAGE={archive_tag}"]
+    if not scratch:
+        r = subprocess.run(
+            ["docker", "buildx", "imagetools", "inspect", archive_tag],
+            capture_output=True,
+        )
+        if r.returncode == 0:
+            print("  (incremental: previous archive found)", file=sys.stderr)
+            archive_args += ["--build-arg", f"ARCHIVE_IMAGE={archive_tag}"]
+        else:
+            print("  (cold start: no previous archive)", file=sys.stderr)
+            archive_args += ["--build-arg", "ARCHIVE_IMAGE=scratch"]
     else:
-        print("  (cold start: no previous archive)", file=sys.stderr)
+        print("  (cold start: --scratch)", file=sys.stderr)
         archive_args += ["--build-arg", "ARCHIVE_IMAGE=scratch"]
 
     # Build and load into local docker daemon (temporary tag for extraction)
@@ -189,12 +196,14 @@ def main() -> None:
                         help="Push to registry (default: load locally)")
     parser.add_argument("--force", action="store_true",
                         help="Rebuild even if no new versions")
+    parser.add_argument("--scratch", action="store_true",
+                        help="Ignore existing archive annotation (cold start)")
     parser.add_argument("--image", default=IMAGE_PREFIX, dest="image_prefix",
                         help="Image prefix (default: %(default)s)")
     args = parser.parse_args()
 
     build_archive(args.kver, push=args.push, force=args.force,
-                  image_prefix=args.image_prefix)
+                  scratch=args.scratch, image_prefix=args.image_prefix)
 
 
 if __name__ == "__main__":
