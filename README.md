@@ -122,7 +122,7 @@ Build the mainline image for a single kernel series. Requires the archive image.
 Build all active kernel versions (stable + longterm, not EOL).
 
 ```sh
-./scripts/build-mainline-all [--push] [--image PREFIX] [--platforms PLATFORMS]
+./scripts/build-mainline-all [--push] [--image PREFIX] [--platforms PLATFORMS] [--force] [--scratch] [--limit N]
 ```
 
 All flags are passed through to `build-mainline` for each series.

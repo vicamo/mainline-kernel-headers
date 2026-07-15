@@ -1,8 +1,11 @@
 import json
+import re
 import subprocess
 import sys
+import urllib.request
 
 MAINLINE_BASE_URL = "https://kernel.ubuntu.com/mainline"
+KERNEL_ORG_RELEASES_URL = "https://www.kernel.org/releases.json"
 IMAGE_PREFIX = "ghcr.io/vicamo/linux-headers"
 
 # OCI manifest annotation keys.
@@ -14,6 +17,25 @@ ARCHIVE_ANNOTATION_VERSIONS_KEY = "dev.mainline-kernel-headers.versions"
 #   ISO 8601 UTC timestamp of last archive build.
 #   Example: "2025-07-15T01:10:43Z"
 MAINLINE_ANNOTATION_CREATED_KEY = "dev.mainline-kernel-headers.archive-created"
+
+
+def fetch_active_kernel_versions() -> list[str]:
+    """Fetch active (non-EOL stable/longterm) kernel series from kernel.org."""
+    with urllib.request.urlopen(KERNEL_ORG_RELEASES_URL) as resp:
+        data = json.loads(resp.read())
+
+    seen: set[str] = set()
+    versions: list[str] = []
+    for r in data["releases"]:
+        if r["moniker"] not in ("stable", "longterm"):
+            continue
+        if r["iseol"]:
+            continue
+        m = re.match(r"^(\d+\.\d+)", r["version"])
+        if m and m.group(1) not in seen:
+            seen.add(m.group(1))
+            versions.append(m.group(1))
+    return versions
 
 
 def get_index_annotation(image: str, key: str) -> str | None:
