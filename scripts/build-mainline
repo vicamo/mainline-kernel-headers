@@ -1,307 +1,206 @@
-#!/usr/bin/env bash
-#
-# Build the mainline image for a given kernel version.
-# Requires the archive image to already exist.
-#
-# Usage:
-#   ./scripts/build-mainline <KVER> [--push] [--scratch] [--limit N] [--image PREFIX] [--platforms PLATFORMS]
-#
-# Examples:
-#   ./scripts/build-mainline 7.0
-#   ./scripts/build-mainline 7.0 --push
-#   ./scripts/build-mainline 7.0 --push --image myrepo/kernel-headers
-#   ./scripts/build-mainline 7.0 --push --platforms linux/amd64,linux/arm64
-#   ./scripts/build-mainline 7.0 --limit 0   # install all kernels (no cap)
-#
-set -euo pipefail
+#!/usr/bin/env python3
+"""Build the mainline image for a given kernel version.
 
-# Require containerd-snapshotter for multi-platform --load and local annotations.
-if ! docker info -f '{{.DriverStatus}}' 2>/dev/null | grep -q 'io.containerd.snapshotter'; then
-    echo "ERROR: containerd-snapshotter not enabled in Docker daemon." >&2
-    echo "Multi-platform --load requires containerd image store." >&2
-    exit 1
-fi
+Requires the archive image to already exist.
 
-script_dir="$(cd "$(dirname "$0")" && pwd)"
-repo_dir="$(dirname "${script_dir}")"
+Examples:
+    ./scripts/build-mainline 7.0
+    ./scripts/build-mainline 7.0 --push
+    ./scripts/build-mainline 7.0 --push --image myrepo/kernel-headers
+    ./scripts/build-mainline 7.0 --push --platforms linux/amd64,linux/arm64
+    ./scripts/build-mainline 7.0 --limit 0   # install all kernels (no cap)
+"""
 
-push=
-force=
-scratch=
-limit=
-kver=""
-image_prefix="ghcr.io/vicamo/linux-headers"
-platforms=""
-
-while [ $# -gt 0 ]; do
-    case "$1" in
-        --push)          push=--push; shift ;;
-        --force)         force=1; shift ;;
-        --scratch)       scratch=1; shift ;;
-        --limit)         limit="$2"; shift 2 ;;
-        --image)         image_prefix="$2"; shift 2 ;;
-        --platforms)     platforms="$2"; shift 2 ;;
-        -*)              echo "Unknown flag: $1" >&2; exit 1 ;;
-        *)               kver="$1"; shift ;;
-    esac
-done
-
-if [ -z "${kver}" ]; then
-    echo "Usage: $0 <KVER> [--push] [--force] [--scratch] [--limit N] [--image PREFIX] [--platforms PLATFORMS]" >&2
-    exit 1
-fi
-
-archive_tag="${image_prefix}:${kver}-archive"
-image_tag="${image_prefix}:${kver}"
-
-# Verify archive image exists and capture its created timestamp
-archive_created=$("${script_dir}/get-archive-annotation" "${archive_tag}" "org.opencontainers.image.created" 2>/dev/null) || true
-if [ -z "${archive_created}" ]; then
-    echo "ERROR: archive image ${archive_tag} not found. Run build-archive first." >&2
-    exit 1
-fi
-
-# ---------------------------------------------------------------------------
-# Build the mainline image (multi-platform)
-# ---------------------------------------------------------------------------
-echo ""
-echo "=== Building image: ${image_tag} ==="
-
-# Check if the install image is already up to date with the archive.
-# Compare the archive created timestamp against what the mainline image recorded.
-if docker buildx imagetools inspect "${image_tag}" >/dev/null 2>&1; then
-    mainline_archive_created=$(docker buildx imagetools inspect "${image_tag}" --raw 2>/dev/null \
-        | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-annotations = data.get('annotations') or {}
-v = annotations.get('dev.mainline-kernel-headers.archive-created', '')
-if v:
-    print(v)
-" 2>/dev/null) || true
-
-    if [ -z "${force}" ] && [ -n "${mainline_archive_created}" ] && [ "${archive_created}" = "${mainline_archive_created}" ]; then
-        echo "  Mainline image already matches archive (created: ${archive_created})"
-        echo ""
-        echo "--- Install image inspection ---"
-        docker buildx imagetools inspect "${image_tag}" --raw 2>/dev/null || true
-        echo ""
-        echo "=== Done: ${kver} (up to date) ==="
-        exit 0
-    fi
-fi
-
-# Determine the appropriate Ubuntu base image for cold-start builds.
-# Ubuntu release kernel versions (codename -> release kernel):
-#   Jammy    (22.04) -> 5.15
-#   Kinetic  (22.10) -> 5.19
-#   Lunar    (23.04) -> 6.2
-#   Mantic   (23.10) -> 6.5
-#   Noble    (24.04) -> 6.8
-#   Oracular (24.10) -> 6.11
-#   Plucky   (25.04) -> 6.14
-#   Questing (25.10) -> 6.17
-#   Resolute (26.04) -> 7.0
-#
-# We pick the newest Ubuntu release whose kernel version <= KVER.
-# Format: "major_minor codename" sorted descending.
-# Series lookup helper (uses scripts/lib/series.py)
-_series_for_kver() {
-    python3 -c "
-import sys; sys.path.insert(0, '${script_dir}')
-from lib.series import series_for_kver
-print(series_for_kver('$1'${2:+, longterm=True}))
-"
-}
-
-common_image_args=(
-    -f "${repo_dir}/mainline/Dockerfile.mainline"
-    --build-arg "KVER=${kver}"
-    --build-arg "ARCHIVE_IMAGE=${archive_tag}"
-)
-
-if [ -z "${scratch}" ] && docker buildx imagetools inspect "${image_tag}" >/dev/null 2>&1; then
-    echo "  (incremental: previous mainline image found)"
-    base_image="${image_tag}"
-else
-    series=$(_series_for_kver "${kver}")
-    dkms_tag="${image_prefix}:${series}-dkms"
-    echo "  (cold start: using ${dkms_tag} as base)"
-    base_image="${dkms_tag}"
-fi
-common_image_args+=(--build-arg "BASE_IMAGE=${base_image}")
-
-# Auto-detect available platforms from the base image if not explicitly set.
-if [ -z "${platforms}" ]; then
-    platforms=$(docker buildx imagetools inspect "${base_image}" --raw 2>/dev/null \
-        | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-platforms = []
-for m in data.get('manifests', []):
-    ann = m.get('annotations') or {}
-    if 'attestation' in ann.get('vnd.docker.reference.type', ''):
-        continue
-    p = m.get('platform', {})
-    if p.get('os') == 'unknown':
-        continue
-    plat = p.get('os', '') + '/' + p.get('architecture', '')
-    if p.get('variant'):
-        plat += '/' + p['variant']
-    platforms.append(plat)
-if platforms:
-    print(','.join(platforms))
-" 2>/dev/null) || true
-
-    if [ -z "${platforms}" ]; then
-        echo "ERROR: could not detect platforms from base image ${base_image}" >&2
-        exit 1
-    fi
-    echo "  (detected platforms from base: ${platforms})"
-fi
-common_image_args+=(--platform "${platforms}")
-
-
-[ -z "${limit}" ] || common_image_args+=(--build-arg MAX_KERNELS="${limit}")
-
-# Build all platforms and load locally (tmp tag)
-tmp_tag="${image_tag}-tmp"
-echo ""
-echo "--- Building multi-platform install (tmp) ---"
-docker rmi "${tmp_tag}" >/dev/null 2>&1 || true
-docker buildx build \
-    "${common_image_args[@]}" \
-    -t "${tmp_tag}" \
-    --load \
-    "${repo_dir}"
-
-# Extract per-platform version info
-echo ""
-echo "--- Extracting per-platform version info ---"
-
-annotation_args=()
-annotation_args+=(--annotation "index:org.opencontainers.image.description=Mainline kernel headers for ${kver}")
-annotation_args+=(--annotation "index:dev.mainline-kernel-headers.archive-created=${archive_created}")
-
-IFS=',' read -ra plats <<< "${platforms}"
-for plat in "${plats[@]}"; do
-    echo "  Extracting versions for ${plat} ..."
-    plat_versions=$(
-        docker save --platform "${plat}" "${tmp_tag}" 2>/dev/null \
-            | python3 -c "
-import tarfile, json, io, sys, re
-
-tar = tarfile.open(fileobj=sys.stdin.buffer, mode='r|')
-
-# First pass: read all members into memory
-content = {}
-for member in tar:
-    if member.isfile():
-        data = tar.extractfile(member).read()
-        content[member.name] = data
-
-# Determine format: OCI (index.json) or Docker (manifest.json)
-if 'index.json' in content:
-    # OCI layout
-    idx = json.loads(content['index.json'])
-    manifest_desc = idx['manifests'][0]
-    manifest_blob = content['blobs/' + manifest_desc['digest'].replace(':', '/')]
-    manifest = json.loads(manifest_blob)
-    layers = [content['blobs/' + l['digest'].replace(':', '/')] for l in manifest['layers']]
-else:
-    # Docker format
-    mf = json.loads(content['manifest.json'])
-    layers = [content[l] for l in mf[0]['Layers']]
-
-# Extract var/lib/dpkg/status from the topmost layer that has it
-dpkg_status = None
-for layer_data in layers:
-    try:
-        lt = tarfile.open(fileobj=io.BytesIO(layer_data), mode='r:*')
-        for m in lt:
-            if m.name in ('var/lib/dpkg/status', './var/lib/dpkg/status'):
-                dpkg_status = lt.extractfile(m).read().decode()
-                break
-        lt.close()
-    except Exception:
-        pass
-
-if not dpkg_status:
-    sys.exit(0)
-
-# {flavour: set(versions)}
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
 from collections import defaultdict
-versions = defaultdict(set)
-for block in dpkg_status.split('\n\n'):
-    if 'Package: linux-headers-' not in block:
-        continue
-    pkg = arch = ''
-    for line in block.splitlines():
-        if line.startswith('Package: '):
-            pkg = line[9:]
-        elif line.startswith('Architecture: '):
-            arch = line[14:]
-    if pkg.startswith('linux-headers-') and arch and arch != 'all':
-        # linux-headers-<ver>-<abi>-<flavour>
-        m = re.match(r'linux-headers-(\d+\.\d+(?:\.\d+)?)-([a-z0-9]+)-(.+)', pkg)
-        if m:
-            ver = m.group(1)
-            # Normalize: strip trailing .0 (e.g. 7.0.0 -> 7.0)
-            if ver.endswith('.0') and ver.count('.') == 2:
-                ver = ver[:-2]
-            versions[m.group(3)].add(ver)
-result = {f: sorted(v) for f, v in sorted(versions.items())}
-print(json.dumps(result, separators=(',', ':')))
-" 2>/dev/null
-    ) || true
+from pathlib import Path
 
-    if [ -n "${plat_versions}" ]; then
-        echo "    Versions: ${plat_versions}"
-        annotation_args+=(--annotation "manifest-descriptor[${plat}]:dev.mainline-kernel-headers.versions=${plat_versions}")
-    fi
-done
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, _script_dir)
 
-# Rebuild with annotations
-echo ""
-echo "--- ${push:+Pushing}${push:-Loading} with annotations ---"
+from lib import (ARCHIVE_ANNOTATION_VERSIONS_KEY, IMAGE_PREFIX,
+                 MAINLINE_ANNOTATION_CREATED_KEY, check_containerd_snapshotter,
+                 detect_platforms, enumerate_installed_headers_packages,
+                 get_index_annotation, inspect_platform_annotation)
+from lib.series import series_for_kver
 
-docker rmi "${image_tag}" >/dev/null 2>&1 || true
-docker buildx build \
-    "${common_image_args[@]}" \
-    "${annotation_args[@]}" \
-    -t "${image_tag}" \
-    ${push:---load} \
-    "${repo_dir}"
+# Re-use get_archive_annotation
+_annotation_path = os.path.join(_script_dir, "get-archive-annotation")
+_annotation_ns: dict = {"__file__": _annotation_path}
+exec(compile(Path(_annotation_path).read_text(), _annotation_path, "exec"), _annotation_ns)
+get_archive_annotation = _annotation_ns["get_archive_annotation"]
 
-# Clean up tmp tag
-docker rmi "${tmp_tag}" >/dev/null 2>&1 || true
 
-echo ""
-echo "--- Install image inspection ---"
-IFS=',' read -ra plats <<< "${platforms}"
-for plat in "${plats[@]}"; do
-    if [ -n "${push}" ]; then
-        val=$(docker buildx imagetools inspect "${image_tag}" --raw 2>/dev/null \
-            | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-for m in data.get('manifests', []):
-    p = m.get('platform', {})
-    plat_str = p.get('os','') + '/' + p.get('architecture','')
-    if p.get('variant'):
-        plat_str += '/' + p['variant']
-    if plat_str == '${plat}':
-        print(m.get('annotations', {}).get('dev.mainline-kernel-headers.versions', ''))
-        break
-" 2>/dev/null) || true
-    else
-        val=$(docker image inspect --platform "${plat}" "${image_tag}" \
-            --format '{{index .Descriptor.Annotations "dev.mainline-kernel-headers.versions"}}' 2>/dev/null) || true
-    fi
-    echo "  ${plat}: dev.mainline-kernel-headers.versions=${val:-<none>}"
-done
+def _build_mainline_versions(
+    image: str, platform: str,
+) -> dict[str, list[str]]:
+    """Build {flavour: [versions]} from installed headers packages."""
+    flavours: dict[str, set[str]] = defaultdict(set)
+    for pkg in enumerate_installed_headers_packages(image, platform) or []:
+        m = re.match(r"linux-headers-(\d+\.\d+\.\d+)-([a-z0-9]+)-(.+)", pkg)
+        if not m:
+            continue
+        ver = m.group(1)
+        # Normalize: strip trailing .0 (e.g. 7.0.0 -> 7.0)
+        if ver.endswith(".0") and ver.count(".") == 2:
+            ver = ver[:-2]
+        flavours[m.group(3)].add(ver)
+    return {f: sorted(v) for f, v in sorted(flavours.items())}
 
-echo ""
-echo "=== Done: ${kver} ==="
-echo "  Archive: ${archive_tag}"
-echo "  Mainline: ${image_tag}"
+
+def build_mainline(
+    kver: str,
+    push: bool = False,
+    force: bool = False,
+    scratch: bool = False,
+    limit: int | None = None,
+    image_prefix: str = IMAGE_PREFIX,
+    platforms: str = "",
+) -> None:
+    """Build the mainline image for a kernel version."""
+    repo_dir = os.path.dirname(_script_dir)
+    archive_tag = f"{image_prefix}:{kver}-archive"
+    image_tag = f"{image_prefix}:{kver}"
+
+    check_containerd_snapshotter()
+
+    # Verify archive image exists and capture its created timestamp
+    archive_created = get_archive_annotation(
+        archive_tag, "org.opencontainers.image.created")
+    if not archive_created:
+        print(f"ERROR: archive image {archive_tag} not found. Run build-archive first.",
+              file=sys.stderr)
+        sys.exit(1)
+
+    # Check if mainline image is already up to date
+    print(f"\n=== Building image: {image_tag} ===", file=sys.stderr)
+
+    if not force and not scratch:
+        existing_created = get_index_annotation(
+            image_tag, MAINLINE_ANNOTATION_CREATED_KEY)
+        if existing_created and existing_created == archive_created:
+            print(f"  Mainline image already matches archive (created: {archive_created})",
+                  file=sys.stderr)
+            print(f"\n=== Done: {kver} (up to date) ===", file=sys.stderr)
+            return
+
+    # Determine base image
+    common_image_args = [
+        "-f", os.path.join(repo_dir, "mainline", "Dockerfile.mainline"),
+        "--build-arg", f"KVER={kver}",
+        "--build-arg", f"ARCHIVE_IMAGE={archive_tag}",
+    ]
+
+    if not scratch and subprocess.run(
+        ["docker", "buildx", "imagetools", "inspect", image_tag],
+        capture_output=True,
+    ).returncode == 0:
+        print("  (incremental: previous mainline image found)", file=sys.stderr)
+        base_image = image_tag
+    else:
+        series = series_for_kver(kver)
+        dkms_tag = f"{image_prefix}:{series}-dkms"
+        print(f"  (cold start: using {dkms_tag} as base)", file=sys.stderr)
+        base_image = dkms_tag
+
+    common_image_args += ["--build-arg", f"BASE_IMAGE={base_image}"]
+
+    # Auto-detect platforms if not specified
+    if not platforms:
+        detected = detect_platforms(base_image)
+        if not detected:
+            print(f"ERROR: could not detect platforms from base image {base_image}",
+                  file=sys.stderr)
+            sys.exit(1)
+        platforms = ",".join(detected)
+        print(f"  (detected platforms from base: {platforms})", file=sys.stderr)
+
+    common_image_args += ["--platform", platforms]
+
+    if limit is not None:
+        common_image_args += ["--build-arg", f"MAX_KERNELS={limit}"]
+
+    # Build all platforms (tmp tag)
+    tmp_tag = f"{image_tag}-tmp"
+    print("\n--- Building multi-platform install (tmp) ---", file=sys.stderr)
+    subprocess.run(["docker", "rmi", tmp_tag], capture_output=True)
+    subprocess.run(["docker", "buildx", "build",
+         *common_image_args, "-t", tmp_tag, "--load", repo_dir],
+        check=True)
+
+    # Extract per-platform version info
+    print("\n--- Extracting per-platform version info ---", file=sys.stderr)
+
+    annotation_args = [
+        "--annotation", f"index:org.opencontainers.image.description="
+                        f"Mainline kernel headers for {kver}",
+        "--annotation", f"index:{MAINLINE_ANNOTATION_CREATED_KEY}={archive_created}",
+    ]
+
+    for plat in platforms.split(","):
+        print(f"  Extracting versions for {plat} ...", file=sys.stderr)
+        plat_versions = _build_mainline_versions(tmp_tag, plat)
+        versions_json = json.dumps(plat_versions, separators=(",", ":"))
+        print(f"    Versions: {versions_json}", file=sys.stderr)
+        annotation_args += [
+            "--annotation",
+            f"manifest-descriptor[{plat}]:{ARCHIVE_ANNOTATION_VERSIONS_KEY}={versions_json}",
+        ]
+
+    # Rebuild with annotations
+    action = "Pushing" if push else "Loading"
+    print(f"\n--- {action} with annotations ---", file=sys.stderr)
+    subprocess.run(["docker", "rmi", image_tag], capture_output=True)
+    subprocess.run(["docker", "buildx", "build",
+         *common_image_args, *annotation_args,
+         "-t", image_tag,
+         *(["--push"] if push else ["--load"]),
+         repo_dir],
+        check=True)
+
+    # Clean up tmp tag
+    subprocess.run(["docker", "rmi", tmp_tag], capture_output=True)
+
+    # Inspect final annotations
+    print("\n--- Install image inspection ---", file=sys.stderr)
+    for plat in platforms.split(","):
+        val = inspect_platform_annotation(
+            image_tag, plat, ARCHIVE_ANNOTATION_VERSIONS_KEY, pushed=push)
+        print(f"  {plat}: {ARCHIVE_ANNOTATION_VERSIONS_KEY}={val or '<none>'}",
+              file=sys.stderr)
+
+    print(f"\n=== Done: {kver} ===", file=sys.stderr)
+    print(f"  Archive: {archive_tag}", file=sys.stderr)
+    print(f"  Mainline: {image_tag}", file=sys.stderr)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Build the mainline image for a given kernel version.")
+    parser.add_argument("kver", help="Kernel series (e.g. '7.0')")
+    parser.add_argument("--push", action="store_true",
+                        help="Push to registry (default: load locally)")
+    parser.add_argument("--force", action="store_true",
+                        help="Rebuild even if up to date with archive")
+    parser.add_argument("--scratch", action="store_true",
+                        help="Cold start (ignore existing mainline image)")
+    parser.add_argument("--limit", type=int, default=None,
+                        help="Max kernels to install (0 = no cap)")
+    parser.add_argument("--image", default=IMAGE_PREFIX, dest="image_prefix",
+                        help="Image prefix (default: %(default)s)")
+    parser.add_argument("--platforms", default="",
+                        help="Comma-separated platforms (auto-detected if omitted)")
+    args = parser.parse_args()
+
+    build_mainline(args.kver, push=args.push, force=args.force,
+                   scratch=args.scratch, limit=args.limit,
+                   image_prefix=args.image_prefix, platforms=args.platforms)
+
+
+if __name__ == "__main__":
+    main()
