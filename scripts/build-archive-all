@@ -1,0 +1,119 @@
+#!/usr/bin/env python3
+"""Rebuild all archive images, cleaning up after each to conserve disk.
+
+Discovers available versions from kernel.ubuntu.com/mainline, then builds
+each one via build-archive with --push --force.
+
+Usage:
+    ./scripts/build-archive-all
+    ./scripts/build-archive-all --from 4.14
+    ./scripts/build-archive-all --from 6.0 --to 6.6
+"""
+
+import argparse
+import os
+import re
+import shutil
+import subprocess
+import sys
+import urllib.request
+
+_script_dir = os.path.dirname(os.path.abspath(__file__))
+_repo_dir = os.path.dirname(_script_dir)
+sys.path.insert(0, _script_dir)
+
+from lib import IMAGE_PREFIX, MAINLINE_BASE_URL
+
+
+def _ver_key(v: str) -> tuple[int, ...]:
+    return tuple(int(x) for x in v.split("."))
+
+
+def discover_mainline_versions(
+    *, from_ver: str = "", to_ver: str = "",
+) -> list[str]:
+    """Scrape kernel.ubuntu.com/mainline for available X.Y versions."""
+    html = urllib.request.urlopen(
+        f"{MAINLINE_BASE_URL}/", timeout=30).read().decode()
+    seen: set[str] = set()
+    result: list[str] = []
+    for m in re.finditer(r'href="v(\d+\.\d+)(?:\.\d+)?/', html):
+        s = m.group(1)
+        if s not in seen:
+            seen.add(s)
+            result.append(s)
+
+    result.sort(key=_ver_key)
+
+    lo = _ver_key(from_ver) if from_ver else None
+    hi = _ver_key(to_ver) if to_ver else None
+    if lo or hi:
+        result = [v for v in result
+                  if (not lo or _ver_key(v) >= lo)
+                  and (not hi or _ver_key(v) <= hi)]
+    return result
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Rebuild all archive images with --push --force.")
+    parser.add_argument("--from", default="", dest="from_ver",
+                        help="Start from this version (inclusive)")
+    parser.add_argument("--to", default="", dest="to_ver",
+                        help="Stop at this version (inclusive)")
+    parser.add_argument("--image", default=IMAGE_PREFIX, dest="image_prefix",
+                        help="Image prefix (default: %(default)s)")
+    args = parser.parse_args()
+
+    print("=== Discovering available versions ===", file=sys.stderr)
+    versions = discover_mainline_versions(
+        from_ver=args.from_ver, to_ver=args.to_ver)
+    if not versions:
+        print("ERROR: no versions found", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"  Versions: {' '.join(versions)}\n", file=sys.stderr)
+
+    failed: list[str] = []
+    for kver in versions:
+        print(f"\n{'#' * 60}", file=sys.stderr)
+        print(f"# Rebuilding archive: {kver}", file=sys.stderr)
+        print(f"{'#' * 60}\n", file=sys.stderr)
+
+        cmd = [sys.executable, f"{_script_dir}/build-archive",
+               kver, "--push", "--force", "--image", args.image_prefix]
+        if subprocess.run(cmd).returncode != 0:
+            print(f"WARNING: build-archive failed for {kver}, continuing...",
+                  file=sys.stderr)
+            failed.append(kver)
+            continue
+
+        # Clean up local images to free disk space
+        archive_tag = f"{args.image_prefix}:{kver}-archive"
+        for tag in (archive_tag, f"{archive_tag}-tmp"):
+            subprocess.run(["docker", "rmi", tag], capture_output=True)
+
+        # Remove downloaded debs
+        debs_dir = os.path.join(_repo_dir, "mainline", "debs", kver)
+        if os.path.isdir(debs_dir):
+            shutil.rmtree(debs_dir)
+
+        # Prune dangling images/layers
+        subprocess.run(["docker", "builder", "prune", "-f"],
+                       capture_output=True)
+
+        print(f"\n=== Cleaned up {kver} ===", file=sys.stderr)
+
+    # Summary
+    print(f"\n{'#' * 60}", file=sys.stderr)
+    print(f"# All versions rebuilt ({len(versions)} total)", file=sys.stderr)
+    if failed:
+        print(f"# Failed: {' '.join(failed)}", file=sys.stderr)
+    print(f"{'#' * 60}", file=sys.stderr)
+
+    if failed:
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
