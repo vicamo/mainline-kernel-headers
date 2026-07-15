@@ -11,6 +11,11 @@ on:
         required: false
         type: string
         default: 'active'
+      scratch:
+        description: 'Build ubuntu image from scratch instead of the previous image'
+        required: false
+        type: boolean
+        default: false
       limit:
         description: 'Max kernels to install per build (0 = unlimited, empty = Dockerfile default 50)'
         required: false
@@ -97,6 +102,7 @@ jobs:
       - name: Build and push headers image
         run: |
           ./scripts/build-ubuntu "${{ matrix.codename }}" --push \
+              ${{ inputs.scratch && '--scratch' || '' }} \
               ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }} \
               ${{ matrix.suite && format('--suite {0}', matrix.suite) || '' }} \
               ${{ matrix.release && format('--release {0}', matrix.release) || '' }}

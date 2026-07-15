@@ -16,7 +16,7 @@ on:
         required: false
         type: boolean
         default: false
-      clean_install:
+      scratch:
         description: 'Build mainline image from scratch instead of the previous image'
         required: false
         type: boolean
@@ -165,7 +165,7 @@ jobs:
         run: |
           ./scripts/build-mainline "${{ matrix.kver }}" --push \
               ${{ inputs.force_install && '--force' || '' }} \
-              ${{ inputs.clean_install && '--clean' || '' }} \
+              ${{ inputs.scratch && '--scratch' || '' }} \
               ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }}
 
       - name: Gap report for ${{ matrix.kver }}

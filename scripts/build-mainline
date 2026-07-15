@@ -4,7 +4,7 @@
 # Requires the archive image to already exist.
 #
 # Usage:
-#   ./scripts/build-mainline <KVER> [--push] [--limit N] [--image PREFIX] [--platforms PLATFORMS]
+#   ./scripts/build-mainline <KVER> [--push] [--scratch] [--limit N] [--image PREFIX] [--platforms PLATFORMS]
 #
 # Examples:
 #   ./scripts/build-mainline 7.0
@@ -27,7 +27,7 @@ repo_dir="$(dirname "${script_dir}")"
 
 push=
 force=
-clean=
+scratch=
 limit=
 kver=""
 image_prefix="ghcr.io/vicamo/linux-headers"
@@ -37,7 +37,7 @@ while [ $# -gt 0 ]; do
     case "$1" in
         --push)          push=--push; shift ;;
         --force)         force=1; shift ;;
-        --clean)         clean=1; shift ;;
+        --scratch)       scratch=1; shift ;;
         --limit)         limit="$2"; shift 2 ;;
         --image)         image_prefix="$2"; shift 2 ;;
         --platforms)     platforms="$2"; shift 2 ;;
@@ -47,7 +47,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "${kver}" ]; then
-    echo "Usage: $0 <KVER> [--push] [--force] [--clean] [--limit N] [--image PREFIX] [--platforms PLATFORMS]" >&2
+    echo "Usage: $0 <KVER> [--push] [--force] [--scratch] [--limit N] [--image PREFIX] [--platforms PLATFORMS]" >&2
     exit 1
 fi
 
@@ -120,7 +120,7 @@ common_image_args=(
     --build-arg "ARCHIVE_IMAGE=${archive_tag}"
 )
 
-if [ -z "${clean}" ] && docker buildx imagetools inspect "${image_tag}" >/dev/null 2>&1; then
+if [ -z "${scratch}" ] && docker buildx imagetools inspect "${image_tag}" >/dev/null 2>&1; then
     echo "  (incremental: previous mainline image found)"
     base_image="${image_tag}"
 else

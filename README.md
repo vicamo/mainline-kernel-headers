@@ -100,7 +100,7 @@ Build the archive image for a single kernel series.
 Build the mainline image for a single kernel series. Requires the archive image.
 
 ```sh
-./scripts/build-mainline <KVER> [--push] [--image PREFIX] [--platforms PLATFORMS] [--force] [--clean] [--limit N]
+./scripts/build-mainline <KVER> [--push] [--image PREFIX] [--platforms PLATFORMS] [--force] [--scratch] [--limit N]
 ```
 
 | Flag | Default | Description |
@@ -109,7 +109,7 @@ Build the mainline image for a single kernel series. Requires the archive image.
 | `--image` | `ghcr.io/vicamo/linux-headers` | Image name prefix |
 | `--platforms` | *(auto-detected from base image)* | Target platforms |
 | `--force` | *(off)* | Force rebuild even if archive is unchanged |
-| `--clean` | *(off)* | Build from scratch (dkms base) instead of previous headers image |
+| `--scratch` | *(off)* | Build from scratch (dkms base) instead of previous headers image |
 | `--limit` | *(Dockerfile default: 50)* | Max kernel versions to install per build (0 = unlimited) |
 
 ```sh
@@ -171,7 +171,7 @@ new kernel ABIs are added on top of the previous image.
 #### scripts/build-ubuntu
 
 ```sh
-./scripts/build-ubuntu <SERIES> [--push] [--image PREFIX] [--platforms PLATFORMS] [--clean] [--limit N]
+./scripts/build-ubuntu <SERIES> [--push] [--image PREFIX] [--platforms PLATFORMS] [--scratch] [--limit N]
 ```
 
 | Flag | Default | Description |
@@ -179,7 +179,7 @@ new kernel ABIs are added on top of the previous image.
 | `--push` | *(off)* | Push to registry; without it, loaded locally |
 | `--image` | `ghcr.io/vicamo/linux-headers` | Image name prefix |
 | `--platforms` | *(auto-detected from base image)* | Target platforms |
-| `--clean` | *(off)* | Build from scratch (dkms base) instead of previous generic image |
+| `--scratch` | *(off)* | Build from scratch (dkms base) instead of previous generic image |
 | `--limit` | *(Dockerfile default: 50)* | Max kernel packages to install per build (0 = unlimited) |
 
 ```sh

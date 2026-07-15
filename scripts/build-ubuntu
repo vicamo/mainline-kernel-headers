@@ -3,7 +3,7 @@
 # Build the Ubuntu generic kernel headers image for a given Ubuntu series.
 #
 # Usage:
-#   ./scripts/build-ubuntu <SERIES> [--push] [--limit N] [--image PREFIX] [--platforms PLATFORMS] [--suite SUITE] [--release RELEASE]
+#   ./scripts/build-ubuntu <SERIES> [--push] [--scratch] [--limit N] [--image PREFIX] [--platforms PLATFORMS] [--suite SUITE] [--release RELEASE]
 #
 # Examples:
 #   ./scripts/build-ubuntu noble
@@ -25,7 +25,7 @@ script_dir="$(cd "$(dirname "$0")" && pwd)"
 repo_dir="$(dirname "${script_dir}")"
 
 push=
-clean=
+scratch=
 limit=
 series=""
 image_prefix="ghcr.io/vicamo/linux-headers"
@@ -36,7 +36,7 @@ release=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --push)          push=--push; shift ;;
-        --clean)         clean=1; shift ;;
+        --scratch)       scratch=1; shift ;;
         --limit)         limit="$2"; shift 2 ;;
         --image)         image_prefix="$2"; shift 2 ;;
         --platforms)     platforms="$2"; shift 2 ;;
@@ -48,7 +48,7 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "${series}" ]; then
-    echo "Usage: $0 <SERIES> [--push] [--clean] [--limit N] [--image PREFIX] [--platforms PLATFORMS] [--suite SUITE] [--release RELEASE]" >&2
+    echo "Usage: $0 <SERIES> [--push] [--scratch] [--limit N] [--image PREFIX] [--platforms PLATFORMS] [--suite SUITE] [--release RELEASE]" >&2
     exit 1
 fi
 
@@ -61,7 +61,7 @@ dkms_tag="${image_prefix}:${series}-dkms"
 echo ""
 echo "=== Building Ubuntu headers: ${generic_tag} ==="
 
-if [ -z "${clean}" ] && docker buildx imagetools inspect "${generic_tag}" >/dev/null 2>&1; then
+if [ -z "${scratch}" ] && docker buildx imagetools inspect "${generic_tag}" >/dev/null 2>&1; then
     echo "  (incremental: previous headers image found)"
     base_image="${generic_tag}"
 else
