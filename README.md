@@ -146,6 +146,13 @@ All flags are passed through to `build-mainline` for each series.
 | `ARCHIVE_PLATFORM` | No | `linux/amd64` | Platform of the archive image |
 | `MAX_KERNELS` | No | `50` | Max kernel versions to install per build (0 = unlimited) |
 
+### Image annotations
+
+| Level | Key | Description |
+|-------|-----|-------------|
+| Index | `dev.mainline-kernel-headers.archive-created` | ISO 8601 timestamp of the archive image used during the build |
+| Per-platform manifest | `dev.mainline-kernel-headers.versions` | JSON object mapping flavour to installed versions, e.g. `{"generic":["7.0.1","7.0.2"],"lowlatency":["7.0"]}` |
+
 ---
 
 ## Ubuntu images
@@ -215,6 +222,12 @@ all use `questing-dkms`).
 | Arg | Required | Default | Description |
 |-----|----------|---------|-------------|
 | `SERIES` | No | `noble` | Ubuntu series codename |
+
+### Image annotations
+
+| Level | Key | Description |
+|-------|-----|-------------|
+| Per-platform manifest | `dev.mainline-kernel-headers.versions` | JSON object mapping flavour to installed version-abi strings, e.g. `{"generic":["6.8.0-45","6.8.0-46"],"lowlatency":["6.8.0-45"]}` |
 
 ---
 

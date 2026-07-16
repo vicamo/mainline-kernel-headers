@@ -195,7 +195,7 @@ def get_install_info(kver):
         ann = m.get("annotations", {})
         versions_str = ann.get("dev.mainline-kernel-headers.versions", "")
         if versions_str:
-            # Format: {version: [flavours]}
+            # Format: {flavour: [versions]}
             result[deb_arch] = json.loads(versions_str)
         else:
             result[deb_arch] = {}
@@ -328,7 +328,7 @@ def generate_json(series_list):
                 elif archive_info is not None and flav not in archive_info.get(v, {}).get(arch, []):
                     col_status[col] = "missing_archive"
                 elif install_info is not None and arch in install_info and \
-                        flav not in install_info[arch].get(v, []):
+                        v not in install_info[arch].get(flav, []):
                     col_status[col] = "missing_install"
                 else:
                     col_status[col] = "ok"
