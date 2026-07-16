@@ -6,90 +6,90 @@
       "versions": {
         "generic": {
           "4.11": {
-            "amd64": "missing_install",
+            "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
           },
           "4.11.10": {
-            "amd64": "missing_install",
+            "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
           },
           "4.11.11": {
-            "amd64": "missing_install",
+            "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
           },
           "4.11.12": {
-            "amd64": "missing_install",
+            "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
           },
           "4.11.3": {
-            "amd64": "missing_install",
+            "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
           },
           "4.11.4": {
-            "amd64": "missing_install",
+            "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
           },
           "4.11.5": {
-            "amd64": "missing_install",
+            "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
           },
           "4.11.6": {
-            "amd64": "missing_install",
+            "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
           },
           "4.11.7": {
-            "amd64": "missing_install",
+            "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
           },
           "4.11.8": {
-            "amd64": "missing_install",
+            "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
           },
           "4.11.9": {
-            "amd64": "missing_install",
+            "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
           }
@@ -131,52 +131,52 @@
         },
         "lowlatency": {
           "4.11": {
-            "amd64": "missing_install",
-            "i386": "missing_install"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.11.10": {
-            "amd64": "missing_install",
-            "i386": "missing_install"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.11.11": {
-            "amd64": "missing_install",
-            "i386": "missing_install"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.11.12": {
-            "amd64": "missing_install",
-            "i386": "missing_install"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.11.3": {
-            "amd64": "missing_install",
-            "i386": "missing_install"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.11.4": {
-            "amd64": "missing_install",
-            "i386": "missing_install"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.11.5": {
-            "amd64": "missing_install",
-            "i386": "missing_install"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.11.6": {
-            "amd64": "missing_install",
-            "i386": "missing_install"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.11.7": {
-            "amd64": "missing_install",
-            "i386": "missing_install"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.11.8": {
-            "amd64": "missing_install",
-            "i386": "missing_install"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.11.9": {
-            "amd64": "missing_install",
-            "i386": "missing_install"
+            "amd64": "ok",
+            "i386": "ok"
           }
         }
       }
     }
   },
-  "updated": "2026-07-16T16:26:16+00:00"
+  "updated": "2026-07-16T16:56:20+00:00"
 }
