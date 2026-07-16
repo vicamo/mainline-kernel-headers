@@ -76,21 +76,21 @@ def _discover_archs(series):
     return sorted(archs)
 
 
-def _fetch_packages(series, arch, flavour="generic"):
-    """Fetch linux-headers-*-<flavour> binary package names from the archive.
+def _fetch_packages(series, arch):
+    """Fetch all linux-headers flavours from the archive for a given arch.
 
     Downloads Packages.gz from each pocket for the given series+arch,
-    extracts matching package names. This mirrors what `apt-cache search`
-    sees inside the Dockerfile.
+    extracts matching package names.
 
-    Returns a set of kabi strings, e.g. {"6.8.0-31", "6.11.0-8"}.
+    Returns {flavour: set(kabi)}.
     """
     pattern = re.compile(
-        rf'^Package: linux-headers-(\d+\.\d+\.\d+-\d+)-{re.escape(flavour)}$'
+        r'^Package: linux-headers-(\d+\.\d+\.\d+-\d+)-(.+)$'
     )
-    kabis = set()
+    result = {}
 
     for base_url in _mirrors_for_arch(arch):
+        found = False
         for pocket in POCKETS:
             suite = f"{series}{pocket}"
             url = f"{base_url}/dists/{suite}/main/binary-{arch}/Packages.gz"
@@ -100,29 +100,34 @@ def _fetch_packages(series, arch, flavour="generic"):
                     for line in data.splitlines():
                         m = pattern.match(line)
                         if m:
-                            kabis.add(m.group(1))
+                            kabi, flav = m.group(1), m.group(2)
+                            result.setdefault(flav, set()).add(kabi)
+                            found = True
             except Exception:
                 continue
-        if kabis:
+        if found:
             break
 
-    return kabis
+    return result
 
 
-def discover_versions(series, archs=None, flavour="generic"):
+def discover_versions(series, archs=None):
     """Discover available linux-headers packages for a series.
 
-    Returns {kabi: [arch, ...]} by fetching Packages.gz from the Ubuntu
-    archive for each arch+pocket. No source package involvement.
+    Returns {flavour: {kabi: [arch, ...]}} by fetching Packages.gz from the
+    Ubuntu archive for each arch+pocket.
     """
     arch_list = archs or _discover_archs(series)
-    result = {}  # {kabi: set(arch)}
+    result = {}  # {flavour: {kabi: set(arch)}}
 
     for arch in arch_list:
-        for kabi in _fetch_packages(series, arch, flavour):
-            result.setdefault(kabi, set()).add(arch)
+        for flav, kabis in _fetch_packages(series, arch).items():
+            flav_data = result.setdefault(flav, {})
+            for kabi in kabis:
+                flav_data.setdefault(kabi, set()).add(arch)
 
-    return {k: sorted(v) for k, v in result.items()}
+    return {flav: {k: sorted(v) for k, v in kabi_archs.items()}
+            for flav, kabi_archs in result.items()}
 
 
 def get_install_info(series):
@@ -172,7 +177,8 @@ def kabi_sort_key(kabi):
 def generate_json(series_list):
     """Generate structured JSON report data.
 
-    Columns are architecture names (e.g. "amd64", "arm64").
+    Output: {"updated": "<iso>", "series": {"<series>": {"versions":
+    {flavour: {kabi: {arch: status}}}, "has_install": bool}}}
     """
     from datetime import datetime, timezone
 
@@ -183,47 +189,25 @@ def generate_json(series_list):
         install_info = get_install_info(series)
 
         if not available and not install_info:
-            results[series] = {"versions": {}, "columns": []}
+            results[series] = {"versions": {}}
             continue
 
-        # Columns = architectures present in archive or image
-        columns_set = set()
-        for kabi, archs in available.items():
-            columns_set.update(archs)
-        if install_info:
-            columns_set.update(install_info.keys())
-
-        columns = sorted(columns_set)
-
-        # Merge version sets from archive and image
-        all_kabis_set = set(available.keys())
-        if install_info:
-            for arch_data in install_info.values():
-                all_kabis_set.update(arch_data.keys())
-        all_kabis = sorted(all_kabis_set, key=kabi_sort_key)
-
         versions_data = {}
-        for kabi in all_kabis:
-            avail_archs = available.get(kabi, [])
-            col_status = {}
-            for arch in columns:
-                has_archive = arch in avail_archs
-                has_install = (install_info is not None and
-                              arch in install_info and
-                              kabi in install_info[arch].get("generic", []))
-                if has_install:
-                    col_status[arch] = "ok"
-                elif has_archive:
-                    col_status[arch] = "missing_install"
-                elif install_info is None and arch in avail_archs:
-                    col_status[arch] = "missing_install"
-                else:
-                    col_status[arch] = "unavailable"
-            versions_data[kabi] = col_status
+        for flav, kabi_archs in available.items():
+            flav_data = {}
+            for kabi, archs in kabi_archs.items():
+                row = {}
+                for arch in archs:
+                    installed = (install_info is not None and
+                                 arch in install_info and
+                                 kabi in install_info[arch].get(flav, []))
+                    row[arch] = "ok" if installed else "missing_install"
+                flav_data[kabi] = row
+            versions_data[flav] = flav_data
 
         results[series] = {
             "versions": versions_data,
-            "columns": columns,
+            "has_install": install_info is not None,
         }
 
     return {
@@ -255,43 +239,55 @@ def json_to_markdown(data):
         lines.append(f"## {series}\n")
 
         versions = info.get("versions", {})
-        columns = info.get("columns", [])
 
         if not versions:
             lines.append("> No versions found in archive.\n")
             continue
 
-        all_kabis = sorted(versions.keys(), key=kabi_sort_key)
+        for flavour in sorted(versions.keys()):
+            kabi_data = versions[flavour]
+            if not kabi_data:
+                continue
 
-        gap_rows = []
-        for kabi in all_kabis:
-            col_status = versions[kabi]
-            cells = []
-            has_gap = False
-            for col in columns:
-                status = col_status.get(col, "ok")
-                cells.append(status_icon.get(status, "?"))
-                if status not in ("ok", "unavailable"):
-                    has_gap = True
-            if has_gap:
-                gap_rows.append((kabi, cells))
+            lines.append(f"### {flavour}\n")
 
-        if not gap_rows:
-            lines.append(f"✅ All {len(all_kabis)} versions fully installed across all architectures.\n")
-        else:
-            lines.append(f"| Version | {' | '.join(columns)} |")
-            lines.append(f"|---------|{'|'.join([':---:'] * len(columns))}|")
-            for kabi, cells in gap_rows:
-                lines.append(f"| ``{kabi}`` | {' | '.join(cells)} |")
-            lines.append("")
-            lines.append(f"_{len(gap_rows)}/{len(all_kabis)} versions have gaps_\n")
+            # Derive columns from arch keys
+            columns_set = set()
+            for row in kabi_data.values():
+                columns_set.update(row.keys())
+            columns = sorted(columns_set)
 
-            complete = [k for k in all_kabis if k not in {r[0] for r in gap_rows}]
-            if complete:
-                links = ", ".join(f"`{k}`" for k in complete)
-                lines.append(f"<details><summary>✅ {len(complete)} complete versions</summary>\n")
-                lines.append(f"{links}\n")
-                lines.append("</details>\n")
+            all_kabis = sorted(kabi_data.keys(), key=kabi_sort_key)
+
+            gap_rows = []
+            for kabi in all_kabis:
+                col_status = kabi_data[kabi]
+                cells = []
+                has_gap = False
+                for col in columns:
+                    status = col_status.get(col, "unavailable")
+                    cells.append(status_icon.get(status, "?"))
+                    if status not in ("ok", "unavailable"):
+                        has_gap = True
+                if has_gap:
+                    gap_rows.append((kabi, cells))
+
+            if not gap_rows:
+                lines.append(f"✅ All {len(all_kabis)} versions fully installed across all architectures.\n")
+            else:
+                lines.append(f"| Version | {' | '.join(columns)} |")
+                lines.append(f"|---------|{'|'.join([':---:'] * len(columns))}|")
+                for kabi, cells in gap_rows:
+                    lines.append(f"| ``{kabi}`` | {' | '.join(cells)} |")
+                lines.append("")
+                lines.append(f"_{len(gap_rows)}/{len(all_kabis)} versions have gaps_\n")
+
+                complete = [k for k in all_kabis if k not in {r[0] for r in gap_rows}]
+                if complete:
+                    links = ", ".join(f"`{k}`" for k in complete)
+                    lines.append(f"<details><summary>✅ {len(complete)} complete versions</summary>\n")
+                    lines.append(f"{links}\n")
+                    lines.append("</details>\n")
 
     return "\n".join(lines)
 

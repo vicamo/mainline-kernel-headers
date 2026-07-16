@@ -232,7 +232,6 @@ def json_to_markdown(data):
         lines.append(f"## Series {kver}\n")
 
         versions = info.get("versions", {})
-        columns = info.get("columns", [])
         has_archive = info.get("has_archive", False)
         has_install = info.get("has_install", False)
 
@@ -241,28 +240,43 @@ def json_to_markdown(data):
             continue
 
         if not has_archive and not has_install:
-            lines.append(f"> ⬛ No Docker images exist yet ({len(versions)} versions upstream)\n")
+            # Count total versions across all flavours
+            total = len(set().union(*(fv.keys() for fv in versions.values())))
+            lines.append(f"> ⬛ No Docker images exist yet ({total} versions upstream)\n")
             continue
 
-        all_versions = sorted(versions.keys(), key=version_sort_key)
+        # Flatten flavour/arch into composite columns, one table
+        columns = []
+        for flav in sorted(versions.keys()):
+            archs = set()
+            for row in versions[flav].values():
+                archs.update(row.keys())
+            for arch in sorted(archs):
+                columns.append((flav, arch))
+
+        all_versions = sorted(
+            set().union(*(fv.keys() for fv in versions.values())),
+            key=version_sort_key,
+        )
 
         gap_rows = []
         for v in all_versions:
-            col_status = versions[v]
             cells = []
             has_gap = False
-            for col in columns:
-                status = col_status.get(col, "ok")
+            for flav, arch in columns:
+                status = versions.get(flav, {}).get(v, {}).get(arch, "unavailable")
                 cells.append(status_icon.get(status, "?"))
-                if status != "ok":
+                if status != "ok" and status != "unavailable":
                     has_gap = True
             if has_gap:
                 gap_rows.append((v, cells))
 
+        col_headers = [f"{f}/{a}" for f, a in columns]
+
         if not gap_rows:
             lines.append(f"✅ All {len(all_versions)} versions fully available across all architectures.\n")
         else:
-            lines.append(f"| Version | {' | '.join(columns)} |")
+            lines.append(f"| Version | {' | '.join(col_headers)} |")
             lines.append(f"|---------|{'|'.join([':---:'] * len(columns))}|")
             for v, cells in gap_rows:
                 lines.append(f"| [``{v}``](https://kernel.ubuntu.com/mainline/v{v}/) | {' | '.join(cells)} |")
@@ -288,7 +302,9 @@ def generate_report(series_list):
 def generate_json(series_list):
     """Generate structured JSON report data.
 
-    Columns are "flavour/arch" (e.g. "generic/amd64", "generic-64k/arm64").
+    Output: {"updated": "<iso>", "series": {"<kver>": {"versions":
+    {flavour: {ver: {arch: status}}}, "has_archive": bool,
+    "has_install": bool}}}
     """
     from datetime import datetime, timezone
 
@@ -297,46 +313,43 @@ def generate_json(series_list):
         print(f"  Fetching upstream versions for {kver}...", file=sys.stderr)
         upstream = get_upstream_versions(kver)
         if not upstream:
-            results[kver] = {"versions": {}, "columns": []}
+            results[kver] = {"versions": {}}
             continue
 
         archive_info = get_archive_info(kver)
         install_info = get_install_info(kver)
 
-        # Discover all flavour/arch columns present across any version
-        columns_set = set()
+        # Discover all flavour→arch pairs across all versions
+        flavour_archs = {}
         for v, arch_flavours in upstream.items():
             for arch, flavours in arch_flavours.items():
                 for flav in flavours:
-                    columns_set.add(f"{flav}/{arch}")
-
-        # Sort columns: primary by arch, secondary by flavour
-        columns = sorted(columns_set, key=lambda c: (
-            c.split("/")[1], c.split("/")[0]
-        ))
+                    flavour_archs.setdefault(flav, set()).add(arch)
 
         all_versions = sorted(upstream.keys(), key=version_sort_key)
         versions_data = {}
-        for v in all_versions:
-            upstream_arch_flavours = upstream[v]
-            col_status = {}
-            for col in columns:
-                flav, arch = col.split("/", 1)
-                upstream_flavours = upstream_arch_flavours.get(arch, [])
-                if flav not in upstream_flavours:
-                    col_status[col] = "unavailable"
-                elif archive_info is not None and flav not in archive_info.get(v, {}).get(arch, []):
-                    col_status[col] = "missing_archive"
-                elif install_info is not None and arch in install_info and \
-                        v not in install_info[arch].get(flav, []):
-                    col_status[col] = "missing_install"
-                else:
-                    col_status[col] = "ok"
-            versions_data[v] = col_status
+        for flav, archs in sorted(flavour_archs.items()):
+            flav_data = {}
+            for v in all_versions:
+                row = {}
+                for arch in sorted(archs):
+                    upstream_flavours = upstream[v].get(arch, [])
+                    if flav not in upstream_flavours:
+                        row[arch] = "unavailable"
+                    elif archive_info is not None and \
+                            flav not in archive_info.get(v, {}).get(arch, []):
+                        row[arch] = "missing_archive"
+                    elif install_info is not None and \
+                            arch in install_info and \
+                            v not in install_info[arch].get(flav, []):
+                        row[arch] = "missing_install"
+                    else:
+                        row[arch] = "ok"
+                flav_data[v] = row
+            versions_data[flav] = flav_data
 
         results[kver] = {
             "versions": versions_data,
-            "columns": columns,
             "has_archive": archive_info is not None,
             "has_install": install_info is not None,
         }
