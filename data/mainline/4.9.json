@@ -4,6 +4,608 @@
       "has_archive": true,
       "has_install": false,
       "versions": {
+        "generic": {
+          "4.9": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.10": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.100": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.105": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.110": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.115": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.120": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.125": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.130": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.135": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.140": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.145": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.15": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.150": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.155": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.160": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.165": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.170": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.175": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.180": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.185": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.190": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.195": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.20": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "unavailable",
+            "s390x": "ok"
+          },
+          "4.9.200": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.205": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.210": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.215": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.220": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.225": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.230": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.235": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "unavailable"
+          },
+          "4.9.240": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "unavailable"
+          },
+          "4.9.245": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "unavailable"
+          },
+          "4.9.25": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.250": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.255": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.260": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.265": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.270": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.275": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.280": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.285": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.290": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.295": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.30": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.300": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.305": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.310": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.320": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.325": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.327": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.328": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.329": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.330": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.331": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.332": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.333": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.335": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.336": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.337": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.35": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.40": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.45": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.5": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.50": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.55": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.60": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "i386": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "4.9.65": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.70": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.75": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.80": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.85": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.90": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.9.95": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          }
+        },
         "generic-lpae": {
           "4.9": {
             "armhf": "ok"
@@ -231,692 +833,90 @@
             "armhf": "ok"
           }
         },
-        "generic": {
-          "4.9": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.10": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.100": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.105": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.110": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.115": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.120": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.125": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.130": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.135": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.140": {
-            "amd64": "ok",
-            "arm64": "unavailable",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.145": {
-            "amd64": "ok",
-            "arm64": "unavailable",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.15": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.150": {
-            "amd64": "ok",
-            "arm64": "unavailable",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.155": {
-            "amd64": "ok",
-            "arm64": "unavailable",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.160": {
-            "amd64": "ok",
-            "arm64": "unavailable",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.165": {
-            "amd64": "ok",
-            "arm64": "unavailable",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.170": {
-            "amd64": "ok",
-            "arm64": "unavailable",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.175": {
-            "amd64": "ok",
-            "arm64": "unavailable",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.180": {
-            "amd64": "ok",
-            "arm64": "unavailable",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.185": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.190": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.195": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.20": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "unavailable",
-            "s390x": "ok"
-          },
-          "4.9.200": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.205": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.210": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.215": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.220": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.225": {
-            "amd64": "unavailable",
-            "arm64": "unavailable",
-            "armhf": "unavailable",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.230": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.235": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "unavailable"
-          },
-          "4.9.240": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "unavailable"
-          },
-          "4.9.245": {
-            "amd64": "ok",
-            "arm64": "unavailable",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "unavailable"
-          },
-          "4.9.25": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.250": {
-            "amd64": "ok",
-            "arm64": "unavailable",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.255": {
-            "amd64": "ok",
-            "arm64": "unavailable",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.260": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.265": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.270": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.275": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.280": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.285": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.290": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.295": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.30": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.300": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.305": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.310": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.320": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.325": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.327": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.328": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.329": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.330": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.331": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.332": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.333": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.335": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.336": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.337": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.35": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.40": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.45": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.5": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.50": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.55": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.60": {
-            "amd64": "unavailable",
-            "arm64": "unavailable",
-            "armhf": "unavailable",
-            "i386": "unavailable",
-            "ppc64el": "unavailable",
-            "s390x": "unavailable"
-          },
-          "4.9.65": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.70": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.75": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.80": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.85": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.90": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.9.95": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "i386": "unavailable",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          }
-        },
         "lowlatency": {
           "4.9": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.10": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.100": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.105": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.110": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.115": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.120": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.125": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.130": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.135": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.140": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.145": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.15": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.150": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.155": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.160": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.165": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.170": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.175": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.180": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.185": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.190": {
             "amd64": "ok",
@@ -932,27 +932,27 @@
           },
           "4.9.200": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.205": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.210": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.215": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.220": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.225": {
             "amd64": "unavailable",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.230": {
             "amd64": "ok",
@@ -972,7 +972,7 @@
           },
           "4.9.25": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.250": {
             "amd64": "ok",
@@ -1016,7 +1016,7 @@
           },
           "4.9.30": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.300": {
             "amd64": "ok",
@@ -1080,27 +1080,27 @@
           },
           "4.9.35": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.40": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.45": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.5": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.50": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.55": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.60": {
             "amd64": "unavailable",
@@ -1108,35 +1108,35 @@
           },
           "4.9.65": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.70": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.75": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.80": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.85": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.90": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           },
           "4.9.95": {
             "amd64": "ok",
-            "i386": "unavailable"
+            "i386": "ok"
           }
         }
       }
     }
   },
-  "updated": "2026-06-18T13:07:27+00:00"
+  "updated": "2026-07-16T15:54:16+00:00"
 }

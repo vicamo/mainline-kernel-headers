@@ -214,18 +214,18 @@ function renderSeries(prefix, kver, data, versionLinkFn, title) {
   section.appendChild(header);
 
   const versions = data.versions || {};
-  const columns = data.columns || [];
-  const allVersions = Object.keys(versions).sort(versionCompare);
+  const flavours = Object.keys(versions).sort();
 
   if (prefix === "mainline" && !data.has_archive && !data.has_install) {
+    const total = new Set(flavours.flatMap(f => Object.keys(versions[f]))).size;
     const p = document.createElement("p");
     p.className = "summary";
-    p.textContent = `⬛ No Docker images exist yet (${allVersions.length} versions upstream)`;
+    p.textContent = `⬛ No Docker images exist yet (${total} versions upstream)`;
     section.appendChild(p);
     return section;
   }
 
-  if (allVersions.length === 0) {
+  if (flavours.length === 0) {
     const p = document.createElement("p");
     p.className = "summary";
     p.textContent = "No versions found.";
@@ -233,6 +233,58 @@ function renderSeries(prefix, kver, data, versionLinkFn, title) {
     return section;
   }
 
+  if (prefix === "mainline") {
+    // One table, columns = flavour/arch
+    const columns = [];
+    for (const flav of flavours) {
+      const archSet = new Set();
+      for (const row of Object.values(versions[flav])) {
+        for (const arch of Object.keys(row)) archSet.add(arch);
+      }
+      for (const arch of [...archSet].sort()) columns.push([flav, arch]);
+    }
+    const allVersions = [...new Set(flavours.flatMap(f => Object.keys(versions[f])))].sort(versionCompare);
+
+    section.appendChild(buildTable(
+      columns.map(([f, a]) => `${f}/${a}`),
+      allVersions,
+      (v, col, idx) => {
+        const [flav, arch] = columns[idx];
+        return (versions[flav] && versions[flav][v] && versions[flav][v][arch]) || "unavailable";
+      },
+      versionLinkFn,
+    ));
+  } else {
+    // Per-flavour tables
+    for (const flav of flavours) {
+      const flavData = versions[flav];
+      if (!flavData || Object.keys(flavData).length === 0) continue;
+
+      const h3 = document.createElement("h3");
+      h3.textContent = flav;
+      h3.style.marginTop = "1rem";
+      section.appendChild(h3);
+
+      const archSet = new Set();
+      for (const row of Object.values(flavData)) {
+        for (const arch of Object.keys(row)) archSet.add(arch);
+      }
+      const columns = [...archSet].sort();
+      const allVersions = Object.keys(flavData).sort(versionCompare);
+
+      section.appendChild(buildTable(
+        columns,
+        allVersions,
+        (v, col) => (flavData[v] && flavData[v][col]) || "unavailable",
+        versionLinkFn,
+      ));
+    }
+  }
+
+  return section;
+}
+
+function buildTable(columns, allVersions, statusFn, versionLinkFn) {
   const table = document.createElement("table");
   table.className = "grid-table";
 
@@ -267,12 +319,12 @@ function renderSeries(prefix, kver, data, versionLinkFn, title) {
     row.appendChild(tdVer);
 
     let rowHasGap = false;
-    for (const col of columns) {
-      const status = versions[v][col] || "no_image";
+    for (let i = 0; i < columns.length; i++) {
+      const status = statusFn(v, columns[i], i);
       const td = document.createElement("td");
       td.className = CLASSES[status] || "";
       td.textContent = ICONS[status] || "?";
-      td.title = `${v} / ${col}: ${status}`;
+      td.title = `${v} / ${columns[i]}: ${status}`;
       row.appendChild(td);
       if (status !== "ok" && status !== "unavailable") rowHasGap = true;
     }
@@ -280,7 +332,9 @@ function renderSeries(prefix, kver, data, versionLinkFn, title) {
     tbody.appendChild(row);
   }
   table.appendChild(tbody);
-  section.appendChild(table);
+
+  const wrapper = document.createElement("div");
+  wrapper.appendChild(table);
 
   const summary = document.createElement("p");
   summary.className = "summary";
@@ -289,9 +343,9 @@ function renderSeries(prefix, kver, data, versionLinkFn, title) {
   } else {
     summary.textContent = `${gaps}/${allVersions.length} versions have gaps.`;
   }
-  section.appendChild(summary);
+  wrapper.appendChild(summary);
 
-  return section;
+  return wrapper;
 }
 
 async function loadTab(prefix, containerId, versionLinkFn) {
