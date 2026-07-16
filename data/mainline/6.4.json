@@ -4,6 +4,15 @@
       "has_archive": true,
       "has_install": true,
       "versions": {
+        "generic": {
+          "6.4": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          }
+        },
         "generic-64k": {
           "6.4": {
             "arm64": "ok"
@@ -13,18 +22,9 @@
           "6.4": {
             "armhf": "ok"
           }
-        },
-        "generic": {
-          "6.4": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          }
         }
       }
     }
   },
-  "updated": "2026-06-20T05:03:58+00:00"
+  "updated": "2026-07-16T20:58:55+00:00"
 }

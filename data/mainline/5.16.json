@@ -4,88 +4,6 @@
       "has_archive": true,
       "has_install": true,
       "versions": {
-        "generic-64k": {
-          "5.16": {
-            "arm64": "ok"
-          },
-          "5.16.10": {
-            "arm64": "ok"
-          },
-          "5.16.11": {
-            "arm64": "ok"
-          },
-          "5.16.12": {
-            "arm64": "ok"
-          },
-          "5.16.13": {
-            "arm64": "ok"
-          },
-          "5.16.14": {
-            "arm64": "ok"
-          },
-          "5.16.15": {
-            "arm64": "ok"
-          },
-          "5.16.16": {
-            "arm64": "ok"
-          },
-          "5.16.17": {
-            "arm64": "ok"
-          },
-          "5.16.18": {
-            "arm64": "ok"
-          },
-          "5.16.19": {
-            "arm64": "ok"
-          },
-          "5.16.20": {
-            "arm64": "ok"
-          },
-          "5.16.5": {
-            "arm64": "ok"
-          }
-        },
-        "generic-lpae": {
-          "5.16": {
-            "armhf": "ok"
-          },
-          "5.16.10": {
-            "armhf": "ok"
-          },
-          "5.16.11": {
-            "armhf": "ok"
-          },
-          "5.16.12": {
-            "armhf": "ok"
-          },
-          "5.16.13": {
-            "armhf": "ok"
-          },
-          "5.16.14": {
-            "armhf": "ok"
-          },
-          "5.16.15": {
-            "armhf": "ok"
-          },
-          "5.16.16": {
-            "armhf": "ok"
-          },
-          "5.16.17": {
-            "armhf": "ok"
-          },
-          "5.16.18": {
-            "armhf": "ok"
-          },
-          "5.16.19": {
-            "armhf": "ok"
-          },
-          "5.16.20": {
-            "armhf": "ok"
-          },
-          "5.16.5": {
-            "armhf": "ok"
-          }
-        },
         "generic": {
           "5.16": {
             "amd64": "ok",
@@ -179,9 +97,9 @@
             "s390x": "ok"
           }
         },
-        "lowlatency-64k": {
+        "generic-64k": {
           "5.16": {
-            "arm64": "unavailable"
+            "arm64": "ok"
           },
           "5.16.10": {
             "arm64": "ok"
@@ -190,34 +108,75 @@
             "arm64": "ok"
           },
           "5.16.12": {
-            "arm64": "unavailable"
+            "arm64": "ok"
           },
           "5.16.13": {
-            "arm64": "unavailable"
+            "arm64": "ok"
           },
           "5.16.14": {
-            "arm64": "unavailable"
+            "arm64": "ok"
           },
           "5.16.15": {
-            "arm64": "unavailable"
+            "arm64": "ok"
           },
           "5.16.16": {
-            "arm64": "unavailable"
+            "arm64": "ok"
           },
           "5.16.17": {
-            "arm64": "unavailable"
+            "arm64": "ok"
           },
           "5.16.18": {
-            "arm64": "unavailable"
+            "arm64": "ok"
           },
           "5.16.19": {
-            "arm64": "unavailable"
+            "arm64": "ok"
           },
           "5.16.20": {
-            "arm64": "unavailable"
+            "arm64": "ok"
           },
           "5.16.5": {
-            "arm64": "unavailable"
+            "arm64": "ok"
+          }
+        },
+        "generic-lpae": {
+          "5.16": {
+            "armhf": "ok"
+          },
+          "5.16.10": {
+            "armhf": "ok"
+          },
+          "5.16.11": {
+            "armhf": "ok"
+          },
+          "5.16.12": {
+            "armhf": "ok"
+          },
+          "5.16.13": {
+            "armhf": "ok"
+          },
+          "5.16.14": {
+            "armhf": "ok"
+          },
+          "5.16.15": {
+            "armhf": "ok"
+          },
+          "5.16.16": {
+            "armhf": "ok"
+          },
+          "5.16.17": {
+            "armhf": "ok"
+          },
+          "5.16.18": {
+            "armhf": "ok"
+          },
+          "5.16.19": {
+            "armhf": "ok"
+          },
+          "5.16.20": {
+            "armhf": "ok"
+          },
+          "5.16.5": {
+            "armhf": "ok"
           }
         },
         "lowlatency": {
@@ -273,9 +232,50 @@
             "amd64": "ok",
             "arm64": "unavailable"
           }
+        },
+        "lowlatency-64k": {
+          "5.16": {
+            "arm64": "unavailable"
+          },
+          "5.16.10": {
+            "arm64": "ok"
+          },
+          "5.16.11": {
+            "arm64": "ok"
+          },
+          "5.16.12": {
+            "arm64": "unavailable"
+          },
+          "5.16.13": {
+            "arm64": "unavailable"
+          },
+          "5.16.14": {
+            "arm64": "unavailable"
+          },
+          "5.16.15": {
+            "arm64": "unavailable"
+          },
+          "5.16.16": {
+            "arm64": "unavailable"
+          },
+          "5.16.17": {
+            "arm64": "unavailable"
+          },
+          "5.16.18": {
+            "arm64": "unavailable"
+          },
+          "5.16.19": {
+            "arm64": "unavailable"
+          },
+          "5.16.20": {
+            "arm64": "unavailable"
+          },
+          "5.16.5": {
+            "arm64": "unavailable"
+          }
         }
       }
     }
   },
-  "updated": "2026-06-20T04:54:01+00:00"
+  "updated": "2026-07-16T20:31:54+00:00"
 }

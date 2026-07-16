@@ -4,41 +4,6 @@
       "has_archive": true,
       "has_install": true,
       "versions": {
-        "generic-64k": {
-          "6.5": {
-            "arm64": "ok"
-          },
-          "6.5.10": {
-            "arm64": "ok"
-          },
-          "6.5.11": {
-            "arm64": "ok"
-          },
-          "6.5.12": {
-            "arm64": "unavailable"
-          },
-          "6.5.13": {
-            "arm64": "unavailable"
-          },
-          "6.5.4": {
-            "arm64": "unavailable"
-          },
-          "6.5.5": {
-            "arm64": "unavailable"
-          },
-          "6.5.6": {
-            "arm64": "unavailable"
-          },
-          "6.5.7": {
-            "arm64": "ok"
-          },
-          "6.5.8": {
-            "arm64": "ok"
-          },
-          "6.5.9": {
-            "arm64": "unavailable"
-          }
-        },
         "generic": {
           "6.5": {
             "amd64": "ok",
@@ -117,9 +82,44 @@
             "ppc64el": "ok",
             "s390x": "ok"
           }
+        },
+        "generic-64k": {
+          "6.5": {
+            "arm64": "ok"
+          },
+          "6.5.10": {
+            "arm64": "ok"
+          },
+          "6.5.11": {
+            "arm64": "ok"
+          },
+          "6.5.12": {
+            "arm64": "unavailable"
+          },
+          "6.5.13": {
+            "arm64": "unavailable"
+          },
+          "6.5.4": {
+            "arm64": "unavailable"
+          },
+          "6.5.5": {
+            "arm64": "unavailable"
+          },
+          "6.5.6": {
+            "arm64": "unavailable"
+          },
+          "6.5.7": {
+            "arm64": "ok"
+          },
+          "6.5.8": {
+            "arm64": "ok"
+          },
+          "6.5.9": {
+            "arm64": "unavailable"
+          }
         }
       }
     }
   },
-  "updated": "2026-06-20T05:10:18+00:00"
+  "updated": "2026-07-16T21:05:51+00:00"
 }

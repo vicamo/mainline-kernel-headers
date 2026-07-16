@@ -2,90 +2,8 @@
   "series": {
     "5.14": {
       "has_archive": true,
-      "has_install": true,
+      "has_install": false,
       "versions": {
-        "generic-64k": {
-          "5.14": {
-            "arm64": "ok"
-          },
-          "5.14.10": {
-            "arm64": "ok"
-          },
-          "5.14.12": {
-            "arm64": "ok"
-          },
-          "5.14.13": {
-            "arm64": "ok"
-          },
-          "5.14.14": {
-            "arm64": "ok"
-          },
-          "5.14.15": {
-            "arm64": "ok"
-          },
-          "5.14.16": {
-            "arm64": "ok"
-          },
-          "5.14.17": {
-            "arm64": "ok"
-          },
-          "5.14.18": {
-            "arm64": "ok"
-          },
-          "5.14.19": {
-            "arm64": "ok"
-          },
-          "5.14.20": {
-            "arm64": "ok"
-          },
-          "5.14.21": {
-            "arm64": "ok"
-          },
-          "5.14.5": {
-            "arm64": "ok"
-          }
-        },
-        "generic-lpae": {
-          "5.14": {
-            "armhf": "unavailable"
-          },
-          "5.14.10": {
-            "armhf": "ok"
-          },
-          "5.14.12": {
-            "armhf": "unavailable"
-          },
-          "5.14.13": {
-            "armhf": "unavailable"
-          },
-          "5.14.14": {
-            "armhf": "unavailable"
-          },
-          "5.14.15": {
-            "armhf": "unavailable"
-          },
-          "5.14.16": {
-            "armhf": "unavailable"
-          },
-          "5.14.17": {
-            "armhf": "unavailable"
-          },
-          "5.14.18": {
-            "armhf": "unavailable"
-          },
-          "5.14.19": {
-            "armhf": "ok"
-          },
-          "5.14.20": {
-            "armhf": "ok"
-          },
-          "5.14.21": {
-            "armhf": "ok"
-          },
-          "5.14.5": {
-            "armhf": "ok"
-          }
-        },
         "generic": {
           "5.14": {
             "amd64": "ok",
@@ -179,6 +97,88 @@
             "s390x": "ok"
           }
         },
+        "generic-64k": {
+          "5.14": {
+            "arm64": "ok"
+          },
+          "5.14.10": {
+            "arm64": "ok"
+          },
+          "5.14.12": {
+            "arm64": "ok"
+          },
+          "5.14.13": {
+            "arm64": "ok"
+          },
+          "5.14.14": {
+            "arm64": "ok"
+          },
+          "5.14.15": {
+            "arm64": "ok"
+          },
+          "5.14.16": {
+            "arm64": "ok"
+          },
+          "5.14.17": {
+            "arm64": "ok"
+          },
+          "5.14.18": {
+            "arm64": "ok"
+          },
+          "5.14.19": {
+            "arm64": "ok"
+          },
+          "5.14.20": {
+            "arm64": "ok"
+          },
+          "5.14.21": {
+            "arm64": "ok"
+          },
+          "5.14.5": {
+            "arm64": "ok"
+          }
+        },
+        "generic-lpae": {
+          "5.14": {
+            "armhf": "unavailable"
+          },
+          "5.14.10": {
+            "armhf": "ok"
+          },
+          "5.14.12": {
+            "armhf": "unavailable"
+          },
+          "5.14.13": {
+            "armhf": "unavailable"
+          },
+          "5.14.14": {
+            "armhf": "unavailable"
+          },
+          "5.14.15": {
+            "armhf": "unavailable"
+          },
+          "5.14.16": {
+            "armhf": "unavailable"
+          },
+          "5.14.17": {
+            "armhf": "unavailable"
+          },
+          "5.14.18": {
+            "armhf": "unavailable"
+          },
+          "5.14.19": {
+            "armhf": "ok"
+          },
+          "5.14.20": {
+            "armhf": "ok"
+          },
+          "5.14.21": {
+            "armhf": "ok"
+          },
+          "5.14.5": {
+            "armhf": "ok"
+          }
+        },
         "lowlatency": {
           "5.14": {
             "amd64": "ok"
@@ -223,5 +223,5 @@
       }
     }
   },
-  "updated": "2026-06-19T09:43:38+00:00"
+  "updated": "2026-07-16T20:14:50+00:00"
 }

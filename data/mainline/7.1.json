@@ -4,42 +4,52 @@
       "has_archive": true,
       "has_install": true,
       "versions": {
-        "generic-64k": {
-          "7.1": {
-            "arm64": "ok"
-          },
-          "7.1.1": {
-            "arm64": "ok"
-          },
-          "7.1.2": {
-            "arm64": "ok"
-          }
-        },
         "generic": {
           "7.1": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
+            "amd64": "missing_install",
+            "arm64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
+            "s390x": "missing_install"
           },
           "7.1.1": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
+            "amd64": "missing_install",
+            "arm64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
+            "s390x": "missing_install"
           },
           "7.1.2": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
+            "amd64": "missing_install",
+            "arm64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
+            "s390x": "missing_install"
+          },
+          "7.1.3": {
+            "amd64": "missing_install",
+            "arm64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
+            "s390x": "missing_install"
+          }
+        },
+        "generic-64k": {
+          "7.1": {
+            "arm64": "missing_install"
+          },
+          "7.1.1": {
+            "arm64": "missing_install"
+          },
+          "7.1.2": {
+            "arm64": "missing_install"
+          },
+          "7.1.3": {
+            "arm64": "missing_install"
           }
         }
       }
     }
   },
-  "updated": "2026-07-04T07:11:36+00:00"
+  "updated": "2026-07-16T22:39:40+00:00"
 }

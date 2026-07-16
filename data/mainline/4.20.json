@@ -4,6 +4,104 @@
       "has_archive": true,
       "has_install": true,
       "versions": {
+        "generic": {
+          "4.20": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.20.10": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.20.11": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.20.12": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.20.13": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.20.14": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.20.15": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.20.16": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.20.17": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.20.5": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.20.8": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.20.9": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          }
+        },
         "generic-lpae": {
           "4.20": {
             "armhf": "ok"
@@ -42,128 +140,54 @@
             "armhf": "ok"
           }
         },
-        "generic": {
-          "4.20": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.20.10": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.20.11": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.20.12": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.20.13": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.20.14": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.20.15": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.20.16": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.20.17": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.20.5": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.20.8": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          },
-          "4.20.9": {
-            "amd64": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "s390x": "ok"
-          }
-        },
         "lowlatency": {
           "4.20": {
-            "amd64": "ok"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.20.10": {
-            "amd64": "ok"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.20.11": {
-            "amd64": "ok"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.20.12": {
-            "amd64": "ok"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.20.13": {
-            "amd64": "ok"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.20.14": {
-            "amd64": "ok"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.20.15": {
-            "amd64": "ok"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.20.16": {
-            "amd64": "ok"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.20.17": {
-            "amd64": "ok"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.20.5": {
-            "amd64": "ok"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.20.8": {
-            "amd64": "ok"
+            "amd64": "ok",
+            "i386": "ok"
           },
           "4.20.9": {
-            "amd64": "ok"
+            "amd64": "ok",
+            "i386": "ok"
           }
         },
         "snapdragon": {
@@ -207,5 +231,5 @@
       }
     }
   },
-  "updated": "2026-06-18T02:45:56+00:00"
+  "updated": "2026-07-16T19:00:54+00:00"
 }
