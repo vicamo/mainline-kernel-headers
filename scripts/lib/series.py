@@ -66,3 +66,22 @@ def series_for_kver(kver: str, *, longterm: bool = False) -> str:
                 continue
             return r.codename
     return RELEASE_KERNELS[-1].codename
+
+
+def series_range(from_codename: str, to_codename: str) -> list[str]:
+    """Return codenames from from_codename (inclusive) to to_codename (exclusive).
+
+    Returns an empty list if from == to or from is not found before to.
+    """
+    codenames = [r.codename for r in RELEASE_KERNELS]
+    try:
+        start = codenames.index(from_codename)
+    except ValueError:
+        return []
+    try:
+        end = codenames.index(to_codename)
+    except ValueError:
+        return []
+    if start >= end:
+        return []
+    return codenames[start:end]

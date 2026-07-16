@@ -17,6 +17,7 @@ import os
 import re
 import subprocess
 import sys
+import tempfile
 from collections import defaultdict
 
 _script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -26,7 +27,7 @@ from lib import (ARCHIVE_ANNOTATION_VERSIONS_KEY, IMAGE_PREFIX,
                  check_containerd_snapshotter,
                  detect_platforms, enumerate_installed_headers_packages,
                  inspect_platform_annotation)
-from lib.series import series_for_kver
+from lib.series import series_for_kver, series_range
 
 
 def _build_mainline_platform_versions(
@@ -70,13 +71,18 @@ def build_mainline(
     archive_tag = f"{image_prefix}:{kver}-archive"
     image_tag = f"{image_prefix}:{kver}"
 
+    # Detect longterm from longterm-series.json
+    longterm_json = os.path.join(repo_dir, "mainline", "longterm-series.json")
+    with open(longterm_json) as f:
+        longterm_map = json.load(f)
+    longterm = kver in longterm_map
+
     check_containerd_snapshotter()
 
     print(f"\n=== Building image: {image_tag} ===", file=sys.stderr)
 
     # Determine base image
     common_image_args = [
-        "-f", os.path.join(repo_dir, "mainline", "Dockerfile.mainline"),
         "--build-arg", f"KVER={kver}",
         "--build-arg", f"ARCHIVE_IMAGE={archive_tag}",
     ]
@@ -89,12 +95,56 @@ def build_mainline(
         print("  (incremental: previous mainline image found)", file=sys.stderr)
         base_image = image_tag
     else:
-        series = series_for_kver(kver)
+        series = series_for_kver(kver, longterm=longterm)
         dkms_tag = f"{image_prefix}:{series}-dkms"
+        if longterm:
+            print(f"  (longterm kernel: base series={series})", file=sys.stderr)
         print(f"  (cold start: using {dkms_tag} as base)", file=sys.stderr)
         base_image = dkms_tag
 
     common_image_args += ["--build-arg", f"BASE_IMAGE={base_image}"]
+
+    # For longterm kernels, generate a Dockerfile with injected FROM/COPY
+    # for additional series apt sources
+    dockerfile_path = os.path.join(repo_dir, "mainline", "Dockerfile.mainline")
+    tmp_dockerfile = None
+    if longterm:
+        original_series = longterm_map[kver]
+        lts_series = series_for_kver(kver, longterm=True)
+        add_series = series_range(original_series, lts_series)
+        if add_series:
+            print(f"  (add_series: {','.join(add_series)})", file=sys.stderr)
+            with open(dockerfile_path) as f:
+                content = f.read()
+            # Prepend FROM aliases for each series
+            from_lines = "\n".join(
+                f"FROM ghcr.io/vicamo/ubuntu:{s} AS add-series-{s}"
+                for s in add_series
+            )
+            # Inject --mount flags onto the RUN line
+            mount_flags = " ".join(
+                f"--mount=from=add-series-{s},source=/etc/apt,target=/tmp/apt/{s}"
+                for s in add_series
+            )
+            content = content.replace(
+                "RUN <<'ADD_SOURCES'",
+                f"RUN {mount_flags} <<'ADD_SOURCES'",
+            )
+            # Inject FROM aliases before the archive stage
+            marker = "FROM --platform=${ARCHIVE_PLATFORM} ${ARCHIVE_IMAGE} AS archive"
+            content = content.replace(
+                marker,
+                f"{from_lines}\n{marker}",
+            )
+            tmp_dockerfile = tempfile.NamedTemporaryFile(
+                mode="w", prefix="Dockerfile.mainline-", suffix=".tmp",
+                dir=os.path.join(repo_dir, "mainline"), delete=False,
+            )
+            tmp_dockerfile.write(content)
+            tmp_dockerfile.close()
+            dockerfile_path = tmp_dockerfile.name
+
+    common_image_args = ["-f", dockerfile_path] + common_image_args[:]
 
     # Auto-detect platforms if not specified
     if not platforms:
@@ -138,6 +188,8 @@ def build_mainline(
         if base_versions == new_versions:
             print("  Versions unchanged — skipping final build.", file=sys.stderr)
             subprocess.run(["docker", "rmi", tmp_tag], capture_output=True)
+            if tmp_dockerfile:
+                os.unlink(tmp_dockerfile.name)
             print(f"\n=== Done: {kver} (up to date) ===", file=sys.stderr)
             return
 
@@ -164,8 +216,10 @@ def build_mainline(
          repo_dir],
         check=True)
 
-    # Clean up tmp tag
+    # Clean up tmp tag and temp dockerfile
     subprocess.run(["docker", "rmi", tmp_tag], capture_output=True)
+    if tmp_dockerfile:
+        os.unlink(tmp_dockerfile.name)
 
     # Inspect final annotations
     print("\n--- Install image inspection ---", file=sys.stderr)

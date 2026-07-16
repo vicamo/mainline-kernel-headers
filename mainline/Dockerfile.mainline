@@ -59,6 +59,28 @@ ARG TARGETARCH
 ARG MAX_KERNELS
 
 SHELL ["/bin/bash", "-c"]
+
+# Add extra apt sources for additional series (longterm kernel support).
+# build-mainline injects --mount flags onto this RUN when building longterm kernels.
+RUN <<'ADD_SOURCES'
+set -euo pipefail
+shopt -s nullglob
+series_dirs=(/tmp/apt/*/)
+[ ${#series_dirs[@]} -eq 0 ] && exit 0
+for dir in "${series_dirs[@]}"; do
+    s=$(basename "${dir}")
+    echo ">>> Adding apt sources for: ${s}"
+    if [ -f "${dir}sources.list.d/debian.sources" ]; then
+        cp "${dir}sources.list.d/debian.sources" "/etc/apt/sources.list.d/${s}.sources"
+    elif [ -f "${dir}sources.list" ]; then
+        cp "${dir}sources.list" "/etc/apt/sources.list.d/${s}.list"
+    else
+        echo "  WARN: no apt sources found in ${dir}" >&2
+    fi
+done
+apt-get update
+ADD_SOURCES
+
 RUN --mount=from=archive,source=/${KVER},target=/tmp/archive/${KVER} <<'INSTALL'
 set -euo pipefail
 

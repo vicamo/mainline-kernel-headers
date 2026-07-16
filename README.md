@@ -113,6 +113,9 @@ Build the mainline image for a single kernel series. Requires the archive image.
 | `--scratch` | *(off)* | Build from scratch (dkms base) instead of previous headers image |
 | `--limit` | *(Dockerfile default: 50)* | Max kernel versions to install per build (0 = unlimited) |
 
+Longterm kernels (those listed in `mainline/longterm-series.json`) are
+auto-detected and use an LTS base image with additional apt sources.
+
 ```sh
 ./scripts/build-mainline 7.0 --push
 ```

@@ -5,7 +5,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 
-from lib.series import RELEASE_KERNELS, Release, series_for_kver
+from lib.series import RELEASE_KERNELS, Release, series_for_kver, series_range
 
 
 class TestReleaseKernels:
@@ -172,3 +172,61 @@ class TestSeriesForKver:
         # devel is not LTS; last LTS is resolute(700)
         # 7.0 → kver_num 700 == resolute, which is LTS
         assert series_for_kver("7.0", longterm=True) == "resolute"
+
+
+class TestSeriesRange:
+    """Test series_range utility."""
+
+    def test_basic_range(self):
+        assert series_range("groovy", "jammy") == ["groovy", "hirsute", "impish"]
+
+    def test_single_gap(self):
+        assert series_range("lunar", "noble") == ["lunar", "mantic"]
+
+    def test_same_codename(self):
+        assert series_range("noble", "noble") == []
+
+    def test_from_after_to(self):
+        assert series_range("noble", "lunar") == []
+
+    def test_unknown_codename(self):
+        assert series_range("nonexistent", "noble") == []
+        assert series_range("noble", "nonexistent") == []
+
+    def test_wider_range(self):
+        r = series_range("oracular", "resolute")
+        assert r == ["oracular", "plucky", "questing"]
+
+
+class TestLongtermSeriesJson:
+    """Ensure longterm-series.json covers all active longterm kernels."""
+
+    def test_all_active_longterm_covered(self):
+        """Every active longterm kernel from kernel.org must be in longterm-series.json."""
+        import json
+        import urllib.request
+
+        longterm_json = Path(__file__).resolve().parents[1] / "mainline" / "longterm-series.json"
+        with open(longterm_json) as f:
+            longterm_map = json.load(f)
+
+        try:
+            with urllib.request.urlopen(
+                "https://www.kernel.org/releases.json", timeout=10
+            ) as resp:
+                data = json.loads(resp.read())
+        except (urllib.error.URLError, OSError):
+            import pytest
+            pytest.skip("cannot reach kernel.org")
+
+        import re
+        missing = []
+        for r in data["releases"]:
+            if r["moniker"] != "longterm" or r["iseol"]:
+                continue
+            m = re.match(r"^(\d+\.\d+)", r["version"])
+            if m and m.group(1) not in longterm_map:
+                missing.append(m.group(1))
+
+        assert not missing, \
+            f"Active longterm kernels missing from longterm-series.json: {missing}"
