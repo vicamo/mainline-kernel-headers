@@ -13,10 +13,6 @@ IMAGE_PREFIX = "ghcr.io/vicamo/linux-headers"
 #   JSON object mapping version → arch → flavours.
 #   Example: {"6.14.0":{"all":["all"],"amd64":["generic"],"arm64":["generic"]}}
 ARCHIVE_ANNOTATION_VERSIONS_KEY = "dev.mainline-kernel-headers.versions"
-# MAINLINE_ANNOTATION_CREATED_KEY: used on mainline images.
-#   ISO 8601 UTC timestamp of last archive build.
-#   Example: "2025-07-15T01:10:43Z"
-MAINLINE_ANNOTATION_CREATED_KEY = "dev.mainline-kernel-headers.archive-created"
 
 
 def fetch_active_kernel_versions() -> list[str]:
@@ -36,18 +32,6 @@ def fetch_active_kernel_versions() -> list[str]:
             seen.add(m.group(1))
             versions.append(m.group(1))
     return versions
-
-
-def get_index_annotation(image: str, key: str) -> str | None:
-    """Read an annotation from the top-level image index (manifest list)."""
-    r = subprocess.run(
-        ["docker", "buildx", "imagetools", "inspect", image, "--raw"],
-        capture_output=True, text=True,
-    )
-    if r.returncode != 0:
-        return None
-    data = json.loads(r.stdout)
-    return (data.get("annotations") or {}).get(key) or None
 
 
 def enumerate_installed_headers_packages(

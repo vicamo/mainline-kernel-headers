@@ -150,7 +150,6 @@ All flags are passed through to `build-mainline` for each series.
 
 | Level | Key | Description |
 |-------|-----|-------------|
-| Index | `dev.mainline-kernel-headers.archive-created` | ISO 8601 timestamp of the archive image used during the build |
 | Per-platform manifest | `dev.mainline-kernel-headers.versions` | JSON object mapping flavour to installed versions, e.g. `{"generic":["7.0.1","7.0.2"],"lowlatency":["7.0"]}` |
 
 ---

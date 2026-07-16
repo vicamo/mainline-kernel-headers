@@ -18,28 +18,21 @@ import re
 import subprocess
 import sys
 from collections import defaultdict
-from pathlib import Path
 
 _script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _script_dir)
 
 from lib import (ARCHIVE_ANNOTATION_VERSIONS_KEY, IMAGE_PREFIX,
-                 MAINLINE_ANNOTATION_CREATED_KEY, check_containerd_snapshotter,
+                 check_containerd_snapshotter,
                  detect_platforms, enumerate_installed_headers_packages,
-                 get_index_annotation, inspect_platform_annotation)
+                 inspect_platform_annotation)
 from lib.series import series_for_kver
 
-# Re-use get_archive_annotation
-_annotation_path = os.path.join(_script_dir, "get-archive-annotation")
-_annotation_ns: dict = {"__file__": _annotation_path}
-exec(compile(Path(_annotation_path).read_text(), _annotation_path, "exec"), _annotation_ns)
-get_archive_annotation = _annotation_ns["get_archive_annotation"]
 
-
-def _build_mainline_versions(
+def _build_mainline_platform_versions(
     image: str, platform: str,
 ) -> dict[str, list[str]]:
-    """Build {flavour: [versions]} from installed headers packages."""
+    """Build {flavour: [versions]} from installed headers packages for one platform."""
     flavours: dict[str, set[str]] = defaultdict(set)
     for pkg in enumerate_installed_headers_packages(image, platform) or []:
         m = re.match(r"linux-headers-(\d+\.\d+\.\d+)-([a-z0-9]+)-(.+)", pkg)
@@ -53,6 +46,16 @@ def _build_mainline_versions(
     return {f: sorted(v) for f, v in sorted(flavours.items())}
 
 
+def _build_mainline_versions(
+    image: str, platforms: list[str],
+) -> dict[str, dict[str, list[str]]]:
+    """Build {platform: {flavour: [versions]}} for all platforms."""
+    result = {}
+    for plat in platforms:
+        result[plat] = _build_mainline_platform_versions(image, plat)
+    return result
+
+
 def build_mainline(
     kver: str,
     push: bool = False,
@@ -60,7 +63,7 @@ def build_mainline(
     scratch: bool = False,
     limit: int | None = None,
     image_prefix: str = IMAGE_PREFIX,
-    platforms: str = "",
+    platforms: list[str] | None = None,
 ) -> None:
     """Build the mainline image for a kernel version."""
     repo_dir = os.path.dirname(_script_dir)
@@ -69,25 +72,7 @@ def build_mainline(
 
     check_containerd_snapshotter()
 
-    # Verify archive image exists and capture its created timestamp
-    archive_created = get_archive_annotation(
-        archive_tag, "org.opencontainers.image.created")
-    if not archive_created:
-        print(f"ERROR: archive image {archive_tag} not found. Run build-archive first.",
-              file=sys.stderr)
-        sys.exit(1)
-
-    # Check if mainline image is already up to date
     print(f"\n=== Building image: {image_tag} ===", file=sys.stderr)
-
-    if not force and not scratch:
-        existing_created = get_index_annotation(
-            image_tag, MAINLINE_ANNOTATION_CREATED_KEY)
-        if existing_created and existing_created == archive_created:
-            print(f"  Mainline image already matches archive (created: {archive_created})",
-                  file=sys.stderr)
-            print(f"\n=== Done: {kver} (up to date) ===", file=sys.stderr)
-            return
 
     # Determine base image
     common_image_args = [
@@ -96,6 +81,7 @@ def build_mainline(
         "--build-arg", f"ARCHIVE_IMAGE={archive_tag}",
     ]
 
+    base_image = None
     if not scratch and subprocess.run(
         ["docker", "buildx", "imagetools", "inspect", image_tag],
         capture_output=True,
@@ -112,15 +98,14 @@ def build_mainline(
 
     # Auto-detect platforms if not specified
     if not platforms:
-        detected = detect_platforms(base_image)
-        if not detected:
+        platforms = detect_platforms(base_image)
+        if not platforms:
             print(f"ERROR: could not detect platforms from base image {base_image}",
                   file=sys.stderr)
             sys.exit(1)
-        platforms = ",".join(detected)
         print(f"  (detected platforms from base: {platforms})", file=sys.stderr)
 
-    common_image_args += ["--platform", platforms]
+    common_image_args += ["--platform", ",".join(platforms)]
 
     if limit is not None:
         common_image_args += ["--build-arg", f"MAX_KERNELS={limit}"]
@@ -133,20 +118,36 @@ def build_mainline(
          *common_image_args, "-t", tmp_tag, "--load", repo_dir],
         check=True)
 
-    # Extract per-platform version info
+    # Extract per-platform version info from tmp image
     print("\n--- Extracting per-platform version info ---", file=sys.stderr)
+    tmp_versions = _build_mainline_versions(tmp_tag, platforms)
+    for plat, plat_versions in tmp_versions.items():
+        print(f"  {plat}: {json.dumps(plat_versions, separators=(',', ':'))}",
+              file=sys.stderr)
 
+    # Compare with base image versions — skip if identical
+    if not force and not scratch and base_image == image_tag:
+        base_versions = {}
+        for plat in platforms:
+            raw = inspect_platform_annotation(
+                image_tag, plat, ARCHIVE_ANNOTATION_VERSIONS_KEY, pushed=push)
+            base_versions[plat] = raw
+
+        new_versions = {plat: json.dumps(v, separators=(",", ":"))
+                        for plat, v in tmp_versions.items()}
+        if base_versions == new_versions:
+            print("  Versions unchanged — skipping final build.", file=sys.stderr)
+            subprocess.run(["docker", "rmi", tmp_tag], capture_output=True)
+            print(f"\n=== Done: {kver} (up to date) ===", file=sys.stderr)
+            return
+
+    # Build annotation args
     annotation_args = [
         "--annotation", f"index:org.opencontainers.image.description="
                         f"Mainline kernel headers for {kver}",
-        "--annotation", f"index:{MAINLINE_ANNOTATION_CREATED_KEY}={archive_created}",
     ]
-
-    for plat in platforms.split(","):
-        print(f"  Extracting versions for {plat} ...", file=sys.stderr)
-        plat_versions = _build_mainline_versions(tmp_tag, plat)
+    for plat, plat_versions in tmp_versions.items():
         versions_json = json.dumps(plat_versions, separators=(",", ":"))
-        print(f"    Versions: {versions_json}", file=sys.stderr)
         annotation_args += [
             "--annotation",
             f"manifest-descriptor[{plat}]:{ARCHIVE_ANNOTATION_VERSIONS_KEY}={versions_json}",
@@ -168,7 +169,7 @@ def build_mainline(
 
     # Inspect final annotations
     print("\n--- Install image inspection ---", file=sys.stderr)
-    for plat in platforms.split(","):
+    for plat in platforms:
         val = inspect_platform_annotation(
             image_tag, plat, ARCHIVE_ANNOTATION_VERSIONS_KEY, pushed=push)
         print(f"  {plat}: {ARCHIVE_ANNOTATION_VERSIONS_KEY}={val or '<none>'}",
@@ -197,9 +198,11 @@ def main() -> None:
                         help="Comma-separated platforms (auto-detected if omitted)")
     args = parser.parse_args()
 
+    platforms = [p for p in args.platforms.split(",") if p] or None
+
     build_mainline(args.kver, push=args.push, force=args.force,
                    scratch=args.scratch, limit=args.limit,
-                   image_prefix=args.image_prefix, platforms=args.platforms)
+                   image_prefix=args.image_prefix, platforms=platforms)
 
 
 if __name__ == "__main__":
