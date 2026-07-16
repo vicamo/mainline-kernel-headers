@@ -1,46 +1,40 @@
 {
   "series": {
     "hirsute": {
-      "columns": [
-        "amd64",
-        "arm64",
-        "armhf",
-        "ppc64el",
-        "riscv64",
-        "s390x"
-      ],
       "versions": {
-        "5.11.0-1007": {
-          "amd64": "unavailable",
-          "arm64": "unavailable",
-          "armhf": "unavailable",
-          "ppc64el": "unavailable",
-          "riscv64": "missing_install",
-          "s390x": "unavailable"
-        },
-        "5.11.0-1028": {
-          "amd64": "unavailable",
-          "arm64": "unavailable",
-          "armhf": "unavailable",
-          "ppc64el": "unavailable",
-          "riscv64": "missing_install",
-          "s390x": "unavailable"
-        },
-        "5.11.0-16": {
-          "amd64": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "ppc64el": "ok",
-          "riscv64": "unavailable",
-          "s390x": "ok"
-        },
-        "5.11.0-49": {
-          "amd64": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "ppc64el": "ok",
-          "riscv64": "unavailable",
-          "s390x": "ok"
+        "generic": {
+          "5.11.0-1007": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "riscv64": "missing_install",
+            "s390x": "unavailable"
+          },
+          "5.11.0-1028": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "riscv64": "missing_install",
+            "s390x": "unavailable"
+          },
+          "5.11.0-16": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "riscv64": "unavailable",
+            "s390x": "ok"
+          },
+          "5.11.0-49": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "riscv64": "unavailable",
+            "s390x": "ok"
+          }
         }
       }
     }

@@ -1,38 +1,32 @@
 {
   "series": {
     "cosmic": {
-      "columns": [
-        "amd64",
-        "arm64",
-        "armhf",
-        "i386",
-        "ppc64el",
-        "s390x"
-      ],
       "versions": {
-        "4.18.0-10": {
-          "amd64": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "i386": "missing_install",
-          "ppc64el": "ok",
-          "s390x": "ok"
-        },
-        "4.18.0-20": {
-          "amd64": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "i386": "missing_install",
-          "ppc64el": "ok",
-          "s390x": "ok"
-        },
-        "4.18.0-25": {
-          "amd64": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "i386": "missing_install",
-          "ppc64el": "ok",
-          "s390x": "ok"
+        "generic": {
+          "4.18.0-10": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "missing_install",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.18.0-20": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "missing_install",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.18.0-25": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "missing_install",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          }
         }
       }
     }

@@ -1,26 +1,27 @@
 {
   "series": {
     "6.4": {
-      "columns": [
-        "generic/amd64",
-        "generic/arm64",
-        "generic-64k/arm64",
-        "generic/armhf",
-        "generic-lpae/armhf",
-        "generic/ppc64el",
-        "generic/s390x"
-      ],
       "has_archive": true,
       "has_install": true,
       "versions": {
-        "6.4": {
-          "generic-64k/arm64": "ok",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok"
+        "generic-64k": {
+          "6.4": {
+            "arm64": "ok"
+          }
+        },
+        "generic-lpae": {
+          "6.4": {
+            "armhf": "ok"
+          }
+        },
+        "generic": {
+          "6.4": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          }
         }
       }
     }

@@ -1,190 +1,256 @@
 {
   "series": {
     "4.8": {
-      "columns": [
-        "cloud/amd64",
-        "generic/amd64",
-        "lowlatency/amd64",
-        "cloud/arm64",
-        "generic/arm64",
-        "cloud/armhf",
-        "generic/armhf",
-        "generic-lpae/armhf",
-        "cloud/ppc64el",
-        "generic/ppc64el",
-        "cloud/s390x",
-        "generic/s390x"
-      ],
       "has_archive": true,
       "has_install": false,
       "versions": {
-        "4.8": {
-          "cloud/amd64": "ok",
-          "cloud/arm64": "ok",
-          "cloud/armhf": "ok",
-          "cloud/ppc64el": "ok",
-          "cloud/s390x": "ok",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
+        "cloud": {
+          "4.8": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.8.10": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "4.8.11": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "4.8.12": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "4.8.13": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "4.8.14": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "4.8.15": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "4.8.16": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "4.8.17": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "4.8.5": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "4.8.8": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "4.8.9": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          }
         },
-        "4.8.10": {
-          "cloud/amd64": "unavailable",
-          "cloud/arm64": "unavailable",
-          "cloud/armhf": "unavailable",
-          "cloud/ppc64el": "unavailable",
-          "cloud/s390x": "unavailable",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
+        "generic-lpae": {
+          "4.8": {
+            "armhf": "ok"
+          },
+          "4.8.10": {
+            "armhf": "ok"
+          },
+          "4.8.11": {
+            "armhf": "ok"
+          },
+          "4.8.12": {
+            "armhf": "ok"
+          },
+          "4.8.13": {
+            "armhf": "ok"
+          },
+          "4.8.14": {
+            "armhf": "ok"
+          },
+          "4.8.15": {
+            "armhf": "ok"
+          },
+          "4.8.16": {
+            "armhf": "ok"
+          },
+          "4.8.17": {
+            "armhf": "ok"
+          },
+          "4.8.5": {
+            "armhf": "ok"
+          },
+          "4.8.8": {
+            "armhf": "ok"
+          },
+          "4.8.9": {
+            "armhf": "ok"
+          }
         },
-        "4.8.11": {
-          "cloud/amd64": "unavailable",
-          "cloud/arm64": "unavailable",
-          "cloud/armhf": "unavailable",
-          "cloud/ppc64el": "unavailable",
-          "cloud/s390x": "unavailable",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
+        "generic": {
+          "4.8": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.8.10": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.8.11": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.8.12": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.8.13": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.8.14": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.8.15": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.8.16": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.8.17": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.8.5": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.8.8": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.8.9": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          }
         },
-        "4.8.12": {
-          "cloud/amd64": "unavailable",
-          "cloud/arm64": "unavailable",
-          "cloud/armhf": "unavailable",
-          "cloud/ppc64el": "unavailable",
-          "cloud/s390x": "unavailable",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "4.8.13": {
-          "cloud/amd64": "unavailable",
-          "cloud/arm64": "unavailable",
-          "cloud/armhf": "unavailable",
-          "cloud/ppc64el": "unavailable",
-          "cloud/s390x": "unavailable",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "4.8.14": {
-          "cloud/amd64": "unavailable",
-          "cloud/arm64": "unavailable",
-          "cloud/armhf": "unavailable",
-          "cloud/ppc64el": "unavailable",
-          "cloud/s390x": "unavailable",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "4.8.15": {
-          "cloud/amd64": "unavailable",
-          "cloud/arm64": "unavailable",
-          "cloud/armhf": "unavailable",
-          "cloud/ppc64el": "unavailable",
-          "cloud/s390x": "unavailable",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "4.8.16": {
-          "cloud/amd64": "unavailable",
-          "cloud/arm64": "unavailable",
-          "cloud/armhf": "unavailable",
-          "cloud/ppc64el": "unavailable",
-          "cloud/s390x": "unavailable",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "4.8.17": {
-          "cloud/amd64": "unavailable",
-          "cloud/arm64": "unavailable",
-          "cloud/armhf": "unavailable",
-          "cloud/ppc64el": "unavailable",
-          "cloud/s390x": "unavailable",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "4.8.5": {
-          "cloud/amd64": "unavailable",
-          "cloud/arm64": "unavailable",
-          "cloud/armhf": "unavailable",
-          "cloud/ppc64el": "unavailable",
-          "cloud/s390x": "unavailable",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "4.8.8": {
-          "cloud/amd64": "unavailable",
-          "cloud/arm64": "unavailable",
-          "cloud/armhf": "unavailable",
-          "cloud/ppc64el": "unavailable",
-          "cloud/s390x": "unavailable",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "4.8.9": {
-          "cloud/amd64": "unavailable",
-          "cloud/arm64": "unavailable",
-          "cloud/armhf": "unavailable",
-          "cloud/ppc64el": "unavailable",
-          "cloud/s390x": "unavailable",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
+        "lowlatency": {
+          "4.8": {
+            "amd64": "ok"
+          },
+          "4.8.10": {
+            "amd64": "ok"
+          },
+          "4.8.11": {
+            "amd64": "ok"
+          },
+          "4.8.12": {
+            "amd64": "ok"
+          },
+          "4.8.13": {
+            "amd64": "ok"
+          },
+          "4.8.14": {
+            "amd64": "ok"
+          },
+          "4.8.15": {
+            "amd64": "ok"
+          },
+          "4.8.16": {
+            "amd64": "ok"
+          },
+          "4.8.17": {
+            "amd64": "ok"
+          },
+          "4.8.5": {
+            "amd64": "ok"
+          },
+          "4.8.8": {
+            "amd64": "ok"
+          },
+          "4.8.9": {
+            "amd64": "ok"
+          }
         }
       }
     }

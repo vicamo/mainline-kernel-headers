@@ -1,38 +1,32 @@
 {
   "series": {
     "lunar": {
-      "columns": [
-        "amd64",
-        "arm64",
-        "armhf",
-        "ppc64el",
-        "riscv64",
-        "s390x"
-      ],
       "versions": {
-        "6.2.0-19": {
-          "amd64": "unavailable",
-          "arm64": "unavailable",
-          "armhf": "unavailable",
-          "ppc64el": "unavailable",
-          "riscv64": "missing_install",
-          "s390x": "unavailable"
-        },
-        "6.2.0-20": {
-          "amd64": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "ppc64el": "ok",
-          "riscv64": "unavailable",
-          "s390x": "ok"
-        },
-        "6.2.0-39": {
-          "amd64": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "ppc64el": "ok",
-          "riscv64": "missing_install",
-          "s390x": "ok"
+        "generic": {
+          "6.2.0-19": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "riscv64": "missing_install",
+            "s390x": "unavailable"
+          },
+          "6.2.0-20": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "riscv64": "unavailable",
+            "s390x": "ok"
+          },
+          "6.2.0-39": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "riscv64": "missing_install",
+            "s390x": "ok"
+          }
         }
       }
     }

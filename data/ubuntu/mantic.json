@@ -1,30 +1,24 @@
 {
   "series": {
     "mantic": {
-      "columns": [
-        "amd64",
-        "arm64",
-        "armhf",
-        "ppc64el",
-        "riscv64",
-        "s390x"
-      ],
       "versions": {
-        "6.5.0-44": {
-          "amd64": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "ppc64el": "ok",
-          "riscv64": "unavailable",
-          "s390x": "ok"
-        },
-        "6.5.0-9": {
-          "amd64": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "ppc64el": "ok",
-          "riscv64": "missing_install",
-          "s390x": "ok"
+        "generic": {
+          "6.5.0-44": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "riscv64": "unavailable",
+            "s390x": "ok"
+          },
+          "6.5.0-9": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "riscv64": "missing_install",
+            "s390x": "ok"
+          }
         }
       }
     }

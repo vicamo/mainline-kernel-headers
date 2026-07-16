@@ -1,69 +1,64 @@
 {
   "series": {
     "xenial": {
-      "columns": [
-        "amd64",
-        "armhf",
-        "i386",
-        "ppc64el",
-        "s390x"
-      ],
       "versions": {
-        "4.15.0-112": {
-          "amd64": "ok",
-          "armhf": "ok",
-          "i386": "ok",
-          "ppc64el": "ok",
-          "s390x": "ok"
-        },
-        "4.15.0-142": {
-          "amd64": "ok",
-          "armhf": "ok",
-          "i386": "ok",
-          "ppc64el": "ok",
-          "s390x": "ok"
-        },
-        "4.15.0-23": {
-          "amd64": "ok",
-          "armhf": "ok",
-          "i386": "ok",
-          "ppc64el": "ok",
-          "s390x": "ok"
-        },
-        "4.15.0-45": {
-          "amd64": "ok",
-          "armhf": "ok",
-          "i386": "ok",
-          "ppc64el": "ok",
-          "s390x": "ok"
-        },
-        "4.4.0-142": {
-          "amd64": "ok",
-          "armhf": "ok",
-          "i386": "ok",
-          "ppc64el": "ok",
-          "s390x": "ok"
-        },
-        "4.4.0-186": {
-          "amd64": "ok",
-          "armhf": "ok",
-          "i386": "ok",
-          "ppc64el": "ok",
-          "s390x": "ok"
-        },
-        "4.4.0-21": {
-          "amd64": "ok",
-          "armhf": "ok",
-          "i386": "ok",
-          "ppc64el": "ok",
-          "s390x": "ok"
-        },
-        "4.4.0-210": {
-          "amd64": "ok",
-          "armhf": "ok",
-          "i386": "ok",
-          "ppc64el": "ok",
-          "s390x": "ok"
+        "generic": {
+          "4.15.0-112": {
+            "amd64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.15.0-142": {
+            "amd64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.15.0-23": {
+            "amd64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.15.0-45": {
+            "amd64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.4.0-142": {
+            "amd64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.4.0-186": {
+            "amd64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.4.0-21": {
+            "amd64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "4.4.0-210": {
+            "amd64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          }
         }
       }
     }

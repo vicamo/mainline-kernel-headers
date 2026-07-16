@@ -1,54 +1,48 @@
 {
   "series": {
     "groovy": {
-      "columns": [
-        "amd64",
-        "arm64",
-        "armhf",
-        "ppc64el",
-        "riscv64",
-        "s390x"
-      ],
       "versions": {
-        "5.7.0-15": {
-          "amd64": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "ppc64el": "ok",
-          "riscv64": "unavailable",
-          "s390x": "ok"
-        },
-        "5.8.0-25": {
-          "amd64": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "ppc64el": "ok",
-          "riscv64": "unavailable",
-          "s390x": "ok"
-        },
-        "5.8.0-32": {
-          "amd64": "unavailable",
-          "arm64": "unavailable",
-          "armhf": "unavailable",
-          "ppc64el": "unavailable",
-          "riscv64": "missing_install",
-          "s390x": "unavailable"
-        },
-        "5.8.0-63": {
-          "amd64": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "ppc64el": "ok",
-          "riscv64": "unavailable",
-          "s390x": "ok"
-        },
-        "5.8.0-7": {
-          "amd64": "unavailable",
-          "arm64": "unavailable",
-          "armhf": "unavailable",
-          "ppc64el": "unavailable",
-          "riscv64": "missing_install",
-          "s390x": "unavailable"
+        "generic": {
+          "5.7.0-15": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "riscv64": "unavailable",
+            "s390x": "ok"
+          },
+          "5.8.0-25": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "riscv64": "unavailable",
+            "s390x": "ok"
+          },
+          "5.8.0-32": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "riscv64": "missing_install",
+            "s390x": "unavailable"
+          },
+          "5.8.0-63": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "riscv64": "unavailable",
+            "s390x": "ok"
+          },
+          "5.8.0-7": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "riscv64": "missing_install",
+            "s390x": "unavailable"
+          }
         }
       }
     }

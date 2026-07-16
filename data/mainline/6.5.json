@@ -1,104 +1,122 @@
 {
   "series": {
     "6.5": {
-      "columns": [
-        "generic/amd64",
-        "generic/arm64",
-        "generic-64k/arm64",
-        "generic/armhf",
-        "generic/ppc64el",
-        "generic/s390x"
-      ],
       "has_archive": true,
       "has_install": true,
       "versions": {
-        "6.5": {
-          "generic-64k/arm64": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok"
+        "generic-64k": {
+          "6.5": {
+            "arm64": "ok"
+          },
+          "6.5.10": {
+            "arm64": "ok"
+          },
+          "6.5.11": {
+            "arm64": "ok"
+          },
+          "6.5.12": {
+            "arm64": "unavailable"
+          },
+          "6.5.13": {
+            "arm64": "unavailable"
+          },
+          "6.5.4": {
+            "arm64": "unavailable"
+          },
+          "6.5.5": {
+            "arm64": "unavailable"
+          },
+          "6.5.6": {
+            "arm64": "unavailable"
+          },
+          "6.5.7": {
+            "arm64": "ok"
+          },
+          "6.5.8": {
+            "arm64": "ok"
+          },
+          "6.5.9": {
+            "arm64": "unavailable"
+          }
         },
-        "6.5.10": {
-          "generic-64k/arm64": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok"
-        },
-        "6.5.11": {
-          "generic-64k/arm64": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok"
-        },
-        "6.5.12": {
-          "generic-64k/arm64": "unavailable",
-          "generic/amd64": "unavailable",
-          "generic/arm64": "unavailable",
-          "generic/armhf": "unavailable",
-          "generic/ppc64el": "unavailable",
-          "generic/s390x": "unavailable"
-        },
-        "6.5.13": {
-          "generic-64k/arm64": "unavailable",
-          "generic/amd64": "unavailable",
-          "generic/arm64": "unavailable",
-          "generic/armhf": "unavailable",
-          "generic/ppc64el": "unavailable",
-          "generic/s390x": "unavailable"
-        },
-        "6.5.4": {
-          "generic-64k/arm64": "unavailable",
-          "generic/amd64": "unavailable",
-          "generic/arm64": "unavailable",
-          "generic/armhf": "unavailable",
-          "generic/ppc64el": "unavailable",
-          "generic/s390x": "unavailable"
-        },
-        "6.5.5": {
-          "generic-64k/arm64": "unavailable",
-          "generic/amd64": "ok",
-          "generic/arm64": "unavailable",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok"
-        },
-        "6.5.6": {
-          "generic-64k/arm64": "unavailable",
-          "generic/amd64": "unavailable",
-          "generic/arm64": "unavailable",
-          "generic/armhf": "unavailable",
-          "generic/ppc64el": "unavailable",
-          "generic/s390x": "unavailable"
-        },
-        "6.5.7": {
-          "generic-64k/arm64": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok"
-        },
-        "6.5.8": {
-          "generic-64k/arm64": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok"
-        },
-        "6.5.9": {
-          "generic-64k/arm64": "unavailable",
-          "generic/amd64": "ok",
-          "generic/arm64": "unavailable",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok"
+        "generic": {
+          "6.5": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "6.5.10": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "6.5.11": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "6.5.12": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "6.5.13": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "6.5.4": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "6.5.5": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "6.5.6": {
+            "amd64": "unavailable",
+            "arm64": "unavailable",
+            "armhf": "unavailable",
+            "ppc64el": "unavailable",
+            "s390x": "unavailable"
+          },
+          "6.5.7": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "6.5.8": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "6.5.9": {
+            "amd64": "ok",
+            "arm64": "unavailable",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          }
         }
       }
     }

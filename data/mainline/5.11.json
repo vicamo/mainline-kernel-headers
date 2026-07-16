@@ -1,148 +1,224 @@
 {
   "series": {
     "5.11": {
-      "columns": [
-        "generic/amd64",
-        "lowlatency/amd64",
-        "generic/arm64",
-        "generic-64k/arm64",
-        "generic/armhf",
-        "generic-lpae/armhf",
-        "generic/ppc64el",
-        "generic/s390x"
-      ],
       "has_archive": true,
       "has_install": true,
       "versions": {
-        "5.11": {
-          "generic-64k/arm64": "ok",
-          "generic-lpae/armhf": "unavailable",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "unavailable",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
+        "generic-64k": {
+          "5.11": {
+            "arm64": "ok"
+          },
+          "5.11.10": {
+            "arm64": "ok"
+          },
+          "5.11.13": {
+            "arm64": "ok"
+          },
+          "5.11.14": {
+            "arm64": "ok"
+          },
+          "5.11.15": {
+            "arm64": "ok"
+          },
+          "5.11.16": {
+            "arm64": "ok"
+          },
+          "5.11.17": {
+            "arm64": "ok"
+          },
+          "5.11.18": {
+            "arm64": "ok"
+          },
+          "5.11.19": {
+            "arm64": "ok"
+          },
+          "5.11.20": {
+            "arm64": "ok"
+          },
+          "5.11.21": {
+            "arm64": "missing_install"
+          },
+          "5.11.22": {
+            "arm64": "missing_install"
+          },
+          "5.11.5": {
+            "arm64": "ok"
+          }
         },
-        "5.11.10": {
-          "generic-64k/arm64": "ok",
-          "generic-lpae/armhf": "unavailable",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "unavailable",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
+        "generic-lpae": {
+          "5.11": {
+            "armhf": "unavailable"
+          },
+          "5.11.10": {
+            "armhf": "unavailable"
+          },
+          "5.11.13": {
+            "armhf": "unavailable"
+          },
+          "5.11.14": {
+            "armhf": "ok"
+          },
+          "5.11.15": {
+            "armhf": "ok"
+          },
+          "5.11.16": {
+            "armhf": "ok"
+          },
+          "5.11.17": {
+            "armhf": "ok"
+          },
+          "5.11.18": {
+            "armhf": "ok"
+          },
+          "5.11.19": {
+            "armhf": "ok"
+          },
+          "5.11.20": {
+            "armhf": "ok"
+          },
+          "5.11.21": {
+            "armhf": "missing_install"
+          },
+          "5.11.22": {
+            "armhf": "missing_install"
+          },
+          "5.11.5": {
+            "armhf": "unavailable"
+          }
         },
-        "5.11.13": {
-          "generic-64k/arm64": "ok",
-          "generic-lpae/armhf": "unavailable",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "unavailable",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
+        "generic": {
+          "5.11": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "unavailable",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "5.11.10": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "unavailable",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "5.11.13": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "unavailable",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "5.11.14": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "5.11.15": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "5.11.16": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "5.11.17": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "5.11.18": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "5.11.19": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "5.11.20": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          },
+          "5.11.21": {
+            "amd64": "missing_install",
+            "arm64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
+            "s390x": "missing_install"
+          },
+          "5.11.22": {
+            "amd64": "missing_install",
+            "arm64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
+            "s390x": "missing_install"
+          },
+          "5.11.5": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "unavailable",
+            "ppc64el": "ok",
+            "s390x": "ok"
+          }
         },
-        "5.11.14": {
-          "generic-64k/arm64": "ok",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "5.11.15": {
-          "generic-64k/arm64": "ok",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "5.11.16": {
-          "generic-64k/arm64": "ok",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "5.11.17": {
-          "generic-64k/arm64": "ok",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "5.11.18": {
-          "generic-64k/arm64": "ok",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "5.11.19": {
-          "generic-64k/arm64": "ok",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "5.11.20": {
-          "generic-64k/arm64": "ok",
-          "generic-lpae/armhf": "ok",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "ok",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
-        },
-        "5.11.21": {
-          "generic-64k/arm64": "missing_install",
-          "generic-lpae/armhf": "missing_install",
-          "generic/amd64": "missing_install",
-          "generic/arm64": "missing_install",
-          "generic/armhf": "missing_install",
-          "generic/ppc64el": "missing_install",
-          "generic/s390x": "missing_install",
-          "lowlatency/amd64": "missing_install"
-        },
-        "5.11.22": {
-          "generic-64k/arm64": "missing_install",
-          "generic-lpae/armhf": "missing_install",
-          "generic/amd64": "missing_install",
-          "generic/arm64": "missing_install",
-          "generic/armhf": "missing_install",
-          "generic/ppc64el": "missing_install",
-          "generic/s390x": "missing_install",
-          "lowlatency/amd64": "missing_install"
-        },
-        "5.11.5": {
-          "generic-64k/arm64": "ok",
-          "generic-lpae/armhf": "unavailable",
-          "generic/amd64": "ok",
-          "generic/arm64": "ok",
-          "generic/armhf": "unavailable",
-          "generic/ppc64el": "ok",
-          "generic/s390x": "ok",
-          "lowlatency/amd64": "ok"
+        "lowlatency": {
+          "5.11": {
+            "amd64": "ok"
+          },
+          "5.11.10": {
+            "amd64": "ok"
+          },
+          "5.11.13": {
+            "amd64": "ok"
+          },
+          "5.11.14": {
+            "amd64": "ok"
+          },
+          "5.11.15": {
+            "amd64": "ok"
+          },
+          "5.11.16": {
+            "amd64": "ok"
+          },
+          "5.11.17": {
+            "amd64": "ok"
+          },
+          "5.11.18": {
+            "amd64": "ok"
+          },
+          "5.11.19": {
+            "amd64": "ok"
+          },
+          "5.11.20": {
+            "amd64": "ok"
+          },
+          "5.11.21": {
+            "amd64": "missing_install"
+          },
+          "5.11.22": {
+            "amd64": "missing_install"
+          },
+          "5.11.5": {
+            "amd64": "ok"
+          }
         }
       }
     }

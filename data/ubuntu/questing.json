@@ -1,33 +1,26 @@
 {
   "series": {
     "questing": {
-      "columns": [
-        "amd64",
-        "amd64v3",
-        "arm64",
-        "armhf",
-        "ppc64el",
-        "riscv64",
-        "s390x"
-      ],
       "versions": {
-        "6.17.0-40": {
-          "amd64": "ok",
-          "amd64v3": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "ppc64el": "ok",
-          "riscv64": "ok",
-          "s390x": "ok"
-        },
-        "6.17.0-5": {
-          "amd64": "ok",
-          "amd64v3": "ok",
-          "arm64": "ok",
-          "armhf": "ok",
-          "ppc64el": "ok",
-          "riscv64": "ok",
-          "s390x": "ok"
+        "generic": {
+          "6.17.0-40": {
+            "amd64": "ok",
+            "amd64v3": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "riscv64": "ok",
+            "s390x": "ok"
+          },
+          "6.17.0-5": {
+            "amd64": "ok",
+            "amd64v3": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
+            "riscv64": "ok",
+            "s390x": "ok"
+          }
         }
       }
     }
