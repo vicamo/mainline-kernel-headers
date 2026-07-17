@@ -1,89 +1,9 @@
 {
   "series": [
     {
-      "name": "stonking",
-      "title": "Ubuntu 26.10 \"Stonking Stingray\"",
-      "version": "26.10"
-    },
-    {
-      "name": "resolute",
-      "title": "Ubuntu 26.04 LTS \"Resolute Raccoon\"",
-      "version": "26.04"
-    },
-    {
-      "name": "questing",
-      "title": "Ubuntu 25.10 \"Questing Quokka\"",
-      "version": "25.10"
-    },
-    {
-      "name": "plucky",
-      "title": "Ubuntu 25.04 \"Plucky Puffin\"",
-      "version": "25.04"
-    },
-    {
-      "name": "oracular",
-      "title": "Ubuntu 24.10 \"Oracular Oriole\"",
-      "version": "24.10"
-    },
-    {
-      "name": "noble",
-      "title": "Ubuntu 24.04 LTS \"Noble Numbat\"",
-      "version": "24.04"
-    },
-    {
-      "name": "mantic",
-      "title": "Ubuntu 23.10 \"Mantic Minotaur\"",
-      "version": "23.10"
-    },
-    {
-      "name": "lunar",
-      "title": "Ubuntu 23.04 \"Lunar Lobster\"",
-      "version": "23.04"
-    },
-    {
-      "name": "kinetic",
-      "title": "Ubuntu 22.10 \"Kinetic Kudu\"",
-      "version": "22.10"
-    },
-    {
-      "name": "jammy",
-      "title": "Ubuntu 22.04 LTS \"Jammy Jellyfish\"",
-      "version": "22.04"
-    },
-    {
-      "name": "impish",
-      "title": "Ubuntu 21.10 \"Impish Indri\"",
-      "version": "21.10"
-    },
-    {
-      "name": "hirsute",
-      "title": "Ubuntu 21.04 \"Hirsute Hippo\"",
-      "version": "21.04"
-    },
-    {
-      "name": "groovy",
-      "title": "Ubuntu 20.10 \"Groovy Gorilla\"",
-      "version": "20.10"
-    },
-    {
-      "name": "focal",
-      "title": "Ubuntu 20.04 LTS \"Focal Fossa\"",
-      "version": "20.04"
-    },
-    {
-      "name": "eoan",
-      "title": "Ubuntu 19.10 \"Eoan Ermine\"",
-      "version": "19.10"
-    },
-    {
-      "name": "disco",
-      "title": "Ubuntu 19.04 \"Disco Dingo\"",
-      "version": "19.04"
-    },
-    {
-      "name": "cosmic",
-      "title": "Ubuntu 18.10 \"Cosmic Cuttlefish\"",
-      "version": "18.10"
+      "name": "artful",
+      "title": "Ubuntu 17.10 \"Artful Aardvark\"",
+      "version": "17.10"
     },
     {
       "name": "bionic",
@@ -91,15 +11,220 @@
       "version": "18.04"
     },
     {
-      "name": "xenial",
-      "title": "Ubuntu 16.04 LTS \"Xenial Xerus\"",
-      "version": "16.04"
+      "name": "breezy",
+      "title": "Ubuntu 5.10 \"Breezy Badger\"",
+      "version": "5.10"
+    },
+    {
+      "name": "cosmic",
+      "title": "Ubuntu 18.10 \"Cosmic Cuttlefish\"",
+      "version": "18.10"
+    },
+    {
+      "name": "dapper",
+      "title": "Ubuntu 6.06 LTS \"Dapper Drake\"",
+      "version": "6.06"
+    },
+    {
+      "name": "disco",
+      "title": "Ubuntu 19.04 \"Disco Dingo\"",
+      "version": "19.04"
+    },
+    {
+      "name": "edgy",
+      "title": "Ubuntu 6.10 \"Edgy Eft\"",
+      "version": "6.10"
+    },
+    {
+      "name": "eoan",
+      "title": "Ubuntu 19.10 \"Eoan Ermine\"",
+      "version": "19.10"
+    },
+    {
+      "name": "feisty",
+      "title": "Ubuntu 7.04 \"Feisty Fawn\"",
+      "version": "7.04"
+    },
+    {
+      "name": "focal",
+      "title": "Ubuntu 20.04 LTS \"Focal Fossa\"",
+      "version": "20.04"
+    },
+    {
+      "name": "groovy",
+      "title": "Ubuntu 20.10 \"Groovy Gorilla\"",
+      "version": "20.10"
+    },
+    {
+      "name": "gutsy",
+      "title": "Ubuntu 7.10 \"Gutsy Gibbon\"",
+      "version": "7.10"
+    },
+    {
+      "name": "hardy",
+      "title": "Ubuntu 8.04 LTS \"Hardy Heron\"",
+      "version": "8.04"
+    },
+    {
+      "name": "hirsute",
+      "title": "Ubuntu 21.04 \"Hirsute Hippo\"",
+      "version": "21.04"
+    },
+    {
+      "name": "hoary",
+      "title": "Ubuntu 5.04 \"Hoary Hedgehog\"",
+      "version": "5.04"
+    },
+    {
+      "name": "impish",
+      "title": "Ubuntu 21.10 \"Impish Indri\"",
+      "version": "21.10"
+    },
+    {
+      "name": "intrepid",
+      "title": "Ubuntu 8.10 \"Intrepid Ibex\"",
+      "version": "8.10"
+    },
+    {
+      "name": "jammy",
+      "title": "Ubuntu 22.04 LTS \"Jammy Jellyfish\"",
+      "version": "22.04"
+    },
+    {
+      "name": "jaunty",
+      "title": "Ubuntu 9.04 \"Jaunty Jackalope\"",
+      "version": "9.04"
+    },
+    {
+      "name": "karmic",
+      "title": "Ubuntu 9.10 \"Karmic Koala\"",
+      "version": "9.10"
+    },
+    {
+      "name": "kinetic",
+      "title": "Ubuntu 22.10 \"Kinetic Kudu\"",
+      "version": "22.10"
+    },
+    {
+      "name": "lucid",
+      "title": "Ubuntu 10.04 LTS \"Lucid Lynx\"",
+      "version": "10.04"
+    },
+    {
+      "name": "lunar",
+      "title": "Ubuntu 23.04 \"Lunar Lobster\"",
+      "version": "23.04"
+    },
+    {
+      "name": "mantic",
+      "title": "Ubuntu 23.10 \"Mantic Minotaur\"",
+      "version": "23.10"
+    },
+    {
+      "name": "maverick",
+      "title": "Ubuntu 10.10 \"Maverick Meerkat\"",
+      "version": "10.10"
+    },
+    {
+      "name": "natty",
+      "title": "Ubuntu 11.04 \"Natty Narwhal\"",
+      "version": "11.04"
+    },
+    {
+      "name": "noble",
+      "title": "Ubuntu 24.04 LTS \"Noble Numbat\"",
+      "version": "24.04"
+    },
+    {
+      "name": "oneiric",
+      "title": "Ubuntu 11.10 \"Oneiric Ocelot\"",
+      "version": "11.10"
+    },
+    {
+      "name": "oracular",
+      "title": "Ubuntu 24.10 \"Oracular Oriole\"",
+      "version": "24.10"
+    },
+    {
+      "name": "plucky",
+      "title": "Ubuntu 25.04 \"Plucky Puffin\"",
+      "version": "25.04"
+    },
+    {
+      "name": "precise",
+      "title": "Ubuntu 12.04 LTS \"Precise Pangolin\"",
+      "version": "12.04"
+    },
+    {
+      "name": "quantal",
+      "title": "Ubuntu 12.10 \"Quantal Quetzal\"",
+      "version": "12.10"
+    },
+    {
+      "name": "questing",
+      "title": "Ubuntu 25.10 \"Questing Quokka\"",
+      "version": "25.10"
+    },
+    {
+      "name": "raring",
+      "title": "Ubuntu 13.04 \"Raring Ringtail\"",
+      "version": "13.04"
+    },
+    {
+      "name": "resolute",
+      "title": "Ubuntu 26.04 LTS \"Resolute Raccoon\"",
+      "version": "26.04"
+    },
+    {
+      "name": "saucy",
+      "title": "Ubuntu 13.10 \"Saucy Salamander\"",
+      "version": "13.10"
+    },
+    {
+      "name": "stonking",
+      "title": "Ubuntu 26.10 \"Stonking Stingray\"",
+      "version": "26.10"
     },
     {
       "name": "trusty",
       "title": "Ubuntu 14.04 LTS \"Trusty Tahr\"",
       "version": "14.04"
+    },
+    {
+      "name": "utopic",
+      "title": "Ubuntu 14.10 \"Utopic Unicorn\"",
+      "version": "14.10"
+    },
+    {
+      "name": "vivid",
+      "title": "Ubuntu 15.04 \"Vivid Vervet\"",
+      "version": "15.04"
+    },
+    {
+      "name": "warty",
+      "title": "Ubuntu 4.10 \"Warty Warthog\"",
+      "version": "4.10"
+    },
+    {
+      "name": "wily",
+      "title": "Ubuntu 15.10 \"Wily Werewolf\"",
+      "version": "15.10"
+    },
+    {
+      "name": "xenial",
+      "title": "Ubuntu 16.04 LTS \"Xenial Xerus\"",
+      "version": "16.04"
+    },
+    {
+      "name": "yakkety",
+      "title": "Ubuntu 16.10 \"Yakkety Yak\"",
+      "version": "16.10"
+    },
+    {
+      "name": "zesty",
+      "title": "Ubuntu 17.04 \"Zesty Zapus\"",
+      "version": "17.04"
     }
   ],
-  "updated": "2026-07-09T17:07:02+00:00"
+  "updated": "2026-07-17T05:06:05+00:00"
 }

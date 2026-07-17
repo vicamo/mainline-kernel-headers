@@ -1,0 +1,260 @@
+{
+  "series": {
+    "raring": {
+      "has_install": false,
+      "versions": {
+        "generic": {
+          "3.8.0-19": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.8.0-21": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.8.0-22": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.8.0-23": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.8.0-25": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.8.0-26": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.8.0-27": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.8.0-29": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.8.0-30": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.8.0-31": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.8.0-32": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.8.0-33": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.8.0-34": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.8.0-35": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          }
+        },
+        "omap4": {
+          "3.5.0-223": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-225": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-226": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-227": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-229": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-231": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-232": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-233": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-234": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-235": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-236": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-237": {
+            "armhf": "missing_install"
+          }
+        },
+        "powerpc-e500": {
+          "3.8.0-10": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-11": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-12": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-13": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-14": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-15": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-16": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-17": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-18": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-19": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-9": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc-e500mc": {
+          "3.8.0-10": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-11": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-12": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-13": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-14": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-15": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-16": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-17": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-18": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-19": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-9": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc-smp": {
+          "3.8.0-10": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-11": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-12": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-13": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-14": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-15": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-16": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-17": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-18": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-19": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-9": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc64-smp": {
+          "3.8.0-10": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-11": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-12": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-13": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-14": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-15": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-16": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-17": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-18": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-19": {
+            "powerpc": "missing_install"
+          },
+          "3.8.0-9": {
+            "powerpc": "missing_install"
+          }
+        }
+      }
+    }
+  },
+  "updated": "2026-07-17T04:44:24+00:00"
+}

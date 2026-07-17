@@ -1,14 +1,136 @@
 {
   "series": {
     "mantic": {
+      "has_install": true,
       "versions": {
+        "aws": {
+          "6.5.0-1008": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1009": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1010": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1011": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1012": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1013": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1014": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1015": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1016": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1017": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1018": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1020": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1021": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1022": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "azure": {
+          "6.5.0-1007": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1008": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1009": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1010": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1011": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1015": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1016": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1017": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1018": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1019": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1021": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1022": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1023": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "gcp": {
+          "6.5.0-1007": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1024": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
         "generic": {
           "6.5.0-44": {
             "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.5.0-9": {
@@ -16,12 +138,84 @@
             "arm64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "missing_install",
+            "riscv64": "ok",
             "s390x": "ok"
+          }
+        },
+        "generic-64k": {
+          "6.5.0-44": {
+            "arm64": "missing_install"
+          },
+          "6.5.0-9": {
+            "arm64": "missing_install"
+          }
+        },
+        "ibm": {
+          "6.5.0-1009": {
+            "amd64": "missing_install"
+          }
+        },
+        "laptop": {
+          "6.5.0-1004": {
+            "arm64": "missing_install"
+          },
+          "6.5.0-1018": {
+            "arm64": "missing_install"
+          }
+        },
+        "lowlatency": {
+          "6.5.0-42": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-9": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "lowlatency-64k": {
+          "6.5.0-42": {
+            "arm64": "missing_install"
+          },
+          "6.5.0-9": {
+            "arm64": "missing_install"
+          }
+        },
+        "oracle": {
+          "6.5.0-1010": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.5.0-1025": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "oracle-64k": {
+          "6.5.0-1025": {
+            "arm64": "missing_install"
+          }
+        },
+        "raspi": {
+          "6.5.0-1005": {
+            "arm64": "missing_install",
+            "armhf": "missing_install"
+          },
+          "6.5.0-1020": {
+            "arm64": "missing_install",
+            "armhf": "missing_install"
+          }
+        },
+        "starfive": {
+          "6.5.0-1002": {
+            "riscv64": "missing_install"
+          },
+          "6.5.0-1016": {
+            "riscv64": "missing_install"
           }
         }
       }
     }
   },
-  "updated": "2026-07-10T02:53:59+00:00"
+  "updated": "2026-07-17T03:26:04+00:00"
 }

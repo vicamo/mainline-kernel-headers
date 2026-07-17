@@ -1,0 +1,617 @@
+{
+  "series": {
+    "oneiric": {
+      "has_install": false,
+      "versions": {
+        "generic": {
+          "3.0.0-12": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-13": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-14": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-15": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-16": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-17": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-19": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-20": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-21": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-22": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-23": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-24": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-25": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-26": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-27": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-28": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-29": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-30": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-31": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-32": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        },
+        "generic-pae": {
+          "3.0.0-12": {
+            "i386": "missing_install"
+          },
+          "3.0.0-13": {
+            "i386": "missing_install"
+          },
+          "3.0.0-14": {
+            "i386": "missing_install"
+          },
+          "3.0.0-15": {
+            "i386": "missing_install"
+          },
+          "3.0.0-16": {
+            "i386": "missing_install"
+          },
+          "3.0.0-17": {
+            "i386": "missing_install"
+          },
+          "3.0.0-19": {
+            "i386": "missing_install"
+          },
+          "3.0.0-20": {
+            "i386": "missing_install"
+          },
+          "3.0.0-21": {
+            "i386": "missing_install"
+          },
+          "3.0.0-22": {
+            "i386": "missing_install"
+          },
+          "3.0.0-23": {
+            "i386": "missing_install"
+          },
+          "3.0.0-24": {
+            "i386": "missing_install"
+          },
+          "3.0.0-25": {
+            "i386": "missing_install"
+          },
+          "3.0.0-26": {
+            "i386": "missing_install"
+          },
+          "3.0.0-27": {
+            "i386": "missing_install"
+          },
+          "3.0.0-28": {
+            "i386": "missing_install"
+          },
+          "3.0.0-29": {
+            "i386": "missing_install"
+          },
+          "3.0.0-30": {
+            "i386": "missing_install"
+          },
+          "3.0.0-31": {
+            "i386": "missing_install"
+          },
+          "3.0.0-32": {
+            "i386": "missing_install"
+          }
+        },
+        "linaro-omap": {
+          "3.0.0-1007": {
+            "armel": "missing_install"
+          }
+        },
+        "linaro-vexpress": {
+          "3.0.0-1007": {
+            "armel": "missing_install"
+          }
+        },
+        "omap": {
+          "3.0.0-12": {
+            "armel": "missing_install"
+          },
+          "3.0.0-13": {
+            "armel": "missing_install"
+          },
+          "3.0.0-14": {
+            "armel": "missing_install"
+          },
+          "3.0.0-15": {
+            "armel": "missing_install"
+          },
+          "3.0.0-16": {
+            "armel": "missing_install"
+          },
+          "3.0.0-17": {
+            "armel": "missing_install"
+          },
+          "3.0.0-19": {
+            "armel": "missing_install"
+          },
+          "3.0.0-20": {
+            "armel": "missing_install"
+          },
+          "3.0.0-21": {
+            "armel": "missing_install"
+          },
+          "3.0.0-22": {
+            "armel": "missing_install"
+          },
+          "3.0.0-23": {
+            "armel": "missing_install"
+          },
+          "3.0.0-24": {
+            "armel": "missing_install"
+          },
+          "3.0.0-25": {
+            "armel": "missing_install"
+          },
+          "3.0.0-26": {
+            "armel": "missing_install"
+          },
+          "3.0.0-27": {
+            "armel": "missing_install"
+          },
+          "3.0.0-28": {
+            "armel": "missing_install"
+          },
+          "3.0.0-29": {
+            "armel": "missing_install"
+          },
+          "3.0.0-30": {
+            "armel": "missing_install"
+          },
+          "3.0.0-31": {
+            "armel": "missing_install"
+          },
+          "3.0.0-32": {
+            "armel": "missing_install"
+          }
+        },
+        "omap4": {
+          "3.0.0-1205": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1206": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1207": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1208": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1209": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1210": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1211": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1212": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1213": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1214": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1215": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1216": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1217": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1218": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1219": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1220": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1221": {
+            "armel": "missing_install"
+          },
+          "3.0.0-1222": {
+            "armel": "missing_install"
+          }
+        },
+        "powerpc": {
+          "3.0.0-12": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-13": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-14": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-15": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-16": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-17": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-19": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-20": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-21": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-22": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-23": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-24": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-25": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-26": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-27": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-28": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-29": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-30": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-31": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-32": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc-smp": {
+          "3.0.0-12": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-13": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-14": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-15": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-16": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-17": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-19": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-20": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-21": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-22": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-23": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-24": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-25": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-26": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-27": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-28": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-29": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-30": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-31": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-32": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc64-smp": {
+          "3.0.0-12": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-13": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-14": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-15": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-16": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-17": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-19": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-20": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-21": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-22": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-23": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-24": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-25": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-26": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-27": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-28": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-29": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-30": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-31": {
+            "powerpc": "missing_install"
+          },
+          "3.0.0-32": {
+            "powerpc": "missing_install"
+          }
+        },
+        "server": {
+          "3.0.0-12": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-13": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-14": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-15": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-16": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-17": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-19": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-20": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-21": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-22": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-23": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-24": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-25": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-26": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-27": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-28": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-29": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-30": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-31": {
+            "amd64": "missing_install"
+          },
+          "3.0.0-32": {
+            "amd64": "missing_install"
+          }
+        },
+        "st1-5": {
+          "2.6.31-800": {
+            "armel": "missing_install"
+          }
+        },
+        "virtual": {
+          "3.0.0-12": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-13": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-14": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-15": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-16": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-17": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-19": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-20": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-21": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-22": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-23": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-24": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-25": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-26": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-27": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-28": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-29": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-30": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-31": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.0.0-32": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        }
+      }
+    }
+  },
+  "updated": "2026-07-17T04:48:48+00:00"
+}

@@ -1,0 +1,61 @@
+{
+  "series": {
+    "artful": {
+      "has_install": true,
+      "versions": {
+        "generic": {
+          "4.13.0-16": {
+            "amd64": "ok",
+            "arm64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "ok",
+            "ppc64el": "missing_install",
+            "s390x": "missing_install"
+          },
+          "4.13.0-21": {
+            "amd64": "ok",
+            "arm64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "ok",
+            "ppc64el": "missing_install",
+            "s390x": "missing_install"
+          },
+          "4.13.0-46": {
+            "amd64": "ok",
+            "arm64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "ok",
+            "ppc64el": "missing_install",
+            "s390x": "missing_install"
+          }
+        },
+        "generic-lpae": {
+          "4.13.0-16": {
+            "armhf": "missing_install"
+          },
+          "4.13.0-21": {
+            "armhf": "missing_install"
+          },
+          "4.13.0-46": {
+            "armhf": "missing_install"
+          }
+        },
+        "lowlatency": {
+          "4.13.0-16": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "4.13.0-21": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "4.13.0-46": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        }
+      }
+    }
+  },
+  "updated": "2026-07-17T04:17:52+00:00"
+}

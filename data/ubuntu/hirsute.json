@@ -1,30 +1,47 @@
 {
   "series": {
     "hirsute": {
+      "has_install": true,
       "versions": {
-        "generic": {
-          "5.11.0-1007": {
-            "amd64": "unavailable",
-            "arm64": "unavailable",
-            "armhf": "unavailable",
-            "ppc64el": "unavailable",
-            "riscv64": "missing_install",
-            "s390x": "unavailable"
+        "aws": {
+          "5.11.0-1006": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.11.0-1027": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "azure": {
+          "5.11.0-1004": {
+            "amd64": "missing_install"
+          },
+          "5.11.0-1027": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "gcp": {
+          "5.11.0-1006": {
+            "amd64": "missing_install"
           },
           "5.11.0-1028": {
-            "amd64": "unavailable",
-            "arm64": "unavailable",
-            "armhf": "unavailable",
-            "ppc64el": "unavailable",
-            "riscv64": "missing_install",
-            "s390x": "unavailable"
+            "amd64": "missing_install"
+          }
+        },
+        "generic": {
+          "5.11.0-1007": {
+            "riscv64": "ok"
+          },
+          "5.11.0-1028": {
+            "riscv64": "ok"
           },
           "5.11.0-16": {
             "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "5.11.0-49": {
@@ -32,12 +49,70 @@
             "arm64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
+          }
+        },
+        "generic-64k": {
+          "5.11.0-16": {
+            "arm64": "missing_install"
+          },
+          "5.11.0-49": {
+            "arm64": "missing_install"
+          }
+        },
+        "generic-lpae": {
+          "5.11.0-16": {
+            "armhf": "missing_install"
+          },
+          "5.11.0-49": {
+            "armhf": "missing_install"
+          }
+        },
+        "kvm": {
+          "5.11.0-1006": {
+            "amd64": "missing_install"
+          },
+          "5.11.0-1024": {
+            "amd64": "missing_install"
+          }
+        },
+        "lowlatency": {
+          "5.11.0-16": {
+            "amd64": "missing_install"
+          },
+          "5.11.0-49": {
+            "amd64": "missing_install"
+          }
+        },
+        "oracle": {
+          "5.11.0-1005": {
+            "amd64": "missing_install"
+          },
+          "5.11.0-1027": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "raspi": {
+          "5.11.0-1007": {
+            "arm64": "missing_install",
+            "armhf": "missing_install"
+          },
+          "5.11.0-1027": {
+            "arm64": "missing_install",
+            "armhf": "missing_install"
+          }
+        },
+        "raspi-nolpae": {
+          "5.11.0-1007": {
+            "armhf": "missing_install"
+          },
+          "5.11.0-1027": {
+            "armhf": "missing_install"
           }
         }
       }
     }
   },
-  "updated": "2026-07-10T02:48:22+00:00"
+  "updated": "2026-07-17T03:40:52+00:00"
 }

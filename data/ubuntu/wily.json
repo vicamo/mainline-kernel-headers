@@ -1,0 +1,76 @@
+{
+  "series": {
+    "wily": {
+      "has_install": true,
+      "versions": {
+        "generic": {
+          "4.2.0-16": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok"
+          },
+          "4.2.0-42": {
+            "amd64": "ok",
+            "arm64": "ok",
+            "armhf": "ok",
+            "i386": "ok",
+            "ppc64el": "ok"
+          }
+        },
+        "generic-lpae": {
+          "4.2.0-16": {
+            "armhf": "missing_install"
+          },
+          "4.2.0-42": {
+            "armhf": "missing_install"
+          }
+        },
+        "lowlatency": {
+          "4.2.0-16": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "4.2.0-42": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        },
+        "powerpc-e500mc": {
+          "4.2.0-16": {
+            "powerpc": "missing_install"
+          },
+          "4.2.0-42": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc-smp": {
+          "4.2.0-16": {
+            "powerpc": "missing_install"
+          },
+          "4.2.0-42": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc64-emb": {
+          "4.2.0-16": {
+            "powerpc": "missing_install"
+          },
+          "4.2.0-42": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc64-smp": {
+          "4.2.0-16": {
+            "powerpc": "missing_install"
+          },
+          "4.2.0-42": {
+            "powerpc": "missing_install"
+          }
+        }
+      }
+    }
+  },
+  "updated": "2026-07-17T04:36:16+00:00"
+}

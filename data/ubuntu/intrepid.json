@@ -1,0 +1,120 @@
+{
+  "series": {
+    "intrepid": {
+      "has_install": false,
+      "versions": {
+        "386": {
+          "2.6.25-2": {
+            "i386": "missing_install"
+          }
+        },
+        "generic": {
+          "2.6.27-11": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.27-14": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.27-15": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.27-16": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.27-17": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.27-7": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.27-9": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        },
+        "hppa32": {
+          "2.6.25-2": {
+            "hppa": "missing_install"
+          }
+        },
+        "hppa64": {
+          "2.6.25-2": {
+            "hppa": "missing_install"
+          }
+        },
+        "lpia": {
+          "2.6.27-4": {
+            "lpia": "missing_install"
+          }
+        },
+        "lpiacompat": {
+          "2.6.27-4": {
+            "lpia": "missing_install"
+          }
+        },
+        "powerpc": {
+          "2.6.25-2": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc-smp": {
+          "2.6.25-2": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc64-smp": {
+          "2.6.25-2": {
+            "powerpc": "missing_install"
+          }
+        },
+        "server": {
+          "2.6.27-11": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.27-14": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.27-15": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.27-16": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.27-17": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.27-7": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.27-9": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        },
+        "sparc64": {
+          "2.6.25-2": {
+            "sparc": "missing_install"
+          }
+        },
+        "sparc64-smp": {
+          "2.6.25-2": {
+            "sparc": "missing_install"
+          }
+        }
+      }
+    }
+  },
+  "updated": "2026-07-17T04:56:50+00:00"
+}

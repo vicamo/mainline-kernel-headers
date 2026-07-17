@@ -1,20 +1,103 @@
 {
   "series": {
     "stonking": {
+      "has_install": false,
       "versions": {
+        "aws": {
+          "7.0.0-1004": {
+            "amd64": "missing_install",
+            "amd64v3": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "aws-64k": {
+          "7.0.0-1004": {
+            "arm64": "missing_install"
+          }
+        },
+        "azure": {
+          "7.0.0-1004": {
+            "amd64": "missing_install",
+            "amd64v3": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "azure-fde": {
+          "7.0.0-1004": {
+            "amd64": "missing_install",
+            "amd64v3": "missing_install"
+          }
+        },
+        "gcp": {
+          "7.0.0-1003": {
+            "amd64": "missing_install",
+            "amd64v3": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "gcp-64k": {
+          "7.0.0-1003": {
+            "arm64": "missing_install"
+          }
+        },
         "generic": {
           "7.0.0-14": {
-            "amd64": "ok",
-            "amd64v3": "ok",
-            "arm64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "riscv64": "ok",
-            "s390x": "ok"
+            "amd64": "missing_install",
+            "amd64v3": "missing_install",
+            "arm64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
+            "riscv64": "missing_install",
+            "s390x": "missing_install"
+          }
+        },
+        "generic-64k": {
+          "7.0.0-14": {
+            "arm64": "missing_install"
+          }
+        },
+        "ibm": {
+          "7.0.0-1005": {
+            "amd64": "missing_install",
+            "amd64v3": "missing_install"
+          }
+        },
+        "oracle": {
+          "7.0.0-1003": {
+            "amd64": "missing_install",
+            "amd64v3": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "oracle-64k": {
+          "7.0.0-1003": {
+            "arm64": "missing_install"
+          }
+        },
+        "raspi": {
+          "7.0.0-1009": {
+            "arm64": "missing_install"
+          }
+        },
+        "raspi-realtime": {
+          "7.0.0-1009": {
+            "arm64": "missing_install"
+          }
+        },
+        "realtime": {
+          "7.0.0-14": {
+            "amd64": "missing_install",
+            "amd64v3": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "realtime-64k": {
+          "7.0.0-14": {
+            "arm64": "missing_install"
           }
         }
       }
     }
   },
-  "updated": "2026-07-10T02:31:45+00:00"
+  "updated": "2026-07-17T03:05:05+00:00"
 }

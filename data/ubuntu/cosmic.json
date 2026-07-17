@@ -1,13 +1,39 @@
 {
   "series": {
     "cosmic": {
+      "has_install": true,
       "versions": {
+        "aws": {
+          "4.18.0-1002": {
+            "amd64": "missing_install"
+          },
+          "4.18.0-1020": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "azure": {
+          "4.18.0-1003": {
+            "amd64": "missing_install"
+          },
+          "4.18.0-1024": {
+            "amd64": "missing_install"
+          }
+        },
+        "gcp": {
+          "4.18.0-1002": {
+            "amd64": "missing_install"
+          },
+          "4.18.0-1015": {
+            "amd64": "missing_install"
+          }
+        },
         "generic": {
           "4.18.0-10": {
             "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
           },
@@ -15,7 +41,7 @@
             "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
           },
@@ -23,13 +49,70 @@
             "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
-            "i386": "missing_install",
+            "i386": "ok",
             "ppc64el": "ok",
             "s390x": "ok"
+          }
+        },
+        "generic-lpae": {
+          "4.18.0-10": {
+            "armhf": "missing_install"
+          },
+          "4.18.0-20": {
+            "armhf": "missing_install"
+          },
+          "4.18.0-25": {
+            "armhf": "missing_install"
+          }
+        },
+        "kvm": {
+          "4.18.0-1003": {
+            "amd64": "missing_install"
+          },
+          "4.18.0-1016": {
+            "amd64": "missing_install"
+          }
+        },
+        "lowlatency": {
+          "4.18.0-10": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "4.18.0-20": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "4.18.0-25": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        },
+        "oem": {
+          "4.15.0-1021": {
+            "amd64": "missing_install"
+          },
+          "4.15.0-1045": {
+            "amd64": "missing_install"
+          }
+        },
+        "oracle": {
+          "4.15.0-1017": {
+            "amd64": "missing_install"
+          }
+        },
+        "snapdragon": {
+          "4.18.0-10": {
+            "arm64": "missing_install"
+          },
+          "4.18.0-20": {
+            "arm64": "missing_install"
+          },
+          "4.18.0-25": {
+            "arm64": "missing_install"
           }
         }
       }
     }
   },
-  "updated": "2026-07-10T02:43:55+00:00"
+  "updated": "2026-07-17T04:10:50+00:00"
 }

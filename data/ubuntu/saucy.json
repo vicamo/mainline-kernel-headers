@@ -1,0 +1,272 @@
+{
+  "series": {
+    "saucy": {
+      "has_install": false,
+      "versions": {
+        "generic": {
+          "3.11.0-12": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.11.0-13": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.11.0-14": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.11.0-15": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.11.0-17": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.11.0-18": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.11.0-19": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.11.0-20": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.11.0-22": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.11.0-23": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.11.0-24": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.11.0-26": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install"
+          }
+        },
+        "generic-lpae": {
+          "3.11.0-12": {
+            "armhf": "missing_install"
+          },
+          "3.11.0-13": {
+            "armhf": "missing_install"
+          },
+          "3.11.0-14": {
+            "armhf": "missing_install"
+          },
+          "3.11.0-15": {
+            "armhf": "missing_install"
+          },
+          "3.11.0-17": {
+            "armhf": "missing_install"
+          },
+          "3.11.0-18": {
+            "armhf": "missing_install"
+          },
+          "3.11.0-19": {
+            "armhf": "missing_install"
+          },
+          "3.11.0-20": {
+            "armhf": "missing_install"
+          },
+          "3.11.0-22": {
+            "armhf": "missing_install"
+          },
+          "3.11.0-23": {
+            "armhf": "missing_install"
+          },
+          "3.11.0-24": {
+            "armhf": "missing_install"
+          },
+          "3.11.0-26": {
+            "armhf": "missing_install"
+          }
+        },
+        "omap4": {
+          "3.5.0-233": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-234": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-235": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-236": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-237": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-238": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-239": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-240": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-241": {
+            "armhf": "missing_install"
+          },
+          "3.5.0-242": {
+            "armhf": "missing_install"
+          }
+        },
+        "powerpc-e500": {
+          "3.11.0-10": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-3": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-4": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-5": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-6": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-7": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-8": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-9": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc-e500mc": {
+          "3.11.0-10": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-3": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-4": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-5": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-6": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-7": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-8": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-9": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc-smp": {
+          "3.11.0-10": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-3": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-4": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-5": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-6": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-7": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-8": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-9": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc64-emb": {
+          "3.11.0-10": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-3": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-4": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-5": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-6": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-7": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-8": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-9": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc64-smp": {
+          "3.11.0-10": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-3": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-4": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-5": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-6": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-7": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-8": {
+            "powerpc": "missing_install"
+          },
+          "3.11.0-9": {
+            "powerpc": "missing_install"
+          }
+        }
+      }
+    }
+  },
+  "updated": "2026-07-17T04:41:32+00:00"
+}

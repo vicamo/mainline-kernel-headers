@@ -1,0 +1,225 @@
+{
+  "series": {
+    "gutsy": {
+      "has_install": false,
+      "versions": {
+        "386": {
+          "2.6.22-14": {
+            "i386": "missing_install"
+          },
+          "2.6.22-15": {
+            "i386": "missing_install"
+          },
+          "2.6.22-16": {
+            "i386": "missing_install"
+          }
+        },
+        "cell": {
+          "2.6.22-14": {
+            "powerpc": "missing_install"
+          },
+          "2.6.22-15": {
+            "powerpc": "missing_install"
+          },
+          "2.6.22-16": {
+            "powerpc": "missing_install"
+          }
+        },
+        "generic": {
+          "2.6.22-14": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.22-15": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.22-16": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        },
+        "hppa32": {
+          "2.6.22-14": {
+            "hppa": "missing_install"
+          },
+          "2.6.22-16": {
+            "hppa": "missing_install"
+          }
+        },
+        "hppa64": {
+          "2.6.22-14": {
+            "hppa": "missing_install"
+          },
+          "2.6.22-16": {
+            "hppa": "missing_install"
+          }
+        },
+        "itanium": {
+          "2.6.22-14": {
+            "ia64": "missing_install"
+          },
+          "2.6.22-15": {
+            "ia64": "missing_install"
+          },
+          "2.6.22-16": {
+            "ia64": "missing_install"
+          }
+        },
+        "lpia": {
+          "2.6.22-14": {
+            "lpia": "missing_install"
+          },
+          "2.6.22-15": {
+            "lpia": "missing_install"
+          },
+          "2.6.22-16": {
+            "lpia": "missing_install"
+          }
+        },
+        "lpiacompat": {
+          "2.6.22-14": {
+            "lpia": "missing_install"
+          },
+          "2.6.22-15": {
+            "lpia": "missing_install"
+          },
+          "2.6.22-16": {
+            "lpia": "missing_install"
+          }
+        },
+        "mckinley": {
+          "2.6.22-14": {
+            "ia64": "missing_install"
+          },
+          "2.6.22-15": {
+            "ia64": "missing_install"
+          },
+          "2.6.22-16": {
+            "ia64": "missing_install"
+          }
+        },
+        "powerpc": {
+          "2.6.22-14": {
+            "powerpc": "missing_install"
+          },
+          "2.6.22-15": {
+            "powerpc": "missing_install"
+          },
+          "2.6.22-16": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc-smp": {
+          "2.6.22-14": {
+            "powerpc": "missing_install"
+          },
+          "2.6.22-15": {
+            "powerpc": "missing_install"
+          },
+          "2.6.22-16": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc64-smp": {
+          "2.6.22-14": {
+            "powerpc": "missing_install"
+          },
+          "2.6.22-15": {
+            "powerpc": "missing_install"
+          },
+          "2.6.22-16": {
+            "powerpc": "missing_install"
+          }
+        },
+        "rt": {
+          "2.6.22-14": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.22-15": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.22-16": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        },
+        "server": {
+          "2.6.22-14": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.22-15": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.22-16": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        },
+        "sparc64": {
+          "2.6.22-14": {
+            "sparc": "missing_install"
+          },
+          "2.6.22-15": {
+            "sparc": "missing_install"
+          },
+          "2.6.22-16": {
+            "sparc": "missing_install"
+          }
+        },
+        "sparc64-smp": {
+          "2.6.22-14": {
+            "sparc": "missing_install"
+          },
+          "2.6.22-15": {
+            "sparc": "missing_install"
+          },
+          "2.6.22-16": {
+            "sparc": "missing_install"
+          }
+        },
+        "ume": {
+          "2.6.22-14": {
+            "i386": "missing_install"
+          },
+          "2.6.22-15": {
+            "i386": "missing_install"
+          },
+          "2.6.22-16": {
+            "i386": "missing_install"
+          }
+        },
+        "virtual": {
+          "2.6.22-14": {
+            "i386": "missing_install"
+          },
+          "2.6.22-15": {
+            "i386": "missing_install"
+          },
+          "2.6.22-16": {
+            "i386": "missing_install"
+          }
+        },
+        "xen": {
+          "2.6.22-14": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.22-15": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.22-16": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        }
+      }
+    }
+  },
+  "updated": "2026-07-17T04:57:02+00:00"
+}

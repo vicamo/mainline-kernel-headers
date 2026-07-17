@@ -1,7 +1,37 @@
 {
   "series": {
     "plucky": {
+      "has_install": true,
       "versions": {
+        "aws": {
+          "6.14.0-1005": {
+            "amd64": "missing_install"
+          },
+          "6.14.0-1018": {
+            "amd64": "missing_install"
+          }
+        },
+        "azure": {
+          "6.14.0-1004": {
+            "amd64": "missing_install"
+          },
+          "6.14.0-1017": {
+            "amd64": "missing_install"
+          }
+        },
+        "azure-fde": {
+          "6.14.0-1017": {
+            "amd64": "missing_install"
+          }
+        },
+        "gcp": {
+          "6.14.0-1006": {
+            "amd64": "missing_install"
+          },
+          "6.14.0-1021": {
+            "amd64": "missing_install"
+          }
+        },
         "generic": {
           "6.14.0-13": {
             "amd64": "ok",
@@ -14,7 +44,6 @@
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.14.0-37": {
@@ -24,9 +53,17 @@
             "riscv64": "ok",
             "s390x": "ok"
           }
+        },
+        "oracle": {
+          "6.14.0-1005": {
+            "amd64": "missing_install"
+          },
+          "6.14.0-1018": {
+            "amd64": "missing_install"
+          }
         }
       }
     }
   },
-  "updated": "2026-07-10T02:28:43+00:00"
+  "updated": "2026-07-17T03:13:54+00:00"
 }

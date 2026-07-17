@@ -1,0 +1,76 @@
+{
+  "series": {
+    "vivid": {
+      "has_install": false,
+      "versions": {
+        "generic": {
+          "3.19.0-15": {
+            "amd64": "missing_install",
+            "arm64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install",
+            "ppc64el": "missing_install"
+          },
+          "3.19.0-84": {
+            "amd64": "missing_install",
+            "arm64": "missing_install",
+            "armhf": "missing_install",
+            "i386": "missing_install",
+            "ppc64el": "missing_install"
+          }
+        },
+        "generic-lpae": {
+          "3.19.0-15": {
+            "armhf": "missing_install"
+          },
+          "3.19.0-84": {
+            "armhf": "missing_install"
+          }
+        },
+        "lowlatency": {
+          "3.19.0-15": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "3.19.0-84": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        },
+        "powerpc-e500mc": {
+          "3.19.0-15": {
+            "powerpc": "missing_install"
+          },
+          "3.19.0-84": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc-smp": {
+          "3.19.0-15": {
+            "powerpc": "missing_install"
+          },
+          "3.19.0-84": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc64-emb": {
+          "3.19.0-15": {
+            "powerpc": "missing_install"
+          },
+          "3.19.0-84": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc64-smp": {
+          "3.19.0-15": {
+            "powerpc": "missing_install"
+          },
+          "3.19.0-84": {
+            "powerpc": "missing_install"
+          }
+        }
+      }
+    }
+  },
+  "updated": "2026-07-17T04:38:25+00:00"
+}

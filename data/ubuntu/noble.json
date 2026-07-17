@@ -1,27 +1,255 @@
 {
   "series": {
     "noble": {
+      "has_install": true,
       "versions": {
+        "aws": {
+          "6.11.0-1014": {
+            "amd64": "missing_install"
+          },
+          "6.14.0-1018": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1007": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1009": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1010": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1012": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1013": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1015": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1017": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1019": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1008": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1047": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1050": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1051": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1052": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1053": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1055": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1057": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1060": {
+            "amd64": "missing_install"
+          },
+          "7.0.0-1007": {
+            "amd64": "missing_install"
+          }
+        },
+        "azure": {
+          "6.11.0-1018": {
+            "amd64": "missing_install"
+          },
+          "6.14.0-1017": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1008": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1010": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1011": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1013": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1015": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1017": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1018": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1020": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1007": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1046": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1051": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1052": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1054": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1056": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1058": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1059": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1062": {
+            "amd64": "missing_install"
+          },
+          "7.0.0-1008": {
+            "amd64": "missing_install"
+          }
+        },
+        "azure-fde": {
+          "6.14.0-1014": {
+            "amd64": "missing_install"
+          },
+          "6.14.0-1017": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1005": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1010": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1015": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1017": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1046": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1053": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1058": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1061": {
+            "amd64": "missing_install"
+          },
+          "7.0.0-1007": {
+            "amd64": "missing_install"
+          }
+        },
+        "gcp": {
+          "6.11.0-1017": {
+            "amd64": "missing_install"
+          },
+          "6.14.0-1020": {
+            "amd64": "missing_install"
+          },
+          "6.14.0-1021": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1008": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1009": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1010": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1012": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1013": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1016": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1018": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1020": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1021": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1007": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1048": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1052": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1053": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1054": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1055": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1058": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1060": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1063": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1064": {
+            "amd64": "missing_install"
+          },
+          "7.0.0-1006": {
+            "amd64": "missing_install"
+          }
+        },
         "generic": {
           "6.11.0-17": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.11.0-29": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.14.0-27": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.14.0-37": {
@@ -46,101 +274,107 @@
             "s390x": "ok"
           },
           "6.17.0-20": {
-            "amd64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
             "riscv64": "ok",
-            "s390x": "ok"
+            "s390x": "missing_install"
           },
           "6.17.0-22": {
-            "amd64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
             "riscv64": "ok",
-            "s390x": "ok"
+            "s390x": "missing_install"
           },
           "6.17.0-23": {
-            "amd64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
             "riscv64": "ok",
-            "s390x": "ok"
+            "s390x": "missing_install"
           },
           "6.17.0-29": {
-            "amd64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
             "riscv64": "ok",
-            "s390x": "ok"
+            "s390x": "missing_install"
           },
           "6.17.0-35": {
-            "amd64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
             "riscv64": "ok",
-            "s390x": "ok"
+            "s390x": "missing_install"
+          },
+          "6.17.0-38": {
+            "riscv64": "ok"
+          },
+          "6.17.0-40": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
+            "s390x": "missing_install"
           },
           "6.8.0-100": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.8.0-101": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.8.0-106": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.8.0-107": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.8.0-110": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.8.0-111": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.8.0-117": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.8.0-124": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.8.0-134": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
+            "s390x": "ok"
+          },
+          "6.8.0-136": {
+            "amd64": "ok",
+            "armhf": "ok",
+            "ppc64el": "ok",
             "s390x": "ok"
           },
           "6.8.0-31": {
@@ -158,50 +392,336 @@
             "s390x": "ok"
           },
           "6.8.0-52": {
-            "amd64": "unavailable",
-            "armhf": "unavailable",
-            "ppc64el": "unavailable",
-            "riscv64": "ok",
-            "s390x": "unavailable"
+            "riscv64": "ok"
           },
           "6.8.0-53": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "6.8.0-60": {
-            "amd64": "unavailable",
-            "armhf": "unavailable",
-            "ppc64el": "unavailable",
-            "riscv64": "ok",
-            "s390x": "unavailable"
+            "riscv64": "ok"
           },
           "6.8.0-71": {
             "amd64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "unavailable",
             "s390x": "ok"
           },
           "7.0.0-14": {
-            "amd64": "ok",
-            "armhf": "ok",
-            "ppc64el": "ok",
-            "riscv64": "unavailable",
-            "s390x": "ok"
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
+            "s390x": "missing_install"
           },
           "7.0.0-27": {
-            "amd64": "unavailable",
-            "armhf": "unavailable",
-            "ppc64el": "unavailable",
-            "riscv64": "ok",
-            "s390x": "unavailable"
+            "riscv64": "ok"
+          },
+          "7.0.0-28": {
+            "amd64": "missing_install",
+            "armhf": "missing_install",
+            "ppc64el": "missing_install",
+            "s390x": "missing_install"
+          }
+        },
+        "gke": {
+          "6.8.0-1003": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1044": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1048": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1049": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1050": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1051": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1054": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1055": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1058": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1059": {
+            "amd64": "missing_install"
+          }
+        },
+        "gkeop": {
+          "6.8.0-1031": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1035": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1036": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1037": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1038": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1041": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1042": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1045": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1046": {
+            "amd64": "missing_install"
+          }
+        },
+        "ibm": {
+          "6.8.0-1005": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1045": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1049": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1050": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1051": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1052": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1055": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1057": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1060": {
+            "amd64": "missing_install"
+          }
+        },
+        "lowlatency": {
+          "6.11.0-1016": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-101": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-106": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-107": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-110": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-111": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-117": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-134": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-31": {
+            "amd64": "missing_install"
+          }
+        },
+        "nvidia": {
+          "6.11.0-1016": {
+            "amd64": "missing_install"
+          },
+          "6.14.0-1015": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1008": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1014": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1018": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1021": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1026": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1046": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1047": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1049": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1050": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1051": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1052": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1054": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1055": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1058": {
+            "amd64": "missing_install"
+          },
+          "7.0.0-1013": {
+            "amd64": "missing_install"
+          }
+        },
+        "nvidia-lowlatency": {
+          "6.8.0-1046": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1047": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1049": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1050": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1051": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1052": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1054": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1055": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1058": {
+            "amd64": "missing_install"
+          }
+        },
+        "oem": {
+          "6.11.0-1025": {
+            "amd64": "missing_install"
+          },
+          "6.11.0-1027": {
+            "amd64": "missing_install"
+          },
+          "6.14.0-1020": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1011": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1012": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1017": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1020": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1023": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1024": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1025": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1028": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1005": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1032": {
+            "amd64": "missing_install"
+          }
+        },
+        "oracle": {
+          "6.14.0-1017": {
+            "amd64": "missing_install"
+          },
+          "6.14.0-1018": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1007": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1009": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1010": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1011": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1014": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1016": {
+            "amd64": "missing_install"
+          },
+          "6.17.0-1018": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1005": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1044": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1047": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1049": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1050": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1052": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1054": {
+            "amd64": "missing_install"
+          },
+          "6.8.0-1057": {
+            "amd64": "missing_install"
           }
         }
       }
     }
   },
-  "updated": "2026-07-10T02:27:47+00:00"
+  "updated": "2026-07-17T03:49:03+00:00"
 }

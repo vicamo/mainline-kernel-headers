@@ -1,7 +1,174 @@
 {
   "series": {
     "eoan": {
+      "has_install": true,
       "versions": {
+        "aws": {
+          "5.3.0-1003": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1004": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1007": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1008": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1009": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1010": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1011": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1013": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1015": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1016": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1017": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1019": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1023": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1028": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1030": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "5.3.0-1032": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "azure": {
+          "5.3.0-1003": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1004": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1007": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1008": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1009": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1010": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1012": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1013": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1016": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1018": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1019": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1020": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1022": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1028": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1031": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1032": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1034": {
+            "amd64": "missing_install"
+          }
+        },
+        "gcp": {
+          "5.3.0-1004": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1005": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1008": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1009": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1011": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1012": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1014": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1016": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1017": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1018": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1020": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1026": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1029": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1030": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1032": {
+            "amd64": "missing_install"
+          }
+        },
         "generic": {
           "5.3.0-18": {
             "amd64": "ok",
@@ -129,9 +296,294 @@
             "ppc64el": "ok",
             "s390x": "ok"
           }
+        },
+        "generic-lpae": {
+          "5.3.0-18": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-19": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-22": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-23": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-24": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-26": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-29": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-40": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-42": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-45": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-46": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-51": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-53": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-55": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-59": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-61": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-62": {
+            "armhf": "missing_install"
+          },
+          "5.3.0-64": {
+            "armhf": "missing_install"
+          }
+        },
+        "kvm": {
+          "5.3.0-1003": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1004": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1007": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1008": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1009": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1010": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1012": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1014": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1015": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1016": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1017": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1023": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1024": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1026": {
+            "amd64": "missing_install"
+          }
+        },
+        "lowlatency": {
+          "5.3.0-18": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-19": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-22": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-23": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-24": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-26": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-29": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-40": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-42": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-45": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-46": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-51": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-53": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-55": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-59": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-61": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-62": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-64": {
+            "amd64": "missing_install"
+          }
+        },
+        "oem": {
+          "4.15.0-1050": {
+            "amd64": "missing_install"
+          },
+          "4.15.0-1059": {
+            "amd64": "missing_install"
+          },
+          "4.15.0-1065": {
+            "amd64": "missing_install"
+          },
+          "4.15.0-1066": {
+            "amd64": "missing_install"
+          },
+          "4.15.0-1067": {
+            "amd64": "missing_install"
+          },
+          "4.15.0-1076": {
+            "amd64": "missing_install"
+          },
+          "4.15.0-1079": {
+            "amd64": "missing_install"
+          },
+          "4.15.0-1087": {
+            "amd64": "missing_install"
+          }
+        },
+        "oracle": {
+          "5.3.0-1002": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1003": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1006": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1007": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1008": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1009": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1011": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1013": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1014": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1016": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1018": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1024": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1027": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1028": {
+            "amd64": "missing_install"
+          },
+          "5.3.0-1030": {
+            "amd64": "missing_install"
+          }
+        },
+        "snapdragon": {
+          "5.3.0-18": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-19": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-22": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-23": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-24": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-26": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-29": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-40": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-42": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-45": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-46": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-51": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-53": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-55": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-59": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-61": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-62": {
+            "arm64": "missing_install"
+          },
+          "5.3.0-64": {
+            "arm64": "missing_install"
+          }
         }
       }
     }
   },
-  "updated": "2026-07-10T02:45:51+00:00"
+  "updated": "2026-07-17T04:12:05+00:00"
 }

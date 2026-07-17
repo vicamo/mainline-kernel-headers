@@ -1,0 +1,131 @@
+{
+  "series": {
+    "edgy": {
+      "has_install": false,
+      "versions": {
+        "386": {
+          "2.6.17-10": {
+            "i386": "missing_install"
+          },
+          "2.6.17-11": {
+            "i386": "missing_install"
+          },
+          "2.6.17-12": {
+            "i386": "missing_install"
+          }
+        },
+        "generic": {
+          "2.6.17-10": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.17-11": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.17-12": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        },
+        "itanium": {
+          "2.6.17-10": {
+            "ia64": "missing_install"
+          },
+          "2.6.17-12": {
+            "ia64": "missing_install"
+          }
+        },
+        "mckinley": {
+          "2.6.17-10": {
+            "ia64": "missing_install"
+          },
+          "2.6.17-12": {
+            "ia64": "missing_install"
+          }
+        },
+        "powerpc": {
+          "2.6.17-10": {
+            "powerpc": "missing_install"
+          },
+          "2.6.17-11": {
+            "powerpc": "missing_install"
+          },
+          "2.6.17-12": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc-smp": {
+          "2.6.17-10": {
+            "powerpc": "missing_install"
+          },
+          "2.6.17-11": {
+            "powerpc": "missing_install"
+          },
+          "2.6.17-12": {
+            "powerpc": "missing_install"
+          }
+        },
+        "powerpc64-smp": {
+          "2.6.17-10": {
+            "powerpc": "missing_install"
+          },
+          "2.6.17-11": {
+            "powerpc": "missing_install"
+          },
+          "2.6.17-12": {
+            "powerpc": "missing_install"
+          }
+        },
+        "server": {
+          "2.6.17-10": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.17-11": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          },
+          "2.6.17-12": {
+            "amd64": "missing_install",
+            "i386": "missing_install"
+          }
+        },
+        "server-bigiron": {
+          "2.6.17-10": {
+            "i386": "missing_install"
+          },
+          "2.6.17-11": {
+            "i386": "missing_install"
+          },
+          "2.6.17-12": {
+            "i386": "missing_install"
+          }
+        },
+        "sparc64": {
+          "2.6.17-10": {
+            "sparc": "missing_install"
+          },
+          "2.6.17-11": {
+            "sparc": "missing_install"
+          },
+          "2.6.17-12": {
+            "sparc": "missing_install"
+          }
+        },
+        "sparc64-smp": {
+          "2.6.17-10": {
+            "sparc": "missing_install"
+          },
+          "2.6.17-11": {
+            "sparc": "missing_install"
+          },
+          "2.6.17-12": {
+            "sparc": "missing_install"
+          }
+        }
+      }
+    }
+  },
+  "updated": "2026-07-17T05:00:53+00:00"
+}

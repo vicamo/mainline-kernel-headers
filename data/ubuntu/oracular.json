@@ -1,14 +1,58 @@
 {
   "series": {
     "oracular": {
+      "has_install": true,
       "versions": {
+        "aws": {
+          "6.11.0-1004": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.11.0-1016": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "azure": {
+          "6.11.0-1004": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.11.0-1017": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.11.0-1018": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "gcp": {
+          "6.11.0-1003": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.11.0-1013": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.11.0-1017": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "gcp-64k": {
+          "6.11.0-1017": {
+            "arm64": "missing_install"
+          }
+        },
         "generic": {
           "6.11.0-29": {
             "amd64": "ok",
             "arm64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "missing_install",
+            "riscv64": "ok",
             "s390x": "ok"
           },
           "6.11.0-8": {
@@ -16,12 +60,78 @@
             "arm64": "ok",
             "armhf": "ok",
             "ppc64el": "ok",
-            "riscv64": "missing_install",
+            "riscv64": "ok",
             "s390x": "ok"
+          }
+        },
+        "generic-64k": {
+          "6.11.0-29": {
+            "arm64": "missing_install"
+          },
+          "6.11.0-8": {
+            "arm64": "missing_install"
+          }
+        },
+        "lowlatency": {
+          "6.11.0-1004": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.11.0-1014": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.11.0-1015": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.11.0-1016": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "lowlatency-64k": {
+          "6.11.0-1004": {
+            "arm64": "missing_install"
+          },
+          "6.11.0-1014": {
+            "arm64": "missing_install"
+          },
+          "6.11.0-1015": {
+            "arm64": "missing_install"
+          },
+          "6.11.0-1016": {
+            "arm64": "missing_install"
+          }
+        },
+        "oracle": {
+          "6.11.0-1006": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          },
+          "6.11.0-1018": {
+            "amd64": "missing_install",
+            "arm64": "missing_install"
+          }
+        },
+        "oracle-64k": {
+          "6.11.0-1006": {
+            "arm64": "missing_install"
+          },
+          "6.11.0-1018": {
+            "arm64": "missing_install"
+          }
+        },
+        "raspi": {
+          "6.11.0-1004": {
+            "arm64": "missing_install"
+          },
+          "6.11.0-1015": {
+            "arm64": "missing_install"
           }
         }
       }
     }
   },
-  "updated": "2026-07-10T02:56:14+00:00"
+  "updated": "2026-07-17T03:17:06+00:00"
 }
