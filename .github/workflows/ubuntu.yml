@@ -1,9 +1,9 @@
 name: Build Ubuntu kernel headers images
 
 on:
-  schedule:
-    # Every Monday at 04:00 UTC
-    - cron: '0 4 * * 1'
+  # schedule:
+  #   # Every Monday at 04:00 UTC
+  #   - cron: '0 4 * * 1'
   workflow_dispatch:
     inputs:
       series:

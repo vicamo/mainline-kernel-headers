@@ -1,9 +1,9 @@
 name: Build mainline kernel images
 
 on:
-  schedule:
-    # Every Saturday at 06:00 UTC
-    - cron: '0 6 * * 6'
+  # schedule:
+  #   # Every Saturday at 06:00 UTC
+  #   - cron: '0 6 * * 6'
   workflow_dispatch:
     inputs:
       kver:
