@@ -185,7 +185,7 @@ jobs:
 
   publish-status:
     needs: [discover, build]
-    if: always() && needs.build.result != 'cancelled'
+    if: always() && needs.build.result != 'cancelled' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
