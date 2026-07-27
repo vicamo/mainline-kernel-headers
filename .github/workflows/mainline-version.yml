@@ -1,0 +1,271 @@
+name: Build mainline kernel headers (per-version)
+
+on:
+  workflow_call:
+    inputs:
+      kver:
+        description: 'Comma-separated X.Y mainline series (e.g. "6.6,6.8,6.12")'
+        required: true
+        type: string
+      series:
+        description: 'Ubuntu codename (e.g. "noble")'
+        required: true
+        type: string
+      max_jobs:
+        # type: string because GHA expressions always produce strings;
+        # workflow_dispatch below uses type: number for the UI.
+        description: 'Max build jobs (0 = no limit, error if > 256, default 256)'
+        required: false
+        type: string
+        default: '256'
+      force:
+        description: 'Rebuild even if tag exists'
+        required: false
+        type: boolean
+        default: false
+  workflow_dispatch:
+    inputs:
+      kver:
+        description: 'Comma-separated X.Y mainline series (e.g. "6.6,6.8,6.12")'
+        required: true
+        type: string
+      series:
+        description: 'Ubuntu codename (e.g. "noble")'
+        required: true
+        type: string
+      max_jobs:
+        description: 'Max build jobs (0 = no limit, error if > 256)'
+        required: false
+        type: number
+        default: 0
+      force:
+        description: 'Rebuild even if tag exists'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      series: ${{ inputs.series }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Discover versions to build
+        id: matrix
+        run: |
+          matrix=$(python3 -c "
+          import json, os, re, subprocess, sys
+          sys.path.insert(0, 'scripts')
+          from lib import IMAGE_PREFIX, ARCHIVE_ANNOTATION_VERSIONS_KEY, inspect_platform_annotation
+
+          kver_list = [v.strip() for v in os.environ['INPUT_KVER'].split(',') if v.strip()]
+          series = os.environ['INPUT_SERIES']
+          force = os.environ['INPUT_FORCE'] == 'true'
+          max_jobs = int(os.environ['INPUT_MAX_JOBS'])
+
+          # Query existing tags from GHCR
+          result = subprocess.run(
+              ['python3', 'scripts/query-ghcr-tags', '--filter', f'-{series}$'],
+              capture_output=True, text=True,
+          )
+          existing_tags = set(result.stdout.strip().split('\n')) if result.stdout.strip() else set()
+
+          # Gather missing (version, flavour, platforms) from archive annotations
+          arch_map = {
+              'amd64': 'linux/amd64',
+              'arm64': 'linux/arm64',
+              'armhf': 'linux/arm/v7',
+              'i386': 'linux/386',
+              'ppc64el': 'linux/ppc64le',
+              's390x': 'linux/s390x',
+              'riscv64': 'linux/riscv64',
+          }
+          matrix_includes = []
+          for kver in kver_list:
+              archive_image = f'{IMAGE_PREFIX}:{kver}-archive'
+              ann = inspect_platform_annotation(archive_image, 'linux/amd64', ARCHIVE_ANNOTATION_VERSIONS_KEY, pushed=True)
+              if not ann:
+                  print(f'WARNING: no archive annotation for {archive_image}', file=sys.stderr)
+                  continue
+              versions_data = json.loads(ann)
+              # versions_data: {version: {arch: [flavours]}}
+              for version, arch_flavours in sorted(versions_data.items()):
+                  # Determine flavours (union across arches, excluding 'all')
+                  flavours = set()
+                  platforms = []
+                  for arch, fl in arch_flavours.items():
+                      if arch == 'all':
+                          continue
+                      if arch not in arch_map:
+                          print(f'ERROR: unknown arch {arch!r} in {version}, add it to arch_map', file=sys.stderr)
+                          sys.exit(1)
+                      flavours.update(fl)
+                      platforms.append(arch_map[arch])
+
+                  for flavour in sorted(flavours):
+                      tag = f'{version}-{flavour}-{series}'
+                      if not force and tag in existing_tags:
+                          continue
+                      # Determine per-flavour platforms (only arches that have this flavour)
+                      flav_platforms = []
+                      for arch, fl in arch_flavours.items():
+                          if arch == 'all':
+                              continue
+                          if flavour in fl:
+                              flav_platforms.append(arch_map[arch])
+                      if not flav_platforms:
+                          continue
+                      matrix_includes.append({
+                          'version': version,
+                          'flavour': flavour,
+                          'platforms': ','.join(sorted(flav_platforms)),
+                      })
+
+          # Sort by version (newest first for tail-cut to drop oldest)
+          def ver_key(item):
+              return tuple(int(x) for x in re.findall(r'\d+', item['version']))
+          matrix_includes.sort(key=ver_key, reverse=True)
+
+          total = len(matrix_includes)
+          if max_jobs == 0 and total > 256:
+              print(f'ERROR: {total} jobs exceeds 256 limit. Set max_jobs > 0 to truncate.', file=sys.stderr)
+              sys.exit(1)
+          if max_jobs > 0 and total > max_jobs:
+              print(f'Truncating {total} → {max_jobs} jobs (dropping oldest versions)', file=sys.stderr)
+              matrix_includes = matrix_includes[:max_jobs]
+
+          print(json.dumps({'include': matrix_includes}) if matrix_includes else json.dumps({'include': []}))
+          ")
+          echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
+          echo "${matrix}" | python3 -m json.tool
+          if [ "$(echo "${matrix}" | python3 -c 'import json,sys; d=json.load(sys.stdin); print(len(d.get("include",[])))')" = "0" ]; then
+            echo "No versions to build for ${{ inputs.series }}"
+          fi
+        env:
+          INPUT_KVER: ${{ inputs.kver }}
+          INPUT_SERIES: ${{ inputs.series }}
+          INPUT_FORCE: ${{ inputs.force && 'true' || 'false' }}
+          INPUT_MAX_JOBS: ${{ fromJSON(inputs.max_jobs) }}
+
+  build:
+    needs: discover
+    if: fromJson(needs.discover.outputs.matrix).include[0] != null
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Maximize Docker disk space
+        uses: vicamo/actions-library/maximize-docker-disk@v1
+
+      - name: Set up QEMU
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq binfmt-support qemu-user-static
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Enable containerd-snapshotter
+        run: |
+          echo '{"features":{"containerd-snapshotter":true}}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ${{ matrix.version }}-${{ matrix.flavour }}-${{ inputs.series }}
+        id: build
+        run: |
+          ./scripts/build-mainline-version \
+            --version "${{ matrix.version }}" \
+            --series "${{ inputs.series }}" \
+            --flavour "${{ matrix.flavour }}" \
+            --platforms "${{ matrix.platforms }}" \
+            ${{ github.ref == 'refs/heads/main' && '--push' || '' }}
+
+      - name: Write result artifact
+        if: always()
+        run: |
+          mkdir -p results
+          status="ok"
+          if [ "${{ steps.build.outcome }}" != "success" ]; then
+            status="failed"
+          fi
+          # Record per-arch status
+          platforms="${{ matrix.platforms }}"
+          archs_json=$(python3 -c "
+          import json
+          platforms = '$platforms'.split(',')
+          oci_to_deb = {
+              'linux/amd64': 'amd64', 'linux/arm64': 'arm64',
+              'linux/arm/v7': 'armhf', 'linux/386': 'i386',
+              'linux/ppc64le': 'ppc64el', 'linux/s390x': 's390x',
+              'linux/riscv64': 'riscv64',
+          }
+          result = {oci_to_deb.get(p, p): '$status' for p in platforms}
+          print(json.dumps(result))
+          ")
+          echo "{\"version\": \"${{ matrix.version }}\", \"flavour\": \"${{ matrix.flavour }}\", \"archs\": ${archs_json}}" \
+            > "results/${{ matrix.version }}-${{ matrix.flavour }}.json"
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: result-${{ matrix.version }}-${{ matrix.flavour }}
+          path: results/
+          retention-days: 1
+
+  collect:
+    needs: [discover, build]
+    if: always() && needs.build.result != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all result artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: result-*
+          path: results
+          merge-multiple: true
+
+      - name: Merge into gap report
+        run: |
+          python3 -c "
+          import json, glob, os
+
+          series = os.environ['SERIES']
+          results = {}
+          for f in sorted(glob.glob('results/*.json')):
+              with open(f) as fh:
+                  data = json.load(fh)
+              flavour = data['flavour']
+              version = data['version']
+              archs = data['archs']
+              results.setdefault(flavour, {})[version] = archs
+
+          report = {'series': series, 'versions': results}
+          print(json.dumps(report, indent=2))
+          with open('gap-report.json', 'w') as f:
+              json.dump(report, f, indent=2)
+          "
+        env:
+          SERIES: ${{ inputs.series }}
+
+      - name: Upload gap report
+        uses: actions/upload-artifact@v7
+        with:
+          name: gap-report-mainline-${{ inputs.series }}
+          path: gap-report.json
+          retention-days: 1

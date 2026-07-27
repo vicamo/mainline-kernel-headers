@@ -1,9 +1,9 @@
 name: Build Ubuntu kernel headers images
 
 on:
-  # schedule:
-  #   # Every Monday at 04:00 UTC
-  #   - cron: '0 4 * * 1'
+  schedule:
+    # Every Monday at 04:00 UTC
+    - cron: '0 4 * * 1'
   workflow_dispatch:
     inputs:
       series:
@@ -11,157 +11,63 @@ on:
         required: false
         type: string
         default: 'active'
-      scratch:
-        description: 'Build ubuntu image from scratch instead of the previous image'
+      max_jobs:
+        description: 'Max build jobs per series (0 = no limit/error if >256, default 256 for schedule)'
+        required: false
+        type: number
+        default: 0
+      force:
+        description: 'Rebuild even if tag exists'
         required: false
         type: boolean
         default: false
-      limit:
-        description: 'Max kernels to install per build (0 = unlimited, empty = Dockerfile default 50)'
-        required: false
-        type: string
-        default: ''
 
 jobs:
   discover:
     runs-on: ubuntu-latest
     outputs:
-      series: ${{ steps.filter.outputs.series }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - name: Get Ubuntu releases
         id: releases
         uses: vicamo/actions-library/ubuntu-releases@v1
 
-      - name: Filter active series
-        id: filter
+      - name: Build fan-out matrix
+        id: matrix
         run: |
-          series=$(python3 -c "
+          matrix=$(python3 -c "
           import json, os
+
           input_series = os.environ['INPUT_SERIES']
           releases = json.loads(os.environ['RELEASES_JSON'])
-          by_codename = {r['codename']: r for r in releases}
+
           if input_series == 'active':
-              names = [r['codename'] for r in releases if r['active']]
+              series_list = [r['codename'] for r in releases if r['active']]
           elif input_series == 'all':
-              names = [r['codename'] for r in releases]
+              series_list = [r['codename'] for r in releases]
           else:
-              names = [s.strip() for s in input_series.split(',') if s.strip()]
-          result = []
-          for name in names:
-              entry = {'codename': name}
-              r = by_codename.get(name, {})
-              if r.get('suite'):
-                  entry['suite'] = r['suite']
-              if r.get('release'):
-                  entry['release'] = r['release']
-              result.append(entry)
-          print(json.dumps(result))
+              series_list = [s.strip() for s in input_series.split(',') if s.strip()]
+
+          matrix_includes = [{'series': s} for s in series_list]
+          print(json.dumps({'include': matrix_includes}))
           ")
-          echo "series=${series}" >> "$GITHUB_OUTPUT"
+          echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
+          echo "${matrix}" | python3 -m json.tool
         env:
           INPUT_SERIES: ${{ inputs.series || 'active' }}
           RELEASES_JSON: ${{ steps.releases.outputs.json }}
 
-  headers:
+  build-series:
     needs: discover
-    if: needs.discover.outputs.series != '[]'
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
+    if: fromJson(needs.discover.outputs.matrix).include[0] != null
     strategy:
       fail-fast: false
       max-parallel: 4
-      matrix:
-        include: ${{ fromJson(needs.discover.outputs.series) }}
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Maximize Docker disk space
-        uses: vicamo/actions-library/maximize-docker-disk@v1
-
-      - name: Set up QEMU (Ubuntu)
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -yq binfmt-support qemu-user-static
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Enable containerd-snapshotter
-        run: |
-          echo '{"features":{"containerd-snapshotter":true}}' | sudo tee /etc/docker/daemon.json
-          sudo systemctl restart docker
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push headers image
-        run: |
-          ./scripts/build-ubuntu "${{ matrix.codename }}" --push \
-              ${{ inputs.scratch && '--scratch' || '' }} \
-              ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }} \
-              ${{ matrix.suite && format('--suite {0}', matrix.suite) || '' }} \
-              ${{ matrix.release && format('--release {0}', matrix.release) || '' }}
-
-      - name: Generate gap report
-        if: always()
-        run: |
-          mkdir -p _site/data
-          python3 scripts/report-gaps-ubuntu --format json "${{ matrix.codename }}" > "_site/data/${{ matrix.codename }}.json"
-          python3 scripts/report-gaps-ubuntu --from-json < "_site/data/${{ matrix.codename }}.json" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload gap report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: ubuntu-gap-report-${{ matrix.codename }}
-          path: _site/data/${{ matrix.codename }}.json
-          retention-days: 1
-
-  publish-status:
-    needs: [discover, headers]
-    if: always() && needs.headers.result != 'cancelled' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+    uses: ./.github/workflows/ubuntu-version.yml
+    with:
+      series: ${{ matrix.series }}
+      max_jobs: ${{ github.event_name == 'schedule' && 256 || inputs.max_jobs }}
+      force: ${{ inputs.force || false }}
     permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Download gap reports
-        uses: actions/download-artifact@v8
-        with:
-          pattern: ubuntu-gap-report-*
-          path: _site/data
-          merge-multiple: true
-
-      - name: Checkout gh-pages
-        uses: actions/checkout@v7
-        with:
-          ref: gh-pages
-          path: gh-pages
-        continue-on-error: true
-
-      - name: Prepare gh-pages content
-        run: |
-          mkdir -p gh-pages/data/ubuntu
-
-          cp pages/index.html gh-pages/index.html
-
-          # Merge new JSON reports from artifacts (overwrite with fresh data)
-          for f in _site/data/*.json; do
-            [ -f "${f}" ] && cp "${f}" "gh-pages/data/ubuntu/$(basename "${f}")"
-          done
-
-          python3 scripts/rebuild-pages-meta ubuntu gh-pages/data/ubuntu \
-            | tee gh-pages/data/ubuntu/meta.json
-
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./gh-pages
-          keep_files: true
+      packages: write

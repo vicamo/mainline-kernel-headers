@@ -1,9 +1,9 @@
 name: Build mainline kernel images
 
 on:
-  # schedule:
-  #   # Every Saturday at 06:00 UTC
-  #   - cron: '0 6 * * 6'
+  schedule:
+    # Every Saturday at 06:00 UTC
+    - cron: '0 6 * * 6'
   workflow_dispatch:
     inputs:
       kver:
@@ -11,218 +11,157 @@ on:
         required: false
         type: string
         default: 'active'
-      force_install:
-        description: 'Force rebuild mainline image even if archive is unchanged'
-        required: false
-        type: boolean
-        default: false
-      scratch:
-        description: 'Build mainline image from scratch instead of the previous image'
-        required: false
-        type: boolean
-        default: false
-      limit:
-        description: 'Max kernel versions to install per build (0 = unlimited, empty = Dockerfile default 50)'
+      series:
+        description: 'Ubuntu series, comma-separated (e.g. "noble,stonking"). Use "active" for active series, "all" for all releases.'
         required: false
         type: string
-        default: ''
+        default: 'active'
+      max_jobs:
+        description: 'Max build jobs per series (0 = no limit/error if >256, default 256 for schedule)'
+        required: false
+        type: number
+        default: 0
+      force:
+        description: 'Rebuild even if tag exists'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   discover:
     runs-on: ubuntu-latest
     outputs:
-      versions: ${{ steps.versions.outputs.matrix }}
+      matrix: ${{ steps.matrix.outputs.matrix }}
     steps:
       - uses: actions/checkout@v7
 
-      - name: Discover active versions (schedule)
-        if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.kver == 'active')
+      - name: Get Ubuntu releases
+        id: releases
+        uses: vicamo/actions-library/ubuntu-releases@v1
+
+      - name: Build fan-out matrix
+        id: matrix
         run: |
-          matrix=$(curl -fsSL https://www.kernel.org/releases.json | python3 -c "
-          import json, sys, re
-          data = json.load(sys.stdin)
-          seen = set()
-          versions = []
-          for r in data['releases']:
-              if r['moniker'] not in ('stable', 'longterm'):
-                  continue
-              if r['iseol']:
-                  continue
-              m = re.match(r'^(\d+\.\d+)', r['version'])
-              if m:
+          matrix=$(python3 -c "
+          import json, os, re, sys, urllib.request
+
+          sys.path.insert(0, 'scripts')
+          from lib.series import series_for_kver, RELEASE_KERNELS
+
+          input_kver = os.environ['INPUT_KVER']
+          input_series = os.environ['INPUT_SERIES']
+          releases = json.loads(os.environ['RELEASES_JSON'])
+          event_name = os.environ['EVENT_NAME']
+
+          # Resolve kver list
+          if input_kver == 'active':
+              data = json.loads(urllib.request.urlopen('https://www.kernel.org/releases.json').read())
+              seen = set()
+              kver_list = []
+              for r in data['releases']:
+                  if r['moniker'] not in ('stable', 'longterm'):
+                      continue
+                  if r['iseol']:
+                      continue
+                  m = re.match(r'^(\d+\.\d+)', r['version'])
+                  if m and m.group(1) not in seen:
+                      seen.add(m.group(1))
+                      kver_list.append(m.group(1))
+          elif input_kver == 'all':
+              html = urllib.request.urlopen('https://kernel.ubuntu.com/mainline/').read().decode()
+              seen = set()
+              kver_list = []
+              for m in re.finditer(r'href=\"v(\d+\.\d+)(?:\.\d+)?/\"', html):
                   series = m.group(1)
+                  major, minor = (int(x) for x in series.split('.'))
+                  if (major, minor) < (4, 7):
+                      continue
                   if series not in seen:
                       seen.add(series)
-                      versions.append(series)
-          print(json.dumps(versions))
+                      kver_list.append(series)
+              kver_list.sort(key=lambda s: tuple(int(x) for x in s.split('.')))
+          else:
+              raw = [v.strip() for v in input_kver.split(',') if v.strip()]
+              need_expand = any(re.fullmatch(r'\d+\.x', v) for v in raw)
+              all_series = None
+              if need_expand:
+                  html = urllib.request.urlopen('https://kernel.ubuntu.com/mainline/').read().decode()
+                  all_series = set()
+                  for m in re.finditer(r'href=\"v(\d+\.\d+)(?:\.\d+)?/\"', html):
+                      all_series.add(m.group(1))
+              kver_list = []
+              seen = set()
+              for v in raw:
+                  wm = re.fullmatch(r'(\d+)\.x', v)
+                  if wm:
+                      major = int(wm.group(1))
+                      matched = sorted(
+                          [s for s in all_series if int(s.split('.')[0]) == major],
+                          key=lambda s: tuple(int(x) for x in s.split('.'))
+                      )
+                      for s in matched:
+                          if s not in seen:
+                              seen.add(s)
+                              kver_list.append(s)
+                  else:
+                      if v not in seen:
+                          seen.add(v)
+                          kver_list.append(v)
+
+          # Resolve series list
+          by_codename = {r['codename']: r for r in releases}
+          if input_series == 'active':
+              series_list = [r['codename'] for r in releases if r['active']]
+          elif input_series == 'all':
+              series_list = [r['codename'] for r in releases]
+          else:
+              series_list = [s.strip() for s in input_series.split(',') if s.strip()]
+
+          # Build codename → kver mapping
+          # For each (kver, codename): only include if series_for_kver(kver) <= codename
+          codename_order = [r.codename for r in RELEASE_KERNELS]
+          def codename_idx(c):
+              try:
+                  return codename_order.index(c)
+              except ValueError:
+                  return 9999
+
+          matrix_includes = []
+          for series in series_list:
+              s_idx = codename_idx(series)
+              valid_kvers = []
+              for kver in kver_list:
+                  origin = series_for_kver(kver)
+                  if codename_idx(origin) <= s_idx:
+                      valid_kvers.append(kver)
+              if valid_kvers:
+                  matrix_includes.append({
+                      'series': series,
+                      'kver': ','.join(valid_kvers),
+                  })
+
+          print(json.dumps({'include': matrix_includes}))
           ")
-          echo "matrix=${matrix}" >> "$GITHUB_ENV"
-
-      - name: Discover all versions >= 4.7
-        if: github.event_name == 'workflow_dispatch' && inputs.kver == 'all'
-        run: |
-          matrix=$(curl -fsSL https://kernel.ubuntu.com/mainline/ | python3 -c "
-          import sys, re, json
-          html = sys.stdin.read()
-          seen = set()
-          versions = []
-          for m in re.finditer(r'href=\"v(\d+\.\d+)(?:\.\d+)?/\"', html):
-              series = m.group(1)
-              major, minor = (int(x) for x in series.split('.'))
-              if (major, minor) < (4, 7):
-                  continue
-              if series not in seen:
-                  seen.add(series)
-                  versions.append(series)
-          versions.sort(key=lambda s: tuple(int(x) for x in s.split('.')))
-          print(json.dumps(versions))
-          ")
-          echo "matrix=${matrix}" >> "$GITHUB_ENV"
-
-      - name: Parse input versions (workflow_dispatch)
-        if: github.event_name == 'workflow_dispatch' && inputs.kver != 'active' && inputs.kver != 'all'
-        run: |
-          matrix=$(echo "${{ inputs.kver }}" | python3 -c "
-          import sys, json, re, urllib.request
-
-          raw = [v.strip() for v in sys.stdin.read().split(',') if v.strip()]
-          # Check if any entry uses wildcard 'x'
-          need_expand = any(re.fullmatch(r'\d+\.x', v) for v in raw)
-          all_series = None
-          if need_expand:
-              html = urllib.request.urlopen('https://kernel.ubuntu.com/mainline/').read().decode()
-              all_series = set()
-              for m in re.finditer(r'href=\"v(\d+\.\d+)(?:\.\d+)?/\"', html):
-                  all_series.add(m.group(1))
-
-          versions = []
-          seen = set()
-          for v in raw:
-              wm = re.fullmatch(r'(\d+)\.x', v)
-              if wm:
-                  major = int(wm.group(1))
-                  matched = sorted(
-                      [s for s in all_series if int(s.split('.')[0]) == major],
-                      key=lambda s: tuple(int(x) for x in s.split('.'))
-                  )
-                  for s in matched:
-                      if s not in seen:
-                          seen.add(s)
-                          versions.append(s)
-              else:
-                  if v not in seen:
-                      seen.add(v)
-                      versions.append(v)
-          print(json.dumps(versions))
-          ")
-          echo "matrix=${matrix}" >> "$GITHUB_ENV"
-
-      - name: Set output
-        id: versions
-        run: |
           echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
+          echo "${matrix}" | python3 -m json.tool
+        env:
+          INPUT_KVER: ${{ inputs.kver || 'active' }}
+          INPUT_SERIES: ${{ inputs.series || 'active' }}
+          RELEASES_JSON: ${{ steps.releases.outputs.json }}
+          EVENT_NAME: ${{ github.event_name }}
 
-  build:
+  build-series:
     needs: discover
-    runs-on: ubuntu-latest
-    permissions:
-      packages: write
+    if: fromJson(needs.discover.outputs.matrix).include[0] != null
     strategy:
       fail-fast: false
       max-parallel: 4
-      matrix:
-        kver: ${{ fromJson(needs.discover.outputs.versions) }}
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Maximize Docker disk space
-        uses: vicamo/actions-library/maximize-docker-disk@v1
-
-      - name: Set up QEMU (Ubuntu)
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -yq binfmt-support qemu-user-static
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
-
-      - name: Enable containerd-snapshotter
-        run: |
-          echo '{"features":{"containerd-snapshotter":true}}' | sudo tee /etc/docker/daemon.json
-          sudo systemctl restart docker
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v4
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build and push archive for ${{ matrix.kver }}
-        run: ./scripts/build-archive "${{ matrix.kver }}" --push
-
-      - name: Build and push mainline image for ${{ matrix.kver }}
-        run: |
-          ./scripts/build-mainline "${{ matrix.kver }}" --push \
-              ${{ inputs.force_install && '--force' || '' }} \
-              ${{ inputs.scratch && '--scratch' || '' }} \
-              ${{ inputs.limit && format('--limit {0}', inputs.limit) || '' }}
-
-      - name: Gap report for ${{ matrix.kver }}
-        if: always()
-        run: |
-          mkdir -p _site/data
-          python3 scripts/report-gaps-mainline --format json "${{ matrix.kver }}" > "_site/data/${{ matrix.kver }}.json"
-          python3 scripts/report-gaps-mainline --from-json < "_site/data/${{ matrix.kver }}.json" >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload gap report
-        if: always()
-        uses: actions/upload-artifact@v7
-        with:
-          name: gap-report-${{ matrix.kver }}
-          path: _site/data/${{ matrix.kver }}.json
-          retention-days: 1
-
-  publish-status:
-    needs: [discover, build]
-    if: always() && needs.build.result != 'cancelled' && github.ref == 'refs/heads/main'
-    runs-on: ubuntu-latest
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+    uses: ./.github/workflows/mainline-version.yml
+    with:
+      kver: ${{ matrix.kver }}
+      series: ${{ matrix.series }}
+      max_jobs: ${{ github.event_name == 'schedule' && 256 || inputs.max_jobs }}
+      force: ${{ inputs.force || false }}
     permissions:
-      contents: write
-    steps:
-      - uses: actions/checkout@v7
-
-      - name: Download gap reports
-        uses: actions/download-artifact@v8
-        with:
-          pattern: gap-report-*
-          path: _site/data
-          merge-multiple: true
-
-      - name: Checkout gh-pages
-        uses: actions/checkout@v7
-        with:
-          ref: gh-pages
-          path: gh-pages
-        continue-on-error: true
-
-      - name: Prepare gh-pages content
-        run: |
-          mkdir -p gh-pages/data/mainline
-
-          cp pages/index.html gh-pages/index.html
-
-          # Merge new JSON reports from artifacts (overwrite with fresh data)
-          for f in _site/data/*.json; do
-            [ -f "${f}" ] && cp "${f}" "gh-pages/data/mainline/$(basename "${f}")"
-          done
-
-          python3 scripts/rebuild-pages-meta mainline gh-pages/data/mainline \
-            | tee gh-pages/data/mainline/meta.json
-
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./gh-pages
-          keep_files: true
+      packages: write

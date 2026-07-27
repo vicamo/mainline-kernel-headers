@@ -1,0 +1,265 @@
+name: Build Ubuntu kernel headers (per-version)
+
+on:
+  workflow_call:
+    inputs:
+      series:
+        description: 'Ubuntu codename (e.g. "noble")'
+        required: true
+        type: string
+      max_jobs:
+        # type: string because GHA expressions always produce strings;
+        # workflow_dispatch below uses type: number for the UI.
+        description: 'Max build jobs (0 = no limit, error if > 256, default 256)'
+        required: false
+        type: string
+        default: '256'
+      force:
+        description: 'Rebuild even if tag exists'
+        required: false
+        type: boolean
+        default: false
+  workflow_dispatch:
+    inputs:
+      series:
+        description: 'Ubuntu codename (e.g. "noble")'
+        required: true
+        type: string
+      max_jobs:
+        description: 'Max build jobs (0 = no limit, error if > 256)'
+        required: false
+        type: number
+        default: 0
+      force:
+        description: 'Rebuild even if tag exists'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Enable containerd-snapshotter
+        run: |
+          echo '{"features":{"containerd-snapshotter":true}}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker
+
+      - name: Set up QEMU
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq binfmt-support qemu-user-static
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Discover versions to build
+        id: matrix
+        run: |
+          matrix=$(python3 -c "
+          import json, os, re, subprocess, sys
+          sys.path.insert(0, 'scripts')
+          from lib import IMAGE_PREFIX, detect_platforms
+
+          series = os.environ['INPUT_SERIES']
+          force = os.environ['INPUT_FORCE'] == 'true'
+          max_jobs = int(os.environ['INPUT_MAX_JOBS'])
+
+          dkms_image = f'{IMAGE_PREFIX}:{series}-dkms'
+
+          # Detect available platforms from dkms image
+          platforms = detect_platforms(dkms_image)
+          if not platforms:
+              print(f'ERROR: cannot detect platforms from {dkms_image}', file=sys.stderr)
+              sys.exit(1)
+
+          # Query apt-cache on each platform to find available headers
+          # {kabi}-{flavour} → set of platforms
+          available = {}
+          flavour_re = re.compile(r'^linux-headers-(\d+\.\d+\.0-\d+)-(generic\S*|oem\S*)$')
+
+          for platform in platforms:
+              result = subprocess.run(
+                  ['docker', 'run', '--rm', '--platform', platform, dkms_image,
+                   'bash', '-c', 'apt-get update -qq >/dev/null 2>&1 && apt-cache search linux-headers'],
+                  capture_output=True, text=True,
+              )
+              if result.returncode != 0:
+                  print(f'WARNING: apt-cache failed on {platform}', file=sys.stderr)
+                  continue
+              for line in result.stdout.splitlines():
+                  pkg = line.split()[0] if line.strip() else ''
+                  m = flavour_re.match(pkg)
+                  if m:
+                      kabi = m.group(1)
+                      flavour = m.group(2)
+                      key = (kabi, flavour)
+                      available.setdefault(key, set()).add(platform)
+
+          # Query existing tags from GHCR
+          result = subprocess.run(
+              ['python3', 'scripts/query-ghcr-tags', '--filter', f'-{series}\$'],
+              capture_output=True, text=True,
+          )
+          existing_tags = set(result.stdout.strip().split('\n')) if result.stdout.strip() else set()
+
+          # Compute missing
+          matrix_includes = []
+          for (kabi, flavour), plats in sorted(available.items()):
+              tag = f'{kabi}-{flavour}-{series}'
+              if not force and tag in existing_tags:
+                  continue
+              matrix_includes.append({
+                  'kabi': kabi,
+                  'flavour': flavour,
+                  'platforms': ','.join(sorted(plats)),
+              })
+
+          # Sort by kabi version (newest first)
+          def kabi_key(item):
+              return tuple(int(x) for x in re.findall(r'\d+', item['kabi']))
+          matrix_includes.sort(key=kabi_key, reverse=True)
+
+          total = len(matrix_includes)
+          if max_jobs == 0 and total > 256:
+              print(f'ERROR: {total} jobs exceeds 256 limit. Set max_jobs > 0 to truncate.', file=sys.stderr)
+              sys.exit(1)
+          if max_jobs > 0 and total > max_jobs:
+              print(f'Truncating {total} → {max_jobs} jobs (dropping oldest versions)', file=sys.stderr)
+              matrix_includes = matrix_includes[:max_jobs]
+
+          print(json.dumps({'include': matrix_includes}) if matrix_includes else json.dumps({'include': []}))
+          ")
+          echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
+          echo "${matrix}" | python3 -m json.tool
+        env:
+          INPUT_SERIES: ${{ inputs.series }}
+          INPUT_FORCE: ${{ inputs.force && 'true' || 'false' }}
+          INPUT_MAX_JOBS: ${{ fromJSON(inputs.max_jobs) }}
+
+  build:
+    needs: discover
+    if: fromJson(needs.discover.outputs.matrix).include[0] != null
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Set up QEMU
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -yq binfmt-support qemu-user-static
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Enable containerd-snapshotter
+        run: |
+          echo '{"features":{"containerd-snapshotter":true}}' | sudo tee /etc/docker/daemon.json
+          sudo systemctl restart docker
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push ${{ matrix.kabi }}-${{ matrix.flavour }}-${{ inputs.series }}
+        id: build
+        run: |
+          ./scripts/build-ubuntu-version \
+            --kabi "${{ matrix.kabi }}" \
+            --flavour "${{ matrix.flavour }}" \
+            --series "${{ inputs.series }}" \
+            --platforms "${{ matrix.platforms }}" \
+            ${{ github.ref == 'refs/heads/main' && '--push' || '' }}
+
+      - name: Write result artifact
+        if: always()
+        run: |
+          mkdir -p results
+          status="ok"
+          if [ "${{ steps.build.outcome }}" != "success" ]; then
+            status="failed"
+          fi
+          platforms="${{ matrix.platforms }}"
+          archs_json=$(python3 -c "
+          import json
+          platforms = '$platforms'.split(',')
+          oci_to_deb = {
+              'linux/amd64': 'amd64', 'linux/arm64': 'arm64',
+              'linux/arm/v7': 'armhf', 'linux/386': 'i386',
+              'linux/ppc64le': 'ppc64el', 'linux/s390x': 's390x',
+              'linux/riscv64': 'riscv64',
+          }
+          result = {oci_to_deb.get(p, p): '$status' for p in platforms}
+          print(json.dumps(result))
+          ")
+          echo "{\"kabi\": \"${{ matrix.kabi }}\", \"flavour\": \"${{ matrix.flavour }}\", \"archs\": ${archs_json}}" \
+            > "results/${{ matrix.kabi }}-${{ matrix.flavour }}.json"
+
+      - name: Upload result
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: result-${{ matrix.kabi }}-${{ matrix.flavour }}
+          path: results/
+          retention-days: 1
+
+  collect:
+    needs: [discover, build]
+    if: always() && needs.build.result != 'cancelled'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all result artifacts
+        uses: actions/download-artifact@v8
+        with:
+          pattern: result-*
+          path: results
+          merge-multiple: true
+
+      - name: Merge into gap report
+        run: |
+          python3 -c "
+          import json, glob, os
+
+          series = os.environ['SERIES']
+          results = {}
+          for f in sorted(glob.glob('results/*.json')):
+              with open(f) as fh:
+                  data = json.load(fh)
+              flavour = data['flavour']
+              kabi = data['kabi']
+              archs = data['archs']
+              results.setdefault(flavour, {})[kabi] = archs
+
+          report = {'series': series, 'versions': results}
+          print(json.dumps(report, indent=2))
+          with open('gap-report.json', 'w') as f:
+              json.dump(report, f, indent=2)
+          "
+        env:
+          SERIES: ${{ inputs.series }}
+
+      - name: Upload gap report
+        uses: actions/upload-artifact@v7
+        with:
+          name: gap-report-ubuntu-${{ inputs.series }}
+          path: gap-report.json
+          retention-days: 1

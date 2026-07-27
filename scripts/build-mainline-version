@@ -1,0 +1,175 @@
+#!/usr/bin/env python3
+"""Build a single per-version mainline kernel headers image.
+
+Usage:
+    build-mainline-version [OPTIONS] --version VERSION --series SERIES
+
+Options:
+    --version VERSION     Exact kernel version (e.g. 6.6.100)
+    --series SERIES       Ubuntu codename (e.g. noble)
+    --flavour FLAVOUR     Kernel flavour (e.g. generic)
+    --platforms PLATFORMS  Comma-separated OCI platforms (default: auto-detect from dkms image)
+    --push                Push to registry
+    --image-prefix PREFIX Image prefix (default: ghcr.io/vicamo/linux-headers)
+
+Alias tags (-latest, -devel) are auto-determined from --series.
+Handles longterm kernel apt source injection automatically.
+"""
+
+import argparse
+import os
+import subprocess
+import sys
+import tempfile
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_DIR = os.path.dirname(SCRIPT_DIR)
+sys.path.insert(0, SCRIPT_DIR)
+
+from lib import IMAGE_PREFIX, detect_platforms, get_latest_lts, get_devel
+from lib.series import series_for_kver, series_range
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Build one per-version mainline image")
+    p.add_argument("--version", required=True, help="Exact kernel version (e.g. 6.6.100)")
+    p.add_argument("--series", required=True, help="Ubuntu codename (e.g. noble)")
+    p.add_argument("--flavour", required=True, help="Kernel flavour (e.g. generic)")
+    p.add_argument("--platforms", default="", help="Comma-separated OCI platforms")
+    p.add_argument("--push", action="store_true", help="Push to registry")
+    p.add_argument("--image-prefix", default=IMAGE_PREFIX)
+    return p.parse_args()
+
+
+def kver_from_version(version: str) -> str:
+    """Extract X.Y from X.Y.Z (or X.Y from X.Y)."""
+    parts = version.split(".")
+    return f"{parts[0]}.{parts[1]}"
+
+
+def compute_add_series(kver: str, target_series: str) -> list[str]:
+    """Compute additional apt source series needed when building on a non-origin series.
+
+    Rule: origin through first LTS at or after origin (inclusive), plus any gap to target.
+    The target series is handled by the base image, so we exclude it from the result.
+    """
+    origin = series_for_kver(kver)
+    if origin == target_series:
+        return []
+
+    # Find first LTS >= origin
+    first_lts = series_for_kver(kver, longterm=True)
+
+    # origin (inclusive) through first_lts (inclusive), excluding target
+    add = series_range(origin, first_lts)
+    if first_lts != target_series:
+        add.append(first_lts)
+
+    return add
+
+
+def inject_longterm_sources(dockerfile_content: str, add_series: list[str]) -> str:
+    """Inject FROM aliases and --mount flags for longterm apt sources."""
+    from_lines = "\n".join(
+        f"FROM ghcr.io/vicamo/ubuntu:{s} AS add-series-{s}"
+        for s in add_series
+    )
+    mount_flags = " ".join(
+        f"--mount=from=add-series-{s},source=/etc/apt,target=/tmp/apt/{s}"
+        for s in add_series
+    )
+
+    # Inject FROM aliases before the archive stage
+    marker = "FROM --platform=${ARCHIVE_PLATFORM} ${ARCHIVE_IMAGE} AS archive"
+    dockerfile_content = dockerfile_content.replace(
+        marker,
+        f"{from_lines}\n{marker}",
+    )
+
+    # Inject --mount flags onto ADD_SOURCES RUN
+    dockerfile_content = dockerfile_content.replace(
+        "RUN <<'ADD_SOURCES'",
+        f"RUN {mount_flags} <<'ADD_SOURCES'",
+    )
+
+    return dockerfile_content
+
+
+def main() -> None:
+    args = parse_args()
+
+    kver = kver_from_version(args.version)
+    archive_image = f"{args.image_prefix}:{kver}-archive"
+    dkms_image = f"{args.image_prefix}:{args.series}-dkms"
+
+    # Auto-detect platforms
+    platforms = args.platforms.split(",") if args.platforms else detect_platforms(dkms_image)
+    if not platforms:
+        print(f"ERROR: could not detect platforms from {dkms_image}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Building {args.version} on {args.series}", file=sys.stderr)
+    print(f"  platforms: {','.join(platforms)}", file=sys.stderr)
+
+    # Handle longterm apt sources
+    dockerfile_path = os.path.join(REPO_DIR, "mainline", "Dockerfile.mainline-version")
+    tmp_dockerfile = None
+
+    add_series = compute_add_series(kver, args.series)
+    if add_series:
+        print(f"  longterm add_series: {','.join(add_series)}", file=sys.stderr)
+        with open(dockerfile_path) as f:
+            content = f.read()
+        content = inject_longterm_sources(content, add_series)
+        tmp_dockerfile = tempfile.NamedTemporaryFile(
+            mode="w", prefix="Dockerfile.mainline-version-", suffix=".tmp",
+            dir=os.path.join(REPO_DIR, "mainline"), delete=False,
+        )
+        tmp_dockerfile.write(content)
+        tmp_dockerfile.close()
+        dockerfile_path = tmp_dockerfile.name
+
+    # Compute tags
+    base_tag = f"{args.version}-{args.flavour}-{args.series}"
+    tags = [f"{args.image_prefix}:{base_tag}"]
+
+    # Auto-detect alias tags from series
+    latest_lts = get_latest_lts()
+    devel = get_devel()
+    if args.series == latest_lts:
+        tags.append(f"{args.image_prefix}:{args.version}-{args.flavour}-latest")
+    if args.series == devel:
+        tags.append(f"{args.image_prefix}:{args.version}-{args.flavour}-devel")
+
+    # Build command
+    cmd = [
+        "docker", "buildx", "build",
+        "--platform", ",".join(platforms),
+        "-f", dockerfile_path,
+        "--build-arg", f"KVER={kver}",
+        "--build-arg", f"VERSION={args.version}",
+        "--build-arg", f"SERIES={args.series}",
+        "--build-arg", f"ARCHIVE_IMAGE={archive_image}",
+    ]
+
+    for tag in tags:
+        cmd += ["-t", tag]
+
+    if args.push:
+        cmd.append("--push")
+    else:
+        cmd.append("--load")
+
+    cmd.append(REPO_DIR)
+
+    print(f"  tags: {', '.join(tags)}", file=sys.stderr)
+
+    try:
+        subprocess.run(cmd, check=True)
+    finally:
+        if tmp_dockerfile:
+            os.unlink(tmp_dockerfile.name)
+
+
+if __name__ == "__main__":
+    main()

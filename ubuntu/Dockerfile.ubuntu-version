@@ -1,0 +1,24 @@
+# syntax=docker/dockerfile:1
+#
+# Dockerfile.ubuntu-version — install ONE Ubuntu kernel version's headers.
+#
+# Build args:
+#   SERIES  - Ubuntu codename (e.g. "noble") (required)
+#   KABI    - kernel ABI version (e.g. "7.0.0-14") (required)
+#   FLAVOUR - kernel flavour (e.g. "generic") (required)
+#
+
+ARG SERIES=noble
+
+FROM ghcr.io/vicamo/linux-headers:${SERIES}-dkms
+
+ARG KABI
+ARG FLAVOUR
+
+SHELL ["/bin/bash", "-c"]
+RUN <<'INSTALL'
+set -euo pipefail
+apt-get update
+apt-get install -y --no-install-recommends "linux-headers-${KABI}-${FLAVOUR}"
+rm -rf /var/lib/apt/lists/*
+INSTALL

@@ -1,0 +1,94 @@
+#!/usr/bin/env python3
+"""Build a single per-version Ubuntu kernel headers image.
+
+Usage:
+    build-ubuntu-version [OPTIONS] --kabi KABI --flavour FLAVOUR --series SERIES
+
+Options:
+    --kabi KABI           Kernel ABI version (e.g. 7.0.0-14)
+    --flavour FLAVOUR     Kernel flavour (e.g. generic)
+    --series SERIES       Ubuntu codename (e.g. noble)
+    --platforms PLATFORMS  Comma-separated OCI platforms (default: auto-detect from dkms image)
+    --push                Push to registry
+    --image-prefix PREFIX Image prefix (default: ghcr.io/vicamo/linux-headers)
+
+Alias tags (-latest, -devel) are auto-determined from --series.
+"""
+
+import argparse
+import os
+import subprocess
+import sys
+
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_DIR = os.path.dirname(SCRIPT_DIR)
+sys.path.insert(0, SCRIPT_DIR)
+
+from lib import IMAGE_PREFIX, detect_platforms, get_latest_lts, get_devel
+
+
+def parse_args() -> argparse.Namespace:
+    p = argparse.ArgumentParser(description="Build one per-version Ubuntu image")
+    p.add_argument("--kabi", required=True, help="Kernel ABI version (e.g. 7.0.0-14)")
+    p.add_argument("--flavour", required=True, help="Kernel flavour (e.g. generic)")
+    p.add_argument("--series", required=True, help="Ubuntu codename (e.g. noble)")
+    p.add_argument("--platforms", default="", help="Comma-separated OCI platforms")
+    p.add_argument("--push", action="store_true", help="Push to registry")
+    p.add_argument("--image-prefix", default=IMAGE_PREFIX)
+    return p.parse_args()
+
+
+def main() -> None:
+    args = parse_args()
+
+    dkms_image = f"{args.image_prefix}:{args.series}-dkms"
+
+    # Auto-detect platforms
+    platforms = args.platforms.split(",") if args.platforms else detect_platforms(dkms_image)
+    if not platforms:
+        print(f"ERROR: could not detect platforms from {dkms_image}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"Building {args.kabi}-{args.flavour} on {args.series}", file=sys.stderr)
+    print(f"  platforms: {','.join(platforms)}", file=sys.stderr)
+
+    # Compute tags
+    base_tag = f"{args.kabi}-{args.flavour}-{args.series}"
+    tags = [f"{args.image_prefix}:{base_tag}"]
+
+    # Auto-detect alias tags from series
+    latest_lts = get_latest_lts()
+    devel = get_devel()
+    if args.series == latest_lts:
+        tags.append(f"{args.image_prefix}:{args.kabi}-{args.flavour}-latest")
+    if args.series == devel:
+        tags.append(f"{args.image_prefix}:{args.kabi}-{args.flavour}-devel")
+
+    print(f"  tags: {', '.join(tags)}", file=sys.stderr)
+
+    # Build command
+    dockerfile_path = os.path.join(REPO_DIR, "ubuntu", "Dockerfile.ubuntu-version")
+    cmd = [
+        "docker", "buildx", "build",
+        "--platform", ",".join(platforms),
+        "-f", dockerfile_path,
+        "--build-arg", f"SERIES={args.series}",
+        "--build-arg", f"KABI={args.kabi}",
+        "--build-arg", f"FLAVOUR={args.flavour}",
+    ]
+
+    for tag in tags:
+        cmd += ["-t", tag]
+
+    if args.push:
+        cmd.append("--push")
+    else:
+        cmd.append("--load")
+
+    cmd.append(REPO_DIR)
+
+    subprocess.run(cmd, check=True)
+
+
+if __name__ == "__main__":
+    main()

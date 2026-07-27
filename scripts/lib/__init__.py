@@ -8,6 +8,26 @@ MAINLINE_BASE_URL = "https://kernel.ubuntu.com/mainline"
 KERNEL_ORG_RELEASES_URL = "https://www.kernel.org/releases.json"
 IMAGE_PREFIX = "ghcr.io/vicamo/linux-headers"
 
+
+def get_latest_lts() -> str:
+    """Return the latest LTS codename (from RELEASE_KERNELS, excluding devel)."""
+    from lib.series import RELEASE_KERNELS
+    for r in reversed(RELEASE_KERNELS):
+        if r.codename == "devel":
+            continue
+        if r.lts:
+            return r.codename
+    return ""
+
+
+def get_devel() -> str:
+    """Return the current devel codename."""
+    result = subprocess.run(
+        ["ubuntu-distro-info", "--devel", "-c"],
+        capture_output=True, text=True,
+    )
+    return result.stdout.strip() if result.returncode == 0 else ""
+
 # OCI manifest annotation keys.
 # ARCHIVE_ANNOTATION_VERSIONS_KEY: used on archive images.
 #   JSON object mapping version → arch → flavours.
