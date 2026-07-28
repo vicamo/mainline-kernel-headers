@@ -44,12 +44,16 @@ class TestFromRegistry:
         with patch("subprocess.run", _fake_run(0, manifest)):
             assert _from_registry("img:tag", "some.key") == "some-value"
 
-    def test_missing_key_returns_none(self):
+    def test_missing_key_raises(self):
         manifest = json.dumps({
             "annotations": {"other.key": "other-value"}
         })
         with patch("subprocess.run", _fake_run(0, manifest)):
-            assert _from_registry("img:tag", "some.key") is None
+            try:
+                _from_registry("img:tag", "some.key")
+                assert False, "should have raised"
+            except RuntimeError:
+                pass
 
     def test_index_dereferences_first_non_attestation(self):
         index = json.dumps({
@@ -83,7 +87,8 @@ class TestFromLocal:
     """Test _from_local with mocked subprocess."""
 
     def test_returns_value(self):
-        with patch("subprocess.run", _fake_run(0, "local-value")):
+        labels = json.dumps({"some.key": "local-value"})
+        with patch("subprocess.run", _fake_run(0, labels)):
             assert _from_local("img:tag", "some.key") == "local-value"
 
     def test_returns_none_on_empty(self):
@@ -93,6 +98,15 @@ class TestFromLocal:
     def test_returns_none_on_failure(self):
         with patch("subprocess.run", _fake_run(1, "")):
             assert _from_local("img:tag", "some.key") is None
+
+    def test_missing_key_raises(self):
+        labels = json.dumps({"other.key": "other-value"})
+        with patch("subprocess.run", _fake_run(0, labels)):
+            try:
+                _from_local("img:tag", "some.key")
+                assert False, "should have raised"
+            except RuntimeError:
+                pass
 
 
 class TestGetArchiveAnnotation:
@@ -104,14 +118,13 @@ class TestGetArchiveAnnotation:
             assert get_archive_annotation("img:tag", "k") == "from-registry"
 
     def test_falls_back_to_local(self):
-        call_count = [0]
+        labels = json.dumps({"k": "local-val"})
         def mock_run(cmd, **kwargs):
-            call_count[0] += 1
             # First call (imagetools inspect) fails
             if "imagetools" in cmd:
                 return subprocess.CompletedProcess(cmd, 1, stdout="", stderr="")
             # Second call (docker inspect) succeeds
-            return subprocess.CompletedProcess(cmd, 0, stdout="local-val", stderr="")
+            return subprocess.CompletedProcess(cmd, 0, stdout=labels, stderr="")
 
         with patch("subprocess.run", mock_run):
             assert get_archive_annotation("img:tag", "k") == "local-val"

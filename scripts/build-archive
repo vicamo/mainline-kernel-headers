@@ -42,10 +42,8 @@ def extract_versions_json(image: str, kver: str) -> str | None:
     """Extract version info by scanning .deb filenames in the archive image."""
     r = subprocess.run(
         ["docker", "run", "--rm", image, "/bin/ls", "-R", f"/{kver}/"],
-        capture_output=True, text=True,
+        capture_output=True, text=True, check=True,
     )
-    if r.returncode != 0 or not r.stdout.strip():
-        return None
 
     versions: dict[str, dict[str, set]] = defaultdict(lambda: defaultdict(set))
     current_ver = ""
@@ -136,12 +134,16 @@ def build_archive(
     subprocess.run(["docker", "rmi", tmp_tag], capture_output=True)
     subprocess.run(["docker", "buildx", "build",
          *archive_args,
+         "--target", "prev",
          "-t", tmp_tag, "--load", repo_dir],
         check=True)
 
     # Extract version info
     print("\n--- Extracting version info from archive ---", file=sys.stderr)
     versions_json = extract_versions_json(tmp_tag, kver)
+    if not versions_json:
+        print(f"ERROR: failed to extract versions from {tmp_tag}", file=sys.stderr)
+        sys.exit(1)
 
     annotation_args: list[str] = []
     label_args: list[str] = []

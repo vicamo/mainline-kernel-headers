@@ -20,9 +20,10 @@ def _run(cmd: list[str]) -> str | None:
 
 
 def _from_registry(image: str, key: str) -> str | None:
+    """Return annotation value, None if image doesn't exist, or raise if key missing."""
     raw = _run(["docker", "buildx", "imagetools", "inspect", image, "--raw"])
     if not raw:
-        return None
+        return None  # image does not exist
 
     data = json.loads(raw)
 
@@ -40,16 +41,31 @@ def _from_registry(image: str, key: str) -> str | None:
             break
 
     annotations = data.get("annotations") or {}
-    return annotations.get(key) or None
+    value = annotations.get(key)
+    if not value:
+        raise RuntimeError(
+            f"image {image} exists but missing annotation key: {key}")
+    return value
 
 
 def _from_local(image: str, key: str) -> str | None:
-    raw = _run(["docker", "inspect", image,
-                "--format", "{{index .Config.Labels \"" + key + "\"}}"])
-    return raw or None
+    """Return label value, None if image doesn't exist locally, or raise if key missing."""
+    raw = _run(["docker", "inspect", image, "--format", "{{json .Config.Labels}}"])
+    if not raw:
+        return None  # image not available locally
+    labels = json.loads(raw) or {}
+    value = labels.get(key)
+    if not value:
+        raise RuntimeError(
+            f"image {image} exists locally but missing label: {key}")
+    return value
 
 
 def get_archive_annotation(image: str, key: str) -> str | None:
+    """Return annotation value, or None if image doesn't exist.
+
+    Raises RuntimeError if image exists but key is missing.
+    """
     return _from_registry(image, key) or _from_local(image, key)
 
 
