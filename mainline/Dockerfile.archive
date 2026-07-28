@@ -20,8 +20,15 @@ ARG ARCHIVE_IMAGE=ghcr.io/vicamo/linux-headers:${KVER}-archive
 # Accumulate .debs under /<KVER>/<version>/
 # ===========================================================================
 FROM busybox:musl AS base
-FROM ${ARCHIVE_IMAGE}
+FROM ${ARCHIVE_IMAGE} AS prev
 
 ARG KVER
 COPY --from=base /bin/sh /bin/cp /bin/ls /bin/
 RUN --mount=type=bind,source=mainline/debs/${KVER},target=/mnt/debs cp -a /mnt/debs/. /${KVER}/
+
+# ===========================================================================
+# Squash into a single layer
+# ===========================================================================
+FROM scratch
+ARG KVER
+COPY --from=prev /${KVER}/ /${KVER}/
