@@ -24,7 +24,7 @@ _script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, _script_dir)
 
 from lib import (ARCHIVE_ANNOTATION_VERSIONS_KEY, IMAGE_PREFIX,
-                 MAINLINE_BASE_URL, check_containerd_snapshotter)
+                 MAINLINE_BASE_URL)
 
 # Re-use fetch_debs and get_archive_annotation directly
 _fetch_debs_path = os.path.join(_script_dir, "fetch-debs")
@@ -84,8 +84,6 @@ def build_archive(
     archive_tag = f"{image_prefix}:{kver}-archive"
     debs_dir = os.path.join(repo_dir, "mainline", "debs", kver)
     os.makedirs(debs_dir, exist_ok=True)
-
-    check_containerd_snapshotter()
 
     # Step 1: Fetch .deb packages
     print(f"=== Fetching kernel headers for series {kver} ===", file=sys.stderr)
