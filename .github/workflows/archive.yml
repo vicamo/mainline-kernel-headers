@@ -1,0 +1,154 @@
+name: Build archive images
+
+on:
+  workflow_dispatch:
+    inputs:
+      kver:
+        description: 'Kernel series to build, comma-separated (e.g. "6.6", "6.x", "6.6,6.12,7.0"). Use "active" for non-EOL versions, "all" for all versions >= 4.7.'
+        required: false
+        type: string
+        default: 'active'
+      force:
+        description: 'Rebuild even if no new versions'
+        required: false
+        type: boolean
+        default: false
+      scratch:
+        description: 'Cold start (ignore existing archive)'
+        required: false
+        type: boolean
+        default: false
+      dry_run:
+        description: 'Discover only, do not build'
+        required: false
+        type: boolean
+        default: false
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build matrix
+        id: matrix
+        run: |
+          matrix=$(python3 -c "
+          import json, os, re, sys, urllib.request
+
+          input_kver = os.environ['INPUT_KVER']
+
+          # Resolve kver list
+          if input_kver == 'active':
+              data = json.loads(urllib.request.urlopen('https://www.kernel.org/releases.json').read())
+              seen = set()
+              kver_list = []
+              for r in data['releases']:
+                  if r['moniker'] not in ('stable', 'longterm'):
+                      continue
+                  if r['iseol']:
+                      continue
+                  m = re.match(r'^(\d+\.\d+)', r['version'])
+                  if m and m.group(1) not in seen:
+                      seen.add(m.group(1))
+                      kver_list.append(m.group(1))
+          elif input_kver == 'all':
+              html = urllib.request.urlopen('https://kernel.ubuntu.com/mainline/').read().decode()
+              seen = set()
+              kver_list = []
+              for m in re.finditer(r'href=\"v(\d+\.\d+)(?:\.\d+)?/\"', html):
+                  series = m.group(1)
+                  major, minor = (int(x) for x in series.split('.'))
+                  if (major, minor) < (4, 7):
+                      continue
+                  if series not in seen:
+                      seen.add(series)
+                      kver_list.append(series)
+              kver_list.sort(key=lambda s: tuple(int(x) for x in s.split('.')))
+          else:
+              raw = [v.strip() for v in input_kver.split(',') if v.strip()]
+              need_expand = any(re.fullmatch(r'\d+\.x', v) for v in raw)
+              all_series = None
+              if need_expand:
+                  html = urllib.request.urlopen('https://kernel.ubuntu.com/mainline/').read().decode()
+                  all_series = set()
+                  for m in re.finditer(r'href=\"v(\d+\.\d+)(?:\.\d+)?/\"', html):
+                      all_series.add(m.group(1))
+              kver_list = []
+              seen = set()
+              for v in raw:
+                  wm = re.fullmatch(r'(\d+)\.x', v)
+                  if wm:
+                      major = int(wm.group(1))
+                      matched = sorted(
+                          [s for s in all_series if int(s.split('.')[0]) == major],
+                          key=lambda s: tuple(int(x) for x in s.split('.'))
+                      )
+                      for s in matched:
+                          if s not in seen:
+                              seen.add(s)
+                              kver_list.append(s)
+                  else:
+                      if v not in seen:
+                          seen.add(v)
+                          kver_list.append(v)
+
+          matrix_includes = [{'kver': k} for k in kver_list]
+          print(json.dumps({'include': matrix_includes}))
+          ")
+          echo "matrix=${matrix}" >> "$GITHUB_OUTPUT"
+          echo "${matrix}" | python3 -m json.tool
+        env:
+          INPUT_KVER: ${{ inputs.kver || 'active' }}
+
+  build:
+    needs: discover
+    if: ${{ !inputs.dry_run && fromJson(needs.discover.outputs.matrix).include[0] != null }}
+    runs-on: ubuntu-latest
+    concurrency:
+      group: archive-${{ matrix.kver }}
+      cancel-in-progress: true
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix: ${{ fromJson(needs.discover.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Maximize disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          swap-storage: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build archive ${{ matrix.kver }}
+        run: |
+          ./scripts/build-archive "${{ matrix.kver }}" \
+            ${{ github.ref == 'refs/heads/main' && '--push' || '' }} \
+            ${{ inputs.force && '--force' || '' }} \
+            ${{ inputs.scratch && '--scratch' || '' }}
+
+      - name: Cleanup
+        if: always()
+        run: |
+          rm -rf mainline/debs/${{ matrix.kver }}
+          docker builder prune -f
+          docker image prune -af
+    permissions:
+      packages: write
